@@ -31,8 +31,6 @@ void yyerror(char* s) {
 %token NUMBER  /* String of digits */
 %token QCHAR   /* Character between singles quotes */
 
-/* A forward slash /, used to denote comments (not sure about this one, will have to think some more on how to represent it) */
-%token SLASH   
 
 /* Tokens explicitly listed in the project page */
 
