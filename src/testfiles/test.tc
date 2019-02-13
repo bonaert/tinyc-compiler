@@ -1,0 +1,28 @@
+int main() {
+	int b;
+	char[b[2] + 7] c;
+	read d;
+	write a;
+	return length b;
+	params(5 + 7, b[8 - 2]);
+}
+
+int params(int a, char b) {
+	// useless comment while()
+   	char c;
+    {
+		int d;
+		c = 'a';
+	};
+	while (i == 5) 
+		if (j != 6 + 2) 
+			write 5
+		else 
+			read b
+	; // currently need because the while is a statement and you need a semicolon to proceed onto the next statement
+	{ char d; int k; return 5 + 2; }; // if we want to declare new variables, we need to declare a new block because all
+						// variable declarations must be at the beginning of a block. since we already wrote some statements
+						// in the block of params, we can't directly declare variables... instead we need to create a block
+						// (which is a statement) in which we declare the variable
+	return (-5 + !7) * 5 - 5 / 7;
+}

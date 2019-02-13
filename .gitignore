@@ -50,3 +50,18 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+# Vim files
+*~
+*.swp
+
+# Symlink to Dropbox
+compilers
+
+# Generated files
+lex.yy.c
+tinyc
+tinyc.output
+tinyc.tab.c
+tinyc.tab.h
