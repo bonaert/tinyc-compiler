@@ -3,21 +3,33 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "symbol.h"
+#include "type.h"
 #include "tinyc.tab.h"
 
-extern int lineno; /* defined in the parser file (tinyc.y) */
+extern int lineno;        /* defined in the parser file (tinyc.y) */
+extern SYMBOL_TABLE *scope;	  /* defined in the parser file (tinyc.y) */
 
-void lexInit() {} // Do nothing for now
+void lexInit() {
+	scope = createScope(0); /* Create top-most scope */
+}
 
-/* This macro is called automatically when the generated scanner initializes itself, thus calling our own custom function */
+/* This macro is called automatically when the generated scanner initializes itself,
+   thus calling our own custom function */
 #define YY_USER_INIT lexInit();
 
 %}
+
+
+
 
 alpha [A-Za-z]
 digit [0-9]
 alphanum [A-Za-z0-9]
 alphanumUnderscore [A-Za-z0-9_]
+
+
+
 
 %%
 
@@ -65,11 +77,15 @@ alphanumUnderscore [A-Za-z0-9_]
 ">" return GREATER;
 "<" return LESS;
 
+"&&" return AND;
+
 {alpha}{alphanumUnderscore}*   {
+	yylval.name	= strdup(yytext);
 	return NAME;
 }
 
 {digit}+ {
+	yylval.value = atoi(yytext);
 	return NUMBER;
 }
 
@@ -81,17 +97,16 @@ alphanumUnderscore [A-Za-z0-9_]
 }
 
 
+
+
+
+
+
 %%
 
+
 int yywrap() {
-	return 1; // Tells scanner that no further files need to be processed
+	// Once the scanner has reached EOF, stop scanning (there are no further files to be processed)
+	return 1; 
 }
-
-
-
-
-
-
-
-
 

@@ -13,7 +13,7 @@
 COLOR='\033[0;34m'
 NC='\033[0m' # No Color
 
-for x in ./testfiles/*; do
+for x in ./testfiles/*[^~]; do
 	filename=$(basename -- "$x")
 	printf "${COLOR}Using test file - $filename${NC}"
 	echo ""

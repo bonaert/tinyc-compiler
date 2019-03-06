@@ -1,28 +1,56 @@
+
 int main() {
+
+	// declarations
 	int b;
+	int c = 7 + 2;
 	char[b[2] + 7] c;
+
+	// read-write statemetns
 	read d;
 	write a;
+
+	// declarations can come after statements
+	int k = params(5 + 7, b[8 - 2]); 
+
+	// return and length
 	return length b;
-	params(5 + 7, b[8 - 2]);
 }
 
+// function
 int params(int a, char b) {
-	// useless comment while()
+	// useless comment
    	char c;
+	int lol;
     {
 		int d;
-		c = 'a';
-	};
-	while (i == 5) 
-		if (j != 6 + 2) 
-			write 5
-		else 
-			read b
-	; // currently need because the while is a statement and you need a semicolon to proceed onto the next statement
-	{ char d; int k; return 5 + 2; }; // if we want to declare new variables, we need to declare a new block because all
-						// variable declarations must be at the beginning of a block. since we already wrote some statements
-						// in the block of params, we can't directly declare variables... instead we need to create a block
-						// (which is a statement) in which we declare the variable
+		params = 'a';
+	}; // if, if-else, while and block don't need to end in a semicolon (but can if you want to)
+
+	// testing while, if, if-else and conditions
+	while (i == 5) { 
+
+		// testing if-else
+		if (j != 6 + 2) {
+			write 5;
+		} else {
+			char x;
+			read b;
+		}
+
+		// testing if
+		if (i == 5) { i = i + 1; }
+
+		// testing empty blocks
+		if (i == 5) {} else {};
+
+		// return in inner block
+		return 5;
+	}
+
+	// Can start a block in the middle of another block
+	{ char d; int k; return 5 + 2; read c; } 
+
+	// testing complicated arithmetic expression with return
 	return (-5 + !7) * 5 - 5 / 7;
 }

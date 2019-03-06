@@ -1,16 +1,16 @@
-CFLAGS=-Wall -g
-CC=gcc
+CFLAGS= -Wall -g
+CC= gcc
 
-CCFILES=
-HHFILES=
-SOURCE= Makefile $(CCFILES) $(HHFILES) tinyc.y lex.l mct.sh
+CCFILES= symbol.c intermediate.c check.c type.c
+HHFILES= symbol.h intermediate.h check.h type.h
+SOURCE= Makefile $(CCFILES) $(HHFILES) tinyc.y lex.l
 
 all: tinyc
 
 
 # $@ = file name of the target of the rule
 # $^ = names of all the prerequisites, with spaces between them
-tinyc: tinyc.tab.o lex.yy.o
+tinyc: tinyc.tab.o lex.yy.o $(CCFILES:%.c=%.o)
 	gcc $(CFLAGS) -o $@ $^
 
 lex.yy.c: lex.l tinyc.tab.h
@@ -24,7 +24,7 @@ lex.yy.c: lex.l tinyc.tab.h
 # -v Generates tinyc.output, which shows the states of the LARL parser
 # -d Generates tinyc.tab.h, which contains the token type definitions
 tinyc.tab.h tinyc.tab.c: tinyc.y
-	bison -v -d $^
+	bison -v -d -t $^
 
 
 clean:

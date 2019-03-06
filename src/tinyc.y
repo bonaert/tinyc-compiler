@@ -4,6 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "symbol.h"
+#include "intermediate.h"
+#include "check.h"
+#include "type.h"
+
+#define YYDEBUG 1
+
 /* Number of current source line. Used in the lexer (see lex.y), which increments it when it sees a newline character */
 int lineno = 1;
 
@@ -20,6 +27,8 @@ void yyerror(char* s) {
 	exit(1);
 }
 
+SYMBOL_TABLE* scope; // Current scope (e.g. symbol table) - initialized in the lexer (lex.l)
+
 %}
 
 
@@ -29,14 +38,16 @@ void yyerror(char* s) {
    http://tinf2.vub.ac.be/~dvermeir/courses/compilers/tiny.html*/
 %token NAME    /* String starting with a letter, followed by 0 or more letters, digits or underscores */
 %token NUMBER  /* String of digits */
-%token QCHAR   /* Character between singles quotes */
+
 
 
 /* Tokens explicitly listed in the project page */
 
 
-/* Keywords */
-%token INT     
+%token INT
+%token QCHAR   /* Character between singles quotes */ 
+
+/* Keywords */   
 %token IF 
 %token ELSE
 %token RETURN   
@@ -45,6 +56,7 @@ void yyerror(char* s) {
 %token READ
 %token LENGTH
 %token WHILE
+%token AND
 
 /* Pairs of tokens */
 %token LBRACE   /* { */
@@ -74,6 +86,34 @@ void yyerror(char* s) {
 %token GREATER  /* > */
 %token LESS     /* < */
 
+/*
+ * Semantic values of each node:
+ *
+ * Therefore we use an attribute stmt.next which contains the locations containing
+ * instructions that need to be backpatched with the location of the first statement
+ * after the current one
+ */
+
+%union {
+	char* name;
+	int value;
+	
+	TYPE_INFO* type;
+	TYPE_LIST* typeList;
+
+	SYMBOL_INFO* symbol;
+} 
+
+
+%type <name> NAME;
+%type <value> NUMBER;
+%type <character> QCHAR;
+
+%type <type> type functionParameter exp lexp;
+%type <typeList> functionParameters non_empty_argument_list arguments;
+
+%type <symbol> var funDeclaration;
+
 
 
 
@@ -81,126 +121,302 @@ void yyerror(char* s) {
 /* https://docs.oracle.com/cd/E19504-01/802-5880/6i9k05dh3/index.html */
 
 /* Non associative operators have no defined behavior when used in a sequence */
-%nonassoc LOW   /* dummy totek to suggest shift on ELSE */
-%nonassoc ELSE  /* higher than low */
+%nonassoc LOW   /* dummy token to suggest shift on ELSE */
+%nonassoc ELSE  /* higher than low (prioritises immediate if-elses; else is attributed to closest if) */
 
 /* Priorities in increasing order */
-/* The result is that -æ[5] * 3 + 5 is parsed as ((-(a[5])) * 3) + 5 */
-%nonassoc EQUAL /* Equal is not associative (could be right associative, but in MicroC it isn't and this line is based on that... I need to understand why they chose to do that */
+/* The result is that -a[5] * 3 + 5 is parsed as ((-(a[5])) * 3) + 5 */
+/* Equal is not associative (could be right associative, but in MicroC it isn't and this line is based on that... I need to understand why they chose to do that */
+%nonassoc EQUAL
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left UMINUS
 %left LBRACK
 
+
+
+
+
+
 %%
+
+
+
+
+
+
+// emitEmptyGoto() = emit(gen3AC(GOTO, 0, 0, 0))
+// emitGoto(arg) = emit(gen3AC(GOTO, arg, 0, 0))
+
+/* Binary operators - TODO: add type values in new var 
+emit(Instruction)
+gen3AC(opcode, arg1, arg2, res)
+
+emitAssignement3AC(arg1, arg2)  =     // arg1 = arg2
+	emit(gen3AC(A0, arg1, 0, arg2));
+
+emitUnary3AC(operation, arg1, result) =
+	emit(gen3AC(operation, arg1.place, 0, result.place))
+
+emitBinary3AC(operation, arg1, arg2, result) =
+	emit(gen3AC(operation, arg1.place, arg2.place, result.place))
+
+// TODO: think well about the operation that will be needed (it might be the opposite one)
+emitComparison3ACs(compareOp, arg1, arg2, result) =  
+	emit(gen3AC(compareOp, arg1.place, arg2.place, next3AC() + 3));
+	emitAssignement3AC(result, 0)
+	emit(gen3AC(GO, next3AC() + 2, 0, 0));
+	emitAssignement3AC(result, 1)
+*/
+
+
+
+
+
+
+
 
 /* TinyC syntax */
 
-program : declarationList
+program: declarationList
 		;
 
 declarationList: declarationList declaration
-			   |
+			   | %empty
 			   ;
 
-declaration : funDeclaration 
-			| varDeclaration
+declaration: funDeclaration 
+		   | varDeclaration
+		   ;
+
+/* Example: int sum(int a, int b) { return a + b; } ; */
+funDeclaration: type NAME {
+			// Insert a new symbol for the function in current symbol table
+			// Type information will be added later, when we have all the parameters
+			// We do this in 2 parts, so that the symbol for the function is introduced in the
+			// scope before the symbols of the parameters are created (so that error messages
+			// are better and more accurate)
+			$<symbol>$ = insertSymbolInSymbolTable(scope, $2, 0); 
+
+			// Create a new child scope for the function and 
+			// associate it with the symbol of the new function
+			scope = createScope(scope);
+			scope->function = $<symbol>$;
+		} LPAR functionParameters RPAR {
+			$<symbol>3->type = createFunctionType($1, $5); // Add type information to the function symbol
+		} block {
+			// After parsing function, leave the function's scope and go back to original scope
+			scope = scope->parent; 
+		};
+
+/* Example: int a, int b ; */
+functionParameters: functionParameters COMMA functionParameter    { $$ = insertTypeInList($3, $1); }  // 2 or more parameters
+		          | functionParameter                             { $$ = insertTypeInList($1, 0); }  // 1 parameter
+		          | %empty                                        { $$ = 0; }                         // 0 parameters
+		          ;
+
+functionParameter: type NAME {
+	insertSymbolInSymbolTable(scope, $2, $1);
+	$$ = $1;  // The result is the type (TYPE_INFO*) of the function parameter
+};
+
+
+block: LBRACE blockContents RBRACE {
+	/* Example: { int a; int b; a = 2; b = a + 1; return b } */
+	//$$.next = $2.next;
+};
+
+blockContents: blockContents blockContent
+		     | %empty
+			 ;
+
+blockContent: varDeclarations
+			| statements
 			;
 
-/* Example: int sum(int a, int b) { return a + b; } */
-funDeclaration : type NAME LPAR formalPars RPAR block  { fprintf(stderr, "detected function\n"); }
-			   ;
-
-/* Example: int a, int b */
-formalPars: formalPars COMMA formalPar      // 2 or more parameters
-		  | formalPar                       // 1 parameter
-		  |                                 // 0 parameters
-		  ;
-
-formalPar: type NAME
-		 ;
-
-/* Example: { int a; int b; a = 2; b = a + 1; return b } */
-block: LBRACE varDeclarations statements RBRACE
-	 ;
-
 varDeclarations: varDeclarations varDeclaration   // 1+ var declarations
-			   |                                  // 0 var declarations
+			   | %empty                           // 0 var declarations
 			   ;
 
-/* Example: int a; */
-varDeclaration: type NAME SEMICOLON { fprintf(stderr, "detected variable\n"); }
-			  ;
+/* Example: int a; int b = 7; */
+varDeclaration: type NAME SEMICOLON {
+	checkNameNotTaken(scope, $2);
+	insertSymbolInSymbolTable(scope, $2, $1);
+	fprintf(stderr, "declaring variable %s without initializing it\n", $2); 
+};
+
+varDeclaration: type NAME ASSIGN exp SEMICOLON { 
+	checkNameNotTaken(scope, $2);
+	fprintf(stderr, "variable name %s\n", $2);
+	insertSymbolInSymbolTable(scope, $2, $1);
+	// TODO: assignement
+	fprintf(stderr, "declaring variable %s and initializing it\n", $2); 
+};
 
 /* int, char or array */
-type: INT 
-	| CHAR 
-	| type LBRACK exp RBRACK   // array (example: int[7])
+type: INT                       { $$ = createSimpleType(int_t); }
+	| CHAR                      { $$ = createSimpleType(char_t); }
+	| type LBRACK exp RBRACK    { $$ = createArrayType($1); /* array (example: int[7]) */ }   
 	;
 
 /* 0, 1 or more statements */
-statements: statement SEMICOLON statements    // 1 or more statements
-		  |                                   // 0 statements
+statements: statementWithoutBlock SEMICOLON statements    // 1 or more statements without blocks (always followed by semicolon)
+		  | statementWithBlock statements                 // 1 or more statements with blocks    (maybe not followed by a semicolon)
+		  | statementWithBlock SEMICOLON statements       // 1 or more statements with blocks    (maybe followed by a semicolon)
+		  | %empty                                        // 0 statements
 		  ;
 
-statement: IF LPAR exp RPAR statement   %prec LOW     // if statement (why single statement instead of statements or body?)
-		 | IF LPAR exp RPAR statement ELSE statement  { fprintf(stderr, "if-else"); }// if-else statement (why single statement instead of statements or body?)
-		 | WHILE LPAR exp RPAR statement              { fprintf(stderr, "while"); }// while loop (why single statement instead of statements or body?)
-		 | lexp ASSIGN exp                            { fprintf(stderr, "assign\n"); }// assignment
-		 | RETURN exp                                 // return statement
-		 | NAME LPAR pars RPAR                        // function call
-		 | block                                      // nested block (which may contain inner statements)
-		 | WRITE exp                                  // write statement
-		 | READ exp                                   // read statement
-		 ;
+// Empty; it's used to locate a specific location (used in IFs, ANDs and ORs))
+marker: %empty { 
+	// $$.location = next3AC(); 
+}; 
+
+goend: %empty { 
+	//$$.next = locationsAdd(locationsCreateSet(), next3AC()); 
+	//emitEmptyGoto(); /* goto end,backpatch later */
+};
+
+
+
+
+// We distinguish between statements with blocks and statements without blocks
+// - statements with blocks may or may not end with a semicolon
+// - statements without blocks MUST end with a semicolon
+
+statementWithBlock: IF LPAR exp RPAR marker block  %prec LOW  { 
+	/*
+	// if statements
+	fprintf(stderr, "if\n"); 
+	backpatch($3.true, $5.location);  // where to go if exp = true
+	backpatch($3.false, $6.next);     // TODO: not sure how to fill this one (check if this is correct)
+	$$.next = $6.next;                // TODO: understand this line
+	*/
+};
+
+statementWithBlock: IF LPAR exp RPAR marker block goend ELSE marker block  {
+	/*
+	// if-else statement 
+	fprintf(stderr, "if-else\n"); 
+	backpatch($3.true, $5.location);  // where to go if exp = true
+	backpatch($3.false, $9.location); // where to go if exp = false
+	$$.next = locationsUnion(
+		locationsUnion($6.next, $7.next), $10.next  // TODO: understand this line
+	)
+	*/
+};
+
+statementWithBlock: WHILE LPAR marker exp RPAR marker block { 
+	/*
+	// while loop 
+	fprintf(stderr, "while\n"); 
+	backpatch($4.true, $6.location);  // if condition is true, go to the block
+	backpatch($7.next, $3.location);  // at the end of the block, go back to the condition
+	$$.next = $4.false;               // TODO: understand this line
+	emitGoto($3.location);            // start by going to the condition? TODO: make sure I understand
+	*/
+};
+
+statementWithBlock: block {
+    // nested block (which may contain inner statements)
+	/*
+	$$.next = $1.next; // TODO: understand this line
+	*/
+};
+			   
+
+statementWithoutBlock: lexp ASSIGN exp {
+	checkAssignment($1, $3); 
+	emitAssignement3AC($3, $1); 
+
+	//$$.next = locationsCreateSet();
+	//emitAssignement3AC($3, $1); 
+};
+
+statementWithoutBlock: RETURN exp { // return statement
+	checkReturnType(scope, $2);
+	emitReturn3AC($2);
+};
+
+statementWithoutBlock:	NAME LPAR arguments RPAR {	// function call
+
+};
+
+statementWithoutBlock:	WRITE exp { // read statement
+	gen3AC(WRITE, $2, 0, 0);
+};
+
+statementWithoutBlock:	READ lexp { // read statement
+	// TODO: do some type checking here (and think, can exp be anything? shouldn't it be a variable?)
+	checkIsIntegerOrChar($2);
+	gen3AC(READ, $2, 0, 0);
+};
 
 /* LHS expression - What can be on the left side of an assignment statement */
-lexp : var
-	 | lexp LBRACK exp RBRACK // array access
-	 ;
+lexp: var                     { $$ = $1->type; }
+	| lexp LBRACK exp RBRACK  { $$ = checkArrayAccess($1, $3); /* TODO: generate A3C */ } 
+	;
 
 /* Any expression */
-exp : lexp                     // LHS expression
-    | exp binop exp            // Binary operation (2 + 7)
-    | unop exp                 // Unary operation  (-8)
-    | LPAR exp RPAR            // Expression inside parenthesis
-	| NUMBER                   // Number
-	| NAME LPAR pars RPAR      // Function call
-	| QCHAR                    // A single character inside single quotes
-	| LENGTH lexp              // LENGTH of an array
+exp: lexp { $$ = $1; /* LHS expression */ };
+
+exp:  exp PLUS exp           { $$ = checkArithOp($1, $3);    emitBinary3AC(A2PLUS, $1, $3, $$); }
+    | exp MINUS exp          { $$ = checkArithOp($1, $3);    emitBinary3AC(A2MINUS, $1, $3, $$); }
+	| exp TIMES exp          { $$ = checkArithOp($1, $3);    emitBinary3AC(A2TIMES, $1, $3, $$); }
+	| exp DIVIDE exp         { $$ = checkArithOp($1, $3);    emitBinary3AC(A2DIVIDE, $1, $3, $$); }
+	| exp EQUAL exp          { $$ = checkEqualityOp($1, $3); emitComparison3AC(IFEQ, $1, $3, $$); }
+	| exp NEQUAL exp         { $$ = checkEqualityOp($1, $3); emitComparison3AC(IFNEQ, $1, $3, $$); }
+	| exp GREATER exp        { $$ = checkArithOp($1, $3);    emitComparison3AC(IFG, $1, $3, $$); }
+	| exp LESS exp           { $$ = checkArithOp($1, $3);    emitComparison3AC(IFS, $1, $3, $$); }
+	| exp AND exp            { $$ = checkArithOp($1, $3);    /* TODO */ }	
 	;
 
-/* Binary operators */
-binop   : MINUS
-	    | PLUS
-	    | TIMES
-		| DIVIDE
-		| EQUAL      // Comparison (==)
-		| NEQUAL
-		| GREATER
-		| LESS
-		;
+exp: MINUS exp %prec UMINUS { $$ = checkIsNumber($2); emitUnary3AC(A1MINUS, $2, $$); }
+   | NOT  exp               { $$ = checkIsNumber($2); /* TODO */ }
+   ;
 
-/* Unary operators */
-unop: MINUS
-	| NOT
-	;
+exp: LPAR exp RPAR         { $$ = $2;  /* (a) */ };
 
-/* Parameters (used in function calls) */
-otherPars: otherPars COMMA exp
-		 |
-		 ;		 
+exp: NUMBER               {
+	// TODO: remember value
+	$$ = createSimpleType(int_t);
+};
 
-pars: exp otherPars   // 1+ or more expressions
-	|                 // 0 expression
-	;
+exp: NAME LPAR arguments RPAR      {
+	// Function call
+	fprintf(stderr, "calling function %s \n", $1);
+	$$ = checkFunctionCall(scope, $1, $3); 
+};
 
-var: NAME { fprintf(stderr, "var"); }
+exp: QCHAR  { // A single character inside single quotes
+ 	// TODO: remember value
+	$$ = createSimpleType(char_t);
+};
+
+exp: LENGTH lexp { // LENGTH of an array
+	checkIsArray($2);
+	$$ = createSimpleType(int_t);
+	// TODO: add instruction
+};
+
+
+/* Arguments (used in function calls) */
+arguments: %empty                     { $$ = 0; }  // No arguments
+         | non_empty_argument_list    { $$ = $1; } // 1 or more arguments
+         ;
+
+non_empty_argument_list: exp                               { $$ = insertTypeInList($1, 0);  }  // 1 argument 
+  				       | non_empty_argument_list COMMA exp { $$ = insertTypeInList($3, $1); }  // previous arguments + COMMA + (nonempty) exp
+  					   ;
+
+var: NAME {
+	$$ = checkSymbol(scope, $1); 
+}
 
 %%
 
 int main(int argc, char* argv[]) {
 	return yyparse(); // yyparse is the function generated by this script
+	yydebug = 1;
 }
 
 
