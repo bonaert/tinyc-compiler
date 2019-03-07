@@ -41,50 +41,77 @@ void checkNameNotTaken(SYMBOL_TABLE* symbolTable, char* name) {
     }
 }
 
-void checkAssignment(TYPE_INFO* left, TYPE_INFO* right) {
-    if (left != right) {
-        error2("cannot assign ", left, " to ", right);
+void checkAssignmentInDeclaration(TYPE_INFO* left, SYMBOL_INFO* right) {
+    if (left != right->type) {
+        error2("cannot assign ", left, " to ", right->type);
     }
 }
+
+void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right) {
+    if (left->type != right->type) {
+        error2("cannot assign ", left->type, " to ", right->type);
+    }
+}
+
+
     
 
-void checkReturnType(SYMBOL_TABLE* scope, TYPE_INFO* returnType) {
+void checkReturnType(SYMBOL_TABLE* scope, SYMBOL_INFO* returnVal) {
     TYPE_INFO* functionReturnType = scope->function->type->info.function.target;
-    if (functionReturnType != returnType) {
-        error2("the function must return ", functionReturnType, " but is actually returning ", returnType);
+    if (functionReturnType != returnVal->type) {
+        error2("the function must return ", functionReturnType, " but is actually returning ", returnVal->type);
     }
 }
 
-TYPE_INFO* checkArrayAccess(TYPE_INFO* array, TYPE_INFO* index) {
-    if (array->type != array_t) {
-        error1("not an array", array);
-    } else if (index->type != int_t) {
-        error1("index should be an integer but is ", index);
+TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index) {
+    if (array->type->type != array_t) {
+        error1("not an array", array->type);
+    } else if (index->type->type != int_t) {
+        error1("index should be an integer but is ", index->type);
     }
-    return array->info.array.base;
+    return array->type->info.array.base;
 }
 
-TYPE_INFO* checkArithOp(TYPE_INFO* op1, TYPE_INFO* op2){
-    if (op1 != op2) {
-        error2("type ", op1, " does not match ", op2);
+TYPE_INFO* checkArithOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
+    if (op1->type != op2->type) {
+        error2("type ", op1->type, " does not match ", op2->type);
     }
 
-    if (op1->type != int_t) {
-        error1("first value should be an integer but is ", op1);
+    if (op1->type->type != int_t) {
+        error1("first value should be an integer but is ", op1->type);
     }
 
-    return op1;
+    return op1->type;
 }
 
-TYPE_INFO* checkEqualityOp(TYPE_INFO* left, TYPE_INFO* right){
-    if (left != right) {
-        error2("type ", left, " does not match ", right);
+TYPE_INFO* checkEqualityOp(SYMBOL_INFO* left, SYMBOL_INFO* right){
+    if (left->type != right->type) {
+        error2("type ", left->type, " does not match ", right->type);
     }
-    return left;
+    return left->type;
+}
+
+int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actualArguments) {
+    int i = 1;
+    while (actualArguments && argumentTypes) {
+        if (!areTypesEqual(argumentTypes->type, actualArguments->info->type)) {
+            fprintf(stderr, "Argument %d has an incorrect type. Wanted ", i);
+            printType(stderr, argumentTypes->type);
+            fprintf(stderr, " but actually got ");
+            printType(stderr, actualArguments->info->type);
+            return 0;
+        }
+
+        actualArguments = actualArguments->next;
+        argumentTypes = argumentTypes->next;
+        i++;
+    }
+
+    return (actualArguments == 0) && (argumentTypes == 0);
 }
 
 
-TYPE_INFO* checkFunctionCall(SYMBOL_TABLE* scope, char* functionName, TYPE_LIST* arguments){
+TYPE_INFO* checkFunctionCall(SYMBOL_TABLE* scope, char* functionName, SYMBOL_LIST* arguments){
     SYMBOL_INFO* symbol = findSymbolInSymbolTableAndParents(scope, functionName);
 
     if (!symbol) {
@@ -95,7 +122,7 @@ TYPE_INFO* checkFunctionCall(SYMBOL_TABLE* scope, char* functionName, TYPE_LIST*
         error(functionName, " should be a function but actually is of type ", symbol->type, 0, 0, 0);
     }
 
-    if (!areTypeListsEqual(symbol->type->info.function.arguments, arguments)) {
+    if (!doArgumentsHaveTheCorrectTypes(symbol->type->info.function.arguments, arguments)) {
         error("bad arguments for function ", functionName, 0, 0, 0, 0);
     }
 
@@ -116,23 +143,24 @@ SYMBOL_INFO* checkSymbol(SYMBOL_TABLE* scope, char* name){
 
 
 
-TYPE_INFO* checkIsNumber(TYPE_INFO* number){
-    if (number->type != int_t) {
-        error1("type should be integer but is ", number);
+TYPE_INFO* checkIsNumber(SYMBOL_INFO* numberSymbol){
+    if (numberSymbol->type->type != int_t) {
+        error1("type should be integer but is ", numberSymbol->type);
     }
-    return number;
+    return numberSymbol->type;
 }
 
-TYPE_INFO* checkIsArray(TYPE_INFO* array) {
-    if (array->type != array_t) {
-        error1("type should be array but is ", array);
+TYPE_INFO* checkIsArray(SYMBOL_INFO* arraySymbol) {
+    if (arraySymbol->type->type != array_t) {
+        error1("type should be array but is ", arraySymbol->type);
     }
-    return array;
+    return arraySymbol->type;
 }
 
-TYPE_INFO* checkIsIntegerOrChar(TYPE_INFO* type) {
-    if ((type->type != int_t) && (type->type != char_t)) {
-        error1("type should be integer or char but is ", type);
+TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* symbol) {
+    // TODO: add a check to make sure it's a variable
+    if ((symbol->type->type != int_t) && (symbol->type->type != char_t)) {
+        error1("type should be integer or char but is ", symbol->type);
     }
-    return type;
+    return symbol->type;
 }

@@ -15,10 +15,36 @@
  * names. The name pointer in the SYMBOL INFO points to the correct name in the string pool.
  */
 
+typedef struct instruction INSTRUCTION;
+
+/* Constant-specific information */
+typedef struct {
+	union { 
+		int intValue;
+		char charValue;
+	} value;
+} CONSTANT_INFO;
+
+/* Variable-specific information */
+typedef struct {
+	int location;
+} VARIABLE_INFO;
+
+/* Function-specific information */
+typedef struct {
+	INSTRUCTION* instructions;
+	struct symbolTable* scope;
+} FUNCTION_INFO;
+
 /* Information about a symbol */
 typedef struct {
 	char * name;
 	TYPE_INFO * type;
+	union {
+		CONSTANT_INFO constant;
+		VARIABLE_INFO var;
+		FUNCTION_INFO function;
+	} details;
 } SYMBOL_INFO;
 
 /* We'll store all the symbols in a linked list */
@@ -39,8 +65,16 @@ typedef struct symbolTable {
 int areSymbolsEqual(SYMBOL_INFO* symbol1, SYMBOL_INFO* symbol2);
 int areSymbolListEqual(SYMBOL_LIST* symbolList1, SYMBOL_LIST* symbolList2);
 
+SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo);
+SYMBOL_INFO* createConstantSymbol(TBASIC type, int value);
+SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo);
+void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO* returnType, SYMBOL_LIST* arguments);
+
 SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symbolInfo);
-SYMBOL_INFO* insertSymbolInSymbolTable(SYMBOL_TABLE* symbolTable, char* name, TYPE_INFO* typeInfo);
+
+SYMBOL_INFO* insertSymbolInSymbolTable(SYMBOL_TABLE* symbolTable, char*name, TYPE_INFO* symbolInfo);
+SYMBOL_INFO* insertVariableInSymbolTable(SYMBOL_TABLE* symbolTable, char* name, TYPE_INFO* typeInfo);
+
 
 SYMBOL_TABLE* createScope(SYMBOL_TABLE* parentTable);
 
@@ -50,6 +84,11 @@ SYMBOL_INFO* findSymbolInSymbolTableAndParents(SYMBOL_TABLE* symbolTable, char* 
 
 void printSymbol(FILE* output, SYMBOL_INFO* symbolInfo);
 void printSymbolList(FILE* output, SYMBOL_LIST* symbolList, char separator);
-void printSymbolTableAndParents(FILE* output, SYMBOL_TABLE* symbolInfo);
+void printSymbolTableAndParents(FILE* output, SYMBOL_TABLE* symbolTable);
+
+char* newSymbolName();
+
+SYMBOL_INFO* newAnonVar(TBASIC typeKind);
+SYMBOL_INFO* newAnonVarWithType(TYPE_INFO* typeInfo);
 
 #endif

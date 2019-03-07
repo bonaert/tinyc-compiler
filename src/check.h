@@ -4,22 +4,24 @@
 #include "symbol.h"
 #include "type.h"
 
-void checkAssignment(TYPE_INFO* left, TYPE_INFO* right);
-void checkReturnType(SYMBOL_TABLE* scope, TYPE_INFO* returnType);
+void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right);
+void checkAssignmentInDeclaration(TYPE_INFO* left, SYMBOL_INFO* right);
+void checkReturnType(SYMBOL_TABLE* scope, SYMBOL_INFO* returnType);
 void checkNameNotTaken(SYMBOL_TABLE* symbolTable, char* name);
 
-TYPE_INFO* checkIsNumber(TYPE_INFO* number);
-TYPE_INFO* checkIsArray(TYPE_INFO* array);
-TYPE_INFO* checkIsIntegerOrChar(TYPE_INFO* array);
+TYPE_INFO* checkIsNumber(SYMBOL_INFO* number);
+TYPE_INFO* checkIsArray(SYMBOL_INFO* array);
+TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* array);
 
-TYPE_INFO* checkArrayAccess(TYPE_INFO* array, TYPE_INFO* index);
-TYPE_INFO* checkArithOp(TYPE_INFO* op1, TYPE_INFO* op2);
-TYPE_INFO* checkEqualityOp(TYPE_INFO* left, TYPE_INFO* right);
-TYPE_INFO* checkFunctionCall(SYMBOL_TABLE* scope, char* functionName, TYPE_LIST* arguments);
+TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index);
+TYPE_INFO* checkArithOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2);
+TYPE_INFO* checkEqualityOp(SYMBOL_INFO* left, SYMBOL_INFO* right);
+TYPE_INFO* checkFunctionCall(SYMBOL_TABLE* scope, char* functionName, SYMBOL_LIST* arguments);
 
 
 SYMBOL_INFO* checkSymbol(SYMBOL_TABLE* scope, char* name);
 
+int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actualArguments);
 
 
 #endif

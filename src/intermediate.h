@@ -37,27 +37,27 @@ typedef enum {
 	RETURNOP   // return A - returns the value A (put result on stack and change special registers to saved values)
 } OPCODE;
 
-typedef struct {
+typedef struct instruction {
 	OPCODE opcode;
 	SYMBOL_INFO* args[2];
 	SYMBOL_INFO* result;
 } INSTRUCTION;
 
 
-INSTRUCTION gen3AC(OPCODE opcode, TYPE_INFO* arg1, TYPE_INFO* arg2, TYPE_INFO* result);
+INSTRUCTION gen3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result);
 
-void emit(INSTRUCTION i);
+void emit(SYMBOL_TABLE* symbolTable, INSTRUCTION i);
 
 // returns number of next (free) location in code sequence
 int next3AC();
 
-INSTRUCTION emitAssignement3AC(TYPE_INFO* lhs, TYPE_INFO* value);
-INSTRUCTION emitUnary3AC(OPCODE opcode, TYPE_INFO* arg1, TYPE_INFO* result);
-INSTRUCTION emitBinary3AC(OPCODE opcode, TYPE_INFO* arg1, TYPE_INFO* arg2, TYPE_INFO* result);
-INSTRUCTION emitComparison3AC(OPCODE opcode, TYPE_INFO* arg1, TYPE_INFO* arg2, TYPE_INFO* result);
-INSTRUCTION emitReturn3AC(TYPE_INFO* arg);
+INSTRUCTION emitAssignement3AC(SYMBOL_INFO* lhs, SYMBOL_INFO* value);
+INSTRUCTION emitUnary3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* result);
+INSTRUCTION emitBinary3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result);
+INSTRUCTION emitComparison3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result);
+INSTRUCTION emitReturn3AC(SYMBOL_INFO* arg);
 INSTRUCTION emitEmptyGoto();
-INSTRUCTION emitGoto(TYPE_INFO* arg);
+INSTRUCTION emitGoto(SYMBOL_INFO* arg);
 
 
 

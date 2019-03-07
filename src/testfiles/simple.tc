@@ -30,7 +30,7 @@ int params(int a, int[7] b) {
 	{ char d; int k; return 5 + 2; read k; } 
 
 	// testing complicated arithmetic expression with return
-	return (-5 + !7) * 5 - 5 / 7;
+	return (-1 + !2) * 3 - 4 / 5;
 }
 
 int main() {
@@ -43,7 +43,7 @@ int main() {
 	read b;
 	write c;
 
-    params = 4;
+    //params = 4;
 
 	// declarations can come after statements
 	int k = params(1, d); 

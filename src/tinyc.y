@@ -38,14 +38,8 @@ SYMBOL_TABLE* scope; // Current scope (e.g. symbol table) - initialized in the l
    http://tinf2.vub.ac.be/~dvermeir/courses/compilers/tiny.html*/
 %token NAME    /* String starting with a letter, followed by 0 or more letters, digits or underscores */
 %token NUMBER  /* String of digits */
-
-
-
-/* Tokens explicitly listed in the project page */
-
-
-%token INT
 %token QCHAR   /* Character between singles quotes */ 
+%token INT
 
 /* Keywords */   
 %token IF 
@@ -97,11 +91,12 @@ SYMBOL_TABLE* scope; // Current scope (e.g. symbol table) - initialized in the l
 %union {
 	char* name;
 	int value;
+	char character;
 	
 	TYPE_INFO* type;
-	TYPE_LIST* typeList;
-
+	
 	SYMBOL_INFO* symbol;
+	SYMBOL_LIST* symbolList;
 } 
 
 
@@ -109,10 +104,10 @@ SYMBOL_TABLE* scope; // Current scope (e.g. symbol table) - initialized in the l
 %type <value> NUMBER;
 %type <character> QCHAR;
 
-%type <type> type functionParameter exp lexp;
-%type <typeList> functionParameters non_empty_argument_list arguments;
+%type <type> type;
 
-%type <symbol> var funDeclaration;
+%type <symbol> var functionParameter funDeclaration exp lexp;
+%type <symbolList> functionParameters non_empty_argument_list arguments;
 
 
 
@@ -203,21 +198,21 @@ funDeclaration: type NAME {
 			scope = createScope(scope);
 			scope->function = $<symbol>$;
 		} LPAR functionParameters RPAR {
-			$<symbol>3->type = createFunctionType($1, $5); // Add type information to the function symbol
+			initFunctionSymbol($<symbol>3, scope, $1, $5);
 		} block {
 			// After parsing function, leave the function's scope and go back to original scope
-			scope = scope->parent; 
+			scope = scope->parent;
+			//$<symbol>$ = $3; 
 		};
 
 /* Example: int a, int b ; */
-functionParameters: functionParameters COMMA functionParameter    { $$ = insertTypeInList($3, $1); }  // 2 or more parameters
-		          | functionParameter                             { $$ = insertTypeInList($1, 0); }  // 1 parameter
+functionParameters: functionParameters COMMA functionParameter    { $$ = insertSymbolInSymbolList($1, $3); }  // 2 or more parameters
+		          | functionParameter                             { $$ = insertSymbolInSymbolList(0, $1); }   // 1 parameter
 		          | %empty                                        { $$ = 0; }                         // 0 parameters
 		          ;
 
 functionParameter: type NAME {
-	insertSymbolInSymbolTable(scope, $2, $1);
-	$$ = $1;  // The result is the type (TYPE_INFO*) of the function parameter
+	$$ = insertVariableInSymbolTable(scope, $2, $1);
 };
 
 
@@ -241,14 +236,16 @@ varDeclarations: varDeclarations varDeclaration   // 1+ var declarations
 /* Example: int a; int b = 7; */
 varDeclaration: type NAME SEMICOLON {
 	checkNameNotTaken(scope, $2);
-	insertSymbolInSymbolTable(scope, $2, $1);
+	insertVariableInSymbolTable(scope, $2, $1);
 	fprintf(stderr, "declaring variable %s without initializing it\n", $2); 
 };
 
 varDeclaration: type NAME ASSIGN exp SEMICOLON { 
 	checkNameNotTaken(scope, $2);
-	fprintf(stderr, "variable name %s\n", $2);
-	insertSymbolInSymbolTable(scope, $2, $1);
+	insertVariableInSymbolTable(scope, $2, $1);
+
+	
+	checkAssignmentInDeclaration($1, $4); 
 	// TODO: assignement
 	fprintf(stderr, "declaring variable %s and initializing it\n", $2); 
 };
@@ -347,54 +344,55 @@ statementWithoutBlock:	WRITE exp { // read statement
 
 statementWithoutBlock:	READ lexp { // read statement
 	// TODO: do some type checking here (and think, can exp be anything? shouldn't it be a variable?)
-	checkIsIntegerOrChar($2);
+	checkIsIntegerOrCharVariable($2);
 	gen3AC(READ, $2, 0, 0);
 };
 
 /* LHS expression - What can be on the left side of an assignment statement */
-lexp: var                     { $$ = $1->type; }
-	| lexp LBRACK exp RBRACK  { $$ = checkArrayAccess($1, $3); /* TODO: generate A3C */ } 
+lexp: var                     { $$ = $1; }
+	| lexp LBRACK exp RBRACK  { checkArrayAccess($1, $3); $$ = $1; /* TODO: createNewArrayAccessVar() */;  /* TODO: generate A3C */ } 
 	;
 
 /* Any expression */
 exp: lexp { $$ = $1; /* LHS expression */ };
 
-exp:  exp PLUS exp           { $$ = checkArithOp($1, $3);    emitBinary3AC(A2PLUS, $1, $3, $$); }
-    | exp MINUS exp          { $$ = checkArithOp($1, $3);    emitBinary3AC(A2MINUS, $1, $3, $$); }
-	| exp TIMES exp          { $$ = checkArithOp($1, $3);    emitBinary3AC(A2TIMES, $1, $3, $$); }
-	| exp DIVIDE exp         { $$ = checkArithOp($1, $3);    emitBinary3AC(A2DIVIDE, $1, $3, $$); }
-	| exp EQUAL exp          { $$ = checkEqualityOp($1, $3); emitComparison3AC(IFEQ, $1, $3, $$); }
-	| exp NEQUAL exp         { $$ = checkEqualityOp($1, $3); emitComparison3AC(IFNEQ, $1, $3, $$); }
-	| exp GREATER exp        { $$ = checkArithOp($1, $3);    emitComparison3AC(IFG, $1, $3, $$); }
-	| exp LESS exp           { $$ = checkArithOp($1, $3);    emitComparison3AC(IFS, $1, $3, $$); }
-	| exp AND exp            { $$ = checkArithOp($1, $3);    /* TODO */ }	
+exp:  exp PLUS exp           { checkArithOp($1, $3);    $$ = newAnonVar(int_t); emitBinary3AC(A2PLUS, $1, $3, $$); }
+    | exp MINUS exp          { checkArithOp($1, $3);    $$ = newAnonVar(int_t); emitBinary3AC(A2MINUS, $1, $3, $$); }
+	| exp TIMES exp          { checkArithOp($1, $3);    $$ = newAnonVar(int_t); emitBinary3AC(A2TIMES, $1, $3, $$); }
+	| exp DIVIDE exp         { checkArithOp($1, $3);    $$ = newAnonVar(int_t); emitBinary3AC(A2DIVIDE, $1, $3, $$); }
+	| exp EQUAL exp          { checkEqualityOp($1, $3); $$ = newAnonVar(int_t); emitComparison3AC(IFEQ, $1, $3, $$); }
+	| exp NEQUAL exp         { checkEqualityOp($1, $3); $$ = newAnonVar(int_t); emitComparison3AC(IFNEQ, $1, $3, $$); }
+	| exp GREATER exp        { checkArithOp($1, $3);    $$ = newAnonVar(int_t); emitComparison3AC(IFG, $1, $3, $$); }
+	| exp LESS exp           { checkArithOp($1, $3);    $$ = newAnonVar(int_t); emitComparison3AC(IFS, $1, $3, $$); }
+	| exp AND exp            { checkArithOp($1, $3);    $$ = newAnonVar(int_t);    /* TODO */ }	
 	;
 
-exp: MINUS exp %prec UMINUS { $$ = checkIsNumber($2); emitUnary3AC(A1MINUS, $2, $$); }
-   | NOT  exp               { $$ = checkIsNumber($2); /* TODO */ }
+exp: MINUS exp %prec UMINUS { checkIsNumber($2); $$ = newAnonVar(int_t); emitUnary3AC(A1MINUS, $2, $$); }
+   | NOT  exp               { checkIsNumber($2); $$ = newAnonVar(int_t); /* TODO */ }
    ;
 
 exp: LPAR exp RPAR         { $$ = $2;  /* (a) */ };
 
 exp: NUMBER               {
 	// TODO: remember value
-	$$ = createSimpleType(int_t);
+	$$ = createConstantSymbol(int_t, $1);
 };
 
 exp: NAME LPAR arguments RPAR      {
 	// Function call
 	fprintf(stderr, "calling function %s \n", $1);
-	$$ = checkFunctionCall(scope, $1, $3); 
+	TYPE_INFO* typeInfo = checkFunctionCall(scope, $1, $3); 
+	$$ = newAnonVarWithType(typeInfo);
+	// emit instructions;
 };
 
 exp: QCHAR  { // A single character inside single quotes
- 	// TODO: remember value
-	$$ = createSimpleType(char_t);
+	$$ = createConstantSymbol(char_t, (int) $1);
 };
 
 exp: LENGTH lexp { // LENGTH of an array
 	checkIsArray($2);
-	$$ = createSimpleType(int_t);
+	$$ = newAnonVar(int_t);
 	// TODO: add instruction
 };
 
@@ -404,8 +402,8 @@ arguments: %empty                     { $$ = 0; }  // No arguments
          | non_empty_argument_list    { $$ = $1; } // 1 or more arguments
          ;
 
-non_empty_argument_list: exp                               { $$ = insertTypeInList($1, 0);  }  // 1 argument 
-  				       | non_empty_argument_list COMMA exp { $$ = insertTypeInList($3, $1); }  // previous arguments + COMMA + (nonempty) exp
+non_empty_argument_list: exp                               { $$ = insertSymbolInSymbolList(0, $1);  }  // 1 argument 
+  				       | non_empty_argument_list COMMA exp { $$ = insertSymbolInSymbolList($1, $3); }  // previous arguments + COMMA + (nonempty) exp
   					   ;
 
 var: NAME {
@@ -417,6 +415,7 @@ var: NAME {
 int main(int argc, char* argv[]) {
 	return yyparse(); // yyparse is the function generated by this script
 	yydebug = 1;
+	printSymbolTableAndParents(stderr, scope);
 }
 
 
