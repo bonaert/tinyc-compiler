@@ -9,8 +9,11 @@
 #include "check.h"
 #include "type.h"
 #include "location.h"
+#include "array.h"
 
 #define YYDEBUG 1
+
+#define NIL 0x0FFFFFFF
 
 /* Number of current source line. Used in the lexer (see lex.y), which increments it when it sees a newline character */
 int lineno = 1;
@@ -131,6 +134,11 @@ void handleComparisonInCondition(CHOICE* choice, SYMBOL_INFO* arg1, SYMBOL_INFO*
 	
 	CHOICE choice;
 	LOCATIONS_SET* next;
+
+	LEFT_VALUE leftValue;
+	ARRAY_ACCESS_INFO arrayAccess;
+
+	DIMENSIONS* dimensions;
 } 
 
 
@@ -138,15 +146,23 @@ void handleComparisonInCondition(CHOICE* choice, SYMBOL_INFO* arg1, SYMBOL_INFO*
 %type <value> NUMBER;
 %type <character> QCHAR;
 
-%type <type> type;
+%type <type> type baseType;
 
-%type <symbol> var functionParameter funDeclaration exp lexp;
+%type <symbol> var lhs functionParameter funDeclaration exp;
 %type <symbolList> functionParameters non_empty_argument_list arguments;
+
+%type <leftValue> lvalue;
+
+// Array: access and dimension (reation)
+%type <arrayAccess> elist;
+%type <dimensions> dimensionsList;
+
 
 // Parser-stuff to correctly implement condition, if, if-else and whiles
 %type <location> marker
 %type <choice> cond;
 %type <next> block blockContents blockEntry varDeclaration statement statementWithoutBlock statementWithBlock goend
+
 
 
 
@@ -285,6 +301,9 @@ blockEntry: varDeclaration { $$ = locationsCreateSet(); /* No blocks, so no next
 
 
 
+
+
+
 varDeclaration: type NAME SEMICOLON { // int a;
 	checkNameNotTaken(scope, $2);
 	insertVariableInSymbolTable(scope, $2, $1);
@@ -300,6 +319,8 @@ varDeclaration: type NAME ASSIGN exp SEMICOLON {  // int a = 7;
 	emitAssignement3AC(scope, $4, symbol);
 	//fprintf(stderr, "declaring variable %s and initializing it\n", $2); 
 };
+
+
 
 
 
@@ -431,7 +452,7 @@ goend: %empty {
 
 
 
-statementWithoutBlock: lexp ASSIGN exp {
+statementWithoutBlock: lhs ASSIGN exp {
 	checkAssignment($1, $3); 
 	emitAssignement3AC(scope, $3, $1); 
 };
@@ -449,21 +470,77 @@ statementWithoutBlock:	WRITE exp { // write statement
 	emit(scope, gen3AC(WRITEOP, $2, 0, 0));
 };
 
-statementWithoutBlock:	READ lexp { // read statement
+statementWithoutBlock:	READ lhs { // read statement
 	// TODO: do some type checking here (and think, can exp be anything? shouldn't it be a variable?)
 	checkIsIntegerOrCharVariable($2);
 	emit(scope, gen3AC(READOP, $2, 0, 0));
 };
 
-/* LHS expression - What can be on the left side of an assignment statement */
-lexp: var                     { $$ = $1; }
-	| lexp LBRACK exp RBRACK  { checkArrayAccess($1, $3); $$ = $1; /* TODO: createNewArrayAccessVar() */;  /* TODO: generate A3C */ } 
-	;
 
-/* Any expression */
-exp: lexp { $$ = $1; /* LHS expression */ };
 
-/* TODO: fix the comparisons */
+
+
+
+
+
+/* LHS expression - What can be on the left side of an assignment statement; */
+lvalue: var  { 
+	$$.place = $1;
+	$$.offset = NIL; 
+	$$.typeKind = getBaseType($1->type)->type;
+};
+
+elist: var LBRACK exp {
+	// TODO: checkArrayAccess($1, $3); $$ = $1;
+	$$.place = $3;
+	$$.array = $1;
+	$$.ndim = 1;
+};
+
+elist: elist RBRACK LBRACK exp {
+	int limit = arrayDimSize($1.array, $1.ndim + 1);
+	$$.place = newAnonVar(scope, int_t); // TODO: check if this type is right
+
+	/* offset(next) = offset(prev)*limit(prev) + index(next) */
+	emit(scope, gen3AC(A2TIMES, $1.place, createConstantSymbol(int_t, limit), $$.place));  /* offset(prev)*limit(prev) */
+	emit(scope, gen3AC(A2PLUS, $$.place, $4, $$.place)); /* + index(next) */
+
+	$$.array = $1.array;
+	$$.ndim = $1.ndim + 1;
+};
+
+lvalue: elist RBRACK {
+	$$.place = newAnonVar(scope, int_t);   // TODO: check if this type is right
+	$$.offset = newAnonVar(scope, int_t);  // TODO: check if this type is right
+	$$.typeKind = getBaseType(($1.array)->type)->type;
+
+	/* base = addr a - array_base(a) */
+	// Note: in my case my indexing starts from zero, so a = array_base(a), and I don't need the
+	// instruction with base
+	emit(scope, gen3AC(ADDR, $1.array, 0, $$.place));
+	//emit(scope, gen3AC(A2MINUS, $$.place, arrayBase($1.array), $$.place));
+	
+	/* offset = elist.offset * sizeof(element) */
+	emit(scope, gen3AC(A2TIMES, $1.place, createConstantSymbol(int_t, arrayElementSize($1.array)), $$.offset));
+
+	/* result: $$.place[$$.offset] references the desired element */
+};
+
+
+/* Any expression; */
+lhs: lvalue { 
+	if ($1.offset == NIL) { // Just a variable, not an array access
+		$$ = $1.place; 
+	} else {
+		$$ = newAnonVar(scope, $1.typeKind);
+		emit(scope, gen3AC(AAC, $1.place, $1.offset, $$));
+	}
+};
+
+
+exp: lhs { $$ = $1; };
+
+
 exp:  exp PLUS exp           { checkArithOp($1, $3);    $$ = newAnonVar(scope, int_t); emitBinary3AC(scope, A2PLUS, $1, $3, $$); }
     | exp MINUS exp          { checkArithOp($1, $3);    $$ = newAnonVar(scope, int_t); emitBinary3AC(scope, A2MINUS, $1, $3, $$); }
 	| exp TIMES exp          { checkArithOp($1, $3);    $$ = newAnonVar(scope, int_t); emitBinary3AC(scope, A2TIMES, $1, $3, $$); }
@@ -501,11 +578,16 @@ exp: QCHAR  { // A single character inside single quotes
 	$$ = createConstantSymbol(char_t, (int) $1);
 };
 
-exp: LENGTH lexp { // LENGTH of an array
+exp: LENGTH lhs { // LENGTH of an array
 	checkIsArray($2);
 	$$ = newAnonVar(scope, int_t);
 	emit(scope, gen3AC(LENGTHOP, $2, 0, 0));
 };
+
+
+
+
+
 
 
 /* Arguments (used in function calls) */
@@ -517,15 +599,38 @@ non_empty_argument_list: exp                               { $$ = insertSymbolIn
   				       | non_empty_argument_list COMMA exp { $$ = insertSymbolInSymbolList($1, $3); }  // previous arguments + COMMA + (nonempty) exp
   					   ;
 
+
+
+
+
+
+
+
 var: NAME {
 	$$ = checkSymbol(scope, $1); 
 }
 
 /* int, char or array; */
-type: INT                       { $$ = createSimpleType(int_t); }
-	| CHAR                      { $$ = createSimpleType(char_t); }
-	| type LBRACK exp RBRACK    { $$ = createArrayType($1); /* array (example: int[7]) */ }   
-	;
+
+baseType: INT { $$ = createSimpleType(int_t);  };
+baseType: CHAR { $$ = createSimpleType(char_t); };
+
+type: baseType { $$ = $1; };
+type: baseType dimensionsList  { $$ = createArrayType($1, $2); };
+
+dimensionsList: dimensionsList LBRACK NUMBER RBRACK { 
+	// TODO: figure out how to deal with variable instead of numbers in there
+	// TODO: check type (what should I allow in the brackets?)
+	//checkIsNumber($3); 
+	addDimension($1, $3); 
+	$$ = $1; 
+};
+dimensionsList: %empty { $$ = initDimensions(); };
+
+
+
+
+
 
 %%
 

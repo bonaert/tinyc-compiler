@@ -6,6 +6,7 @@
 #include "symbol.h"
 #include "type.h"
 #include "location.h"
+#include "array.h"
 #include "tinyc.tab.h"
 
 extern int lineno;        /* defined in the parser file (tinyc.y) */

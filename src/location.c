@@ -37,9 +37,9 @@ void growLocationsIfNeeded(LOCATIONS_SET* locations) {
         locations->locations = malloc(sizeof(int) * INCREMENT_SIZE);
         locations->capacity = INCREMENT_SIZE;
     } else if (locations->size == capacity) {  // Reached max
-        locations->locations = realloc(locations->locations, capacity + INCREMENT_SIZE * sizeof(int)); /* like malloc() if buf==0 */
+        locations->locations = realloc(locations->locations, (capacity + INCREMENT_SIZE) * sizeof(int)); /* like malloc() if buf==0 */
         if (!locations->locations) {
-            fprintf(stderr, "Cannot expand name space (%d bytes)", capacity + INCREMENT_SIZE * sizeof(int));
+            fprintf(stderr, "Cannot expand name space (%d bytes)", (int) ((capacity + INCREMENT_SIZE) * sizeof(int)));
             exit(1);
         }
         locations->capacity = capacity + INCREMENT_SIZE;

@@ -209,7 +209,7 @@ SYMBOL_INFO* findSymbolInSymbolTableAndParents(SYMBOL_TABLE* symbolTable, char* 
  * Print a symbol type information and name
  */
 void printSymbol(FILE* output, SYMBOL_INFO* symbolInfo) {
-    if (symbolInfo == 0 ){
+    if (symbolInfo == 0){
         fprintf(stdout, "symbol info pointer is 0");
         exit(1);
     }

@@ -11,6 +11,11 @@ int main() {
     }
     i = 7;
     int c = foo(5, 7);
+
+
+    char[5][7][8] array;
+	array[0][1][2] = 'b';
+
     return c;
 }
 

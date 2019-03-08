@@ -43,6 +43,9 @@ int main() {
 	read b;
 	write c;
 
+	char[5][7][8] array;
+	array[0][1][2] = 'b';
+
     //params = 4;
 
 	// declarations can come after statements

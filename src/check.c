@@ -41,15 +41,17 @@ void checkNameNotTaken(SYMBOL_TABLE* symbolTable, char* name) {
     }
 }
 
+
+
 void checkAssignmentInDeclaration(TYPE_INFO* left, SYMBOL_INFO* right) {
-    if (left != right->type) {
-        error2("cannot assign ", left, " to ", right->type);
+    if (getBaseType(left) != right->type) {
+        error2("cannot assign ", right->type, " to ", getBaseType(left));
     }
 }
 
 void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right) {
-    if (left->type != right->type) {
-        error2("cannot assign ", left->type, " to ", right->type);
+    if (getBaseType(left->type) != right->type) {
+        error2("cannot assign ", right->type, " to ", getBaseType(left->type));
     }
 }
 

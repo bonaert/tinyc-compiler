@@ -3,6 +3,7 @@
 
 #include <stdio.h> /* for FILE */
 
+
 /*
  * We defined here the basic type data structures:
  * 
@@ -15,6 +16,8 @@
  *            and additional info for complex types (function and arrays).
  * TYPE_LIST: a list of types (used in TFUNCTION) - implemented as a linked list
  */
+
+typedef struct dimensions DIMENSIONS;
 
 typedef enum {
     int_t,
@@ -31,6 +34,7 @@ typedef struct {
 
 typedef struct {
     struct type_info* base;
+    DIMENSIONS* dimensions;
 } TARRAY;
 
 typedef struct type_info {
@@ -50,7 +54,7 @@ typedef struct type_list {
 
 TYPE_INFO* createSimpleType(TBASIC typeKind);
 TYPE_INFO* createFunctionType(TYPE_INFO* returnType, TYPE_LIST* argumentTypes);
-TYPE_INFO* createArrayType(TYPE_INFO* baseType);
+TYPE_INFO* createArrayType(TYPE_INFO* baseType, DIMENSIONS* dimensions);
 
 TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList);
 
@@ -60,7 +64,7 @@ int areTypeListsEqual(TYPE_LIST* typeList1, TYPE_LIST* argumentTypes);
 void printType(FILE * output, TYPE_INFO* type);
 void printTypeList(FILE * output, TYPE_LIST* type, char separator);
 
-
+TYPE_INFO* getBaseType(TYPE_INFO* typeInfo);
 
 
 

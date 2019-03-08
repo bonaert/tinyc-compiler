@@ -1,9 +1,14 @@
 #include "type.h"
+#include "array.h"
 #include <assert.h> /* for assert(condition) */
 #include <stdio.h>  /* for fprintf() and friends */
 #include <stdlib.h> /* for malloc() and friends */
 
 static TYPE_LIST* currentTypeList = 0;
+
+TYPE_INFO* getBaseType(TYPE_INFO* typeInfo){
+    return (typeInfo->type == array_t) ? typeInfo->info.array.base : typeInfo;
+}
 
 int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
     if (t1 == t2) {
@@ -17,7 +22,8 @@ int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
         case char_t:
             return 1;  // In the case of INT and CHAR, if the kinds are equal then the types are equal
         case array_t:
-            return areTypesEqual(t1->info.array.base, t2->info.array.base);  // the types of the contents of the arrays must be equal
+            return areTypesEqual(t1->info.array.base, t2->info.array.base) &&
+                   areDimensionsEqual(t1->info.array.dimensions, t2->info.array.dimensions);  // the types of the contents of the arrays must be equal
         case function_t:
             return areTypesEqual(t1->info.function.target, t2->info.function.target) &&          // same types for return values
                    areTypeListsEqual(t1->info.function.arguments, t2->info.function.arguments);  // same types for arguments
@@ -126,15 +132,18 @@ TYPE_INFO* createFunctionType(TYPE_INFO* returnType, TYPE_LIST* argumentTypes) {
  * the previously created TYPE_INFO (this is to save memory, since we avoid having several
  * times the same TYPE_INFO in memory).
  */
-TYPE_INFO* createArrayType(TYPE_INFO* baseType) {
+TYPE_INFO* createArrayType(TYPE_INFO* baseType, DIMENSIONS* dimensions) {
     TYPE_INFO type;
     type.type = array_t;
     type.info.array.base = baseType;
+    type.info.array.dimensions = dimensions;
 
     TYPE_INFO* typePt;
     if (!(typePt = findType(&type))) {
         typePt = createType(array_t);
         typePt->info.array.base = baseType;
+        typePt->info.array.dimensions = dimensions;
+        
         return typePt;
     } else {
         return typePt;
