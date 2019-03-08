@@ -2,6 +2,7 @@
 #define INTERMEDIATEGUARD
 
 #include "symbol.h"
+#include "location.h"
 
 typedef enum {
 	A2PLUS,  // a + b
@@ -13,7 +14,7 @@ typedef enum {
 	A1FTOI,  // float to integer
 	A1ITOF,  // integer to float
 
-	A0,      // a = b (simple assignement
+	A0,      // a = b (simple assignement)
 
 	GOTO,    // goto
 
@@ -34,8 +35,20 @@ typedef enum {
 	DEREF,   // A = *B   - get the value pointed by B (dereferencing)
 	DEREFA,  // *A = B   - save a value B in the address pointed by A
 
+	WRITEOP,  // Write A   - writes the value of A
+	READOP,   // Read to A - read a value to A
+
 	RETURNOP   // return A - returns the value A (put result on stack and change special registers to saved values)
 } OPCODE;
+
+static char * opcodeNames[] = {"PLUS", "MINUS", "TIMES", "DIVIDE", "MINUS_SELF", "FLOAT_TO_INTEGER", 
+					   "INTEGER_TO_FLOAT", "ASSIGN", "GOTO", 
+					   "IF_EQUAL", "IF_NOT_EQUAL", "IF_GREATER_OR_EQUAL", 
+					   "IF_SMALLER_OR_EQUAL", "IF_GREATER", "IF_SMALLER", 
+					   "PARAM", "CALL", "ARRAY ACCESS", "ARRAY MODIFICATION",
+					   "GET_ADDRESS", "GET_AT_ADDRESS", "SAVE_AT_ADDRESS",
+					   "WRITE", "READ", "RETURN"
+};
 
 typedef struct instruction {
 	OPCODE opcode;
@@ -48,17 +61,20 @@ INSTRUCTION gen3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_I
 
 void emit(SYMBOL_TABLE* symbolTable, INSTRUCTION i);
 
+void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int location);
+
 // returns number of next (free) location in code sequence
-int next3AC();
+int next3AC(SYMBOL_TABLE* symbolTable);
 
-INSTRUCTION emitAssignement3AC(SYMBOL_INFO* lhs, SYMBOL_INFO* value);
-INSTRUCTION emitUnary3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* result);
-INSTRUCTION emitBinary3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result);
-INSTRUCTION emitComparison3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result);
-INSTRUCTION emitReturn3AC(SYMBOL_INFO* arg);
-INSTRUCTION emitEmptyGoto();
-INSTRUCTION emitGoto(SYMBOL_INFO* arg);
+void emitAssignement3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* lhs, SYMBOL_INFO* value);
+void emitUnary3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* result);
+void emitBinary3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result);
+void emitComparison3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result);
+void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg);
+void emitEmptyGoto(SYMBOL_TABLE* scope);
+void emitGoto(SYMBOL_TABLE* scope, SYMBOL_INFO* arg);
 
 
+void print3AC(INSTRUCTION instruction);
 
 #endif

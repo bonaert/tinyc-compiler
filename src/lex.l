@@ -5,6 +5,7 @@
 
 #include "symbol.h"
 #include "type.h"
+#include "location.h"
 #include "tinyc.tab.h"
 
 extern int lineno;        /* defined in the parser file (tinyc.y) */
@@ -82,6 +83,7 @@ alphanumUnderscore [A-Za-z0-9_]
 "<" return LESS;
 
 "&&" return AND;
+"||" return OR;
 
 {alpha}{alphanumUnderscore}*   {
 	yylval.name	= strdup(yytext);

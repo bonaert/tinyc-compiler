@@ -33,6 +33,8 @@ typedef struct {
 /* Function-specific information */
 typedef struct {
 	INSTRUCTION* instructions;
+	int numInstructions;
+	int capacity;
 	struct symbolTable* scope;
 } FUNCTION_INFO;
 
@@ -74,6 +76,7 @@ SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symb
 
 SYMBOL_INFO* insertSymbolInSymbolTable(SYMBOL_TABLE* symbolTable, char*name, TYPE_INFO* symbolInfo);
 SYMBOL_INFO* insertVariableInSymbolTable(SYMBOL_TABLE* symbolTable, char* name, TYPE_INFO* typeInfo);
+SYMBOL_INFO* insertCompleteSymbolInSymbolTable(SYMBOL_TABLE* symbolTable, SYMBOL_INFO* symbolInfo);
 
 
 SYMBOL_TABLE* createScope(SYMBOL_TABLE* parentTable);
@@ -87,8 +90,9 @@ void printSymbolList(FILE* output, SYMBOL_LIST* symbolList, char separator);
 void printSymbolTableAndParents(FILE* output, SYMBOL_TABLE* symbolTable);
 
 char* newSymbolName();
+char* newConstantSymbolName();
 
-SYMBOL_INFO* newAnonVar(TBASIC typeKind);
-SYMBOL_INFO* newAnonVarWithType(TYPE_INFO* typeInfo);
+SYMBOL_INFO* newAnonVar(SYMBOL_TABLE* scope, TBASIC typeKind);
+SYMBOL_INFO* newAnonVarWithType(SYMBOL_TABLE* scope, TYPE_INFO* typeInfo);
 
 #endif

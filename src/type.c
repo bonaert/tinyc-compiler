@@ -1,10 +1,9 @@
-#include <stdio.h> /* for fprintf() and friends */
-#include <assert.h> /* for assert(condition) */
-#include <stdlib.h> /* for malloc() and friends */
 #include "type.h"
+#include <assert.h> /* for assert(condition) */
+#include <stdio.h>  /* for fprintf() and friends */
+#include <stdlib.h> /* for malloc() and friends */
 
 static TYPE_LIST* currentTypeList;
-
 
 int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
     if (t1 == t2) {
@@ -13,18 +12,17 @@ int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
         return 0;  // If the type's kind are different (ex: INT and ARRAY), the types are different
     }
 
-    switch (t1->type)
-    {
+    switch (t1->type) {
         case int_t:
         case char_t:
             return 1;  // In the case of INT and CHAR, if the kinds are equal then the types are equal
         case array_t:
             return areTypesEqual(t1->info.array.base, t2->info.array.base);  // the types of the contents of the arrays must be equal
         case function_t:
-            return areTypesEqual(t1->info.function.target, t2->info.function.target) &&           // same types for return values
-                   areTypeListsEqual(t1->info.function.arguments, t2->info.function.arguments);   // same types for arguments
+            return areTypesEqual(t1->info.function.target, t2->info.function.target) &&          // same types for return values
+                   areTypeListsEqual(t1->info.function.arguments, t2->info.function.arguments);  // same types for arguments
         default:
-            assert(0); // Should never happend, must lead to a crash.
+            assert(0);  // Should never happend, must lead to a crash.
     }
 }
 
@@ -52,7 +50,7 @@ TYPE_INFO* findType(TYPE_INFO* type) {
 TYPE_INFO* createType(TBASIC typeKind) {
     TYPE_INFO* type = malloc(sizeof(TYPE_INFO));
     type->type = typeKind;
-    
+
     TYPE_LIST* typeCell = malloc(sizeof(TYPE_LIST));
     typeCell->type = type;
     typeCell->next = currentTypeList;
@@ -71,7 +69,7 @@ TYPE_INFO* createType(TBASIC typeKind) {
 TYPE_INFO* createSimpleType(TBASIC typeKind) {
     TYPE_INFO type;
     type.type = typeKind;
-    
+
     TYPE_INFO* foundType;
     if ((foundType = findType(&type))) {
         return foundType;
@@ -95,7 +93,7 @@ TYPE_INFO* createFunctionType(TYPE_INFO* returnType, TYPE_LIST* argumentTypes) {
     type.info.function.arguments = argumentTypes;
 
     TYPE_INFO* typePt;
-    if (!(typePt = findType(&type))) {    
+    if (!(typePt = findType(&type))) {
         typePt = createType(function_t);
         typePt->info.function.target = returnType;
         typePt->info.function.arguments = argumentTypes;
@@ -141,7 +139,7 @@ int areTypeListsEqual(TYPE_LIST* typeList1, TYPE_LIST* typeList2) {
     if (typeList1 == typeList2) {
         return 1;  // if both pointers point to the same type list, then the type lists are equal
     }
-    
+
     // loop over both lists and compare types
     while (typeList1 && typeList2) {
         if (!areTypesEqual(typeList1->type, typeList2->type)) {

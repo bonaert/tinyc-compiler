@@ -1,5 +1,11 @@
 
 
 int main() {
+    int i;
+    i = 5;
+    if (i == 5) {
+        write i;
+    }
+    i = 7;
 }
 

@@ -1,0 +1,16 @@
+int main() {
+    int a;
+    int b;
+    int c;
+    int d;
+    int x; 
+    int y;
+    int z;
+
+    while (a < b) {
+        if (c < d) {
+            x = y + z;
+        }
+    }
+    //write z;
+}

@@ -132,6 +132,8 @@ TYPE_INFO* checkFunctionCall(SYMBOL_TABLE* scope, char* functionName, SYMBOL_LIS
 
 SYMBOL_INFO* checkSymbol(SYMBOL_TABLE* scope, char* name){
     SYMBOL_INFO* symbol = findSymbolInSymbolTableAndParents(scope, name);
+    fprintf(stderr, "%s   ", name);
+    printSymbolTableAndParents(stderr, scope);
 
     if (!symbol) {
         error("undeclared variable '", name, 0, "'", 0, 0);
