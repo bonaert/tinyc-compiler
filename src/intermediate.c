@@ -64,8 +64,6 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 		switch (instructions[location].opcode)
 		{
 			case GOTO:
-				// TODO: how should I backpatch? this expects a symbol but I only have an integer (location)
-				// instructions[i].args
 				// GOTO location 0 0
 				instructions[location].args[0] = realLocation;
 				break;
@@ -77,7 +75,6 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 			case IFGE:
 			case IFSE:
 				// EX: IFEQ a.location b.location location
-				// TODO: how should I backpatch? this expects a symbol but I only have an integer (location)
 				instructions[location].result = realLocation;
 				break;
 		

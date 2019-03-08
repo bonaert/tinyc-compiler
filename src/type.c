@@ -3,7 +3,7 @@
 #include <stdio.h>  /* for fprintf() and friends */
 #include <stdlib.h> /* for malloc() and friends */
 
-static TYPE_LIST* currentTypeList;
+static TYPE_LIST* currentTypeList = 0;
 
 int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
     if (t1 == t2) {
@@ -42,6 +42,12 @@ TYPE_INFO* findType(TYPE_INFO* type) {
     return 0;
 }
 
+TYPE_LIST* getLastTypeCell(TYPE_LIST* typeList) {
+    if (typeList == 0) { return 0; }
+    for(; typeList->next; typeList = typeList->next) {}
+    return typeList;
+}
+
 /**
  * Utility function that heap-allocates a TYPE_INFO object with the given typeKind
  * and adds it to the list of existing types. 
@@ -51,12 +57,22 @@ TYPE_INFO* createType(TBASIC typeKind) {
     TYPE_INFO* type = malloc(sizeof(TYPE_INFO));
     type->type = typeKind;
 
-    TYPE_LIST* typeCell = malloc(sizeof(TYPE_LIST));
-    typeCell->type = type;
-    typeCell->next = currentTypeList;
-
-    currentTypeList = typeCell;
+    TYPE_LIST* typeList = insertTypeInList(type, currentTypeList);
+    if (currentTypeList == 0) { currentTypeList = typeList; }
     return type;
+}
+
+
+TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList) {
+    TYPE_LIST* typeCell = malloc(sizeof(TYPE_LIST));
+    typeCell->type = newType;
+    typeCell->next = 0;
+
+    TYPE_LIST* lastTypeCell = getLastTypeCell(typeList);
+    typeCell->prev = lastTypeCell;
+    if (lastTypeCell != 0) { lastTypeCell->next = typeCell; }
+
+    return typeList ? typeList : typeCell;
 }
 
 /**
@@ -125,12 +141,7 @@ TYPE_INFO* createArrayType(TYPE_INFO* baseType) {
     }
 }
 
-TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList) {
-    TYPE_LIST* typeCell = malloc(sizeof(TYPE_LIST));
-    typeCell->next = typeList;
-    typeCell->type = newType;
-    return typeCell;
-}
+
 
 /**
  * Returns 1 if the two type lists are equal, otherwise returns 0. 

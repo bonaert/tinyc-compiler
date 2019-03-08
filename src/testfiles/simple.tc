@@ -30,7 +30,7 @@ int params(int a, int[7] b) {
 	{ char d; int k; return 5 + 2; read k; } 
 
 	// testing complicated arithmetic expression with return
-	return (-1 + !2) * 3 - 4 / 5;
+	return (-1 + 2) * 3 - 4 / 5;
 }
 
 int main() {

@@ -106,6 +106,11 @@ int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actual
         argumentTypes = argumentTypes->next;
         i++;
     }
+    if (argumentTypes) {
+        fprintf(stderr, "Gave too few arguments - ");
+    } else if (actualArguments) {
+        fprintf(stderr, "Gave too many arguments - ");
+    }
 
     return (actualArguments == 0) && (argumentTypes == 0);
 }

@@ -1,4 +1,7 @@
 
+int foo(int a, int b) {
+    return 5;
+}
 
 int main() {
     int i;
@@ -7,5 +10,7 @@ int main() {
         write i;
     }
     i = 7;
+    int c = foo(5, 7);
+    return c;
 }
 

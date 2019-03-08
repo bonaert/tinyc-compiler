@@ -9,19 +9,11 @@
 
 
 TYPE_LIST* makeTypeList(SYMBOL_LIST* symbolList) {
-    // TODO: fix this horrendous hack, I just need to fix the implementation of my lists
-    // Here I want to make a list in the same order, but since list creation reverse the order
-    // I need to do it twice, which is really ugly
-    // Additionally, there's a memory leak here
-    TYPE_LIST* firstTypeList = 0;
+    TYPE_LIST* typeList = 0;
     for(; symbolList; symbolList = symbolList->next) {
-        firstTypeList = insertTypeInList(symbolList->info->type, firstTypeList);
+        typeList = insertTypeInList(symbolList->info->type, typeList);
     }
-    TYPE_LIST* realTypeList = 0;
-    for(; firstTypeList; firstTypeList = firstTypeList->next) {
-        realTypeList = insertTypeInList(firstTypeList->type, realTypeList);
-    }
-    return realTypeList;
+    return typeList;
 }
 
 SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo) {
@@ -64,6 +56,11 @@ void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO*
 }
 
 
+SYMBOL_LIST* getLastSymbolCell(SYMBOL_LIST* symbolList) {
+    if (symbolList == 0) { return 0; }
+    for(; symbolList->next; symbolList = symbolList->next) {}
+    return symbolList;
+}
 
 /**
  * Inserts the symbol into the symbol list.
@@ -71,11 +68,13 @@ void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO*
  */ 
 SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symbolInfo) {
     SYMBOL_LIST* s = malloc(sizeof(SYMBOL_LIST));
+    SYMBOL_LIST* lastCell = getLastSymbolCell(symbolList);
+
     s->info = symbolInfo;
-    s->next = symbolList;
-    s->previous = 0;
-    if (symbolList) { symbolList->previous = s; }
-    return s;
+    s->next = 0;
+    s->previous = lastCell;
+    if (lastCell) { lastCell->next = s; }
+    return symbolList ? symbolList : s;
 }
 
 /**

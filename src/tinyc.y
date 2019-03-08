@@ -251,7 +251,7 @@ funDeclaration: type NAME {
 /* Example: int a, int b ; */
 functionParameters: functionParameters COMMA functionParameter    { $$ = insertSymbolInSymbolList($1, $3); }  // 2 or more parameters
 		          | functionParameter                             { $$ = insertSymbolInSymbolList(0, $1); }   // 1 parameter
-		          | %empty                                        { $$ = 0; }                         // 0 parameters
+		          | %empty                                        { $$ = 0; }                                  // 0 parameters
 		          ;
 
 functionParameter: type NAME {
@@ -486,10 +486,7 @@ exp: NAME LPAR arguments RPAR      {
 	TYPE_INFO* typeInfo = checkFunctionCall(scope, $1, $3); 
 	$$ = newAnonVarWithType(scope, typeInfo);
 	
-	// TODO: this is in reverse because list insertion is broken, make this right
 	SYMBOL_LIST* arguments = $3;
-	for(; arguments->previous; arguments = arguments->previous) {} // Go to the beginning
-	
 	for(; arguments; arguments = arguments->next) {	
 		emit(scope, gen3AC(PARAM, arguments->info, 0, 0));
 	}

@@ -44,6 +44,7 @@ typedef struct type_info {
 typedef struct type_list {
     TYPE_INFO *type;
     struct type_list *next;
+    struct type_list *prev;
 } TYPE_LIST;
 
 
