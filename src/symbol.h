@@ -53,6 +53,7 @@ typedef struct {
 typedef struct symbolCell {
 	SYMBOL_INFO* info;
 	struct symbolCell* next;
+	struct symbolCell* previous;
 } SYMBOL_LIST;
 
 /* Symbol table for a given score, with a link to the parent scope (if there is one) */

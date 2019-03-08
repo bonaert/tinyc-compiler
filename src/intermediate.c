@@ -1,6 +1,7 @@
 #include <stdlib.h> /* for exit() */
 #include "intermediate.h"
 
+#define DEBUG (0)
 
 INSTRUCTION gen3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result) {
 	if (opcode > RETURNOP) {
@@ -15,16 +16,16 @@ INSTRUCTION gen3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_I
 	return instruction;
 }
 
-static int INCREMENT_SIZE = 10 * sizeof(INSTRUCTION);
+static int INCREMENT_SIZE = 10;
 void growInstructionsArrayIfNeeded(SYMBOL_TABLE* scope) {
 	int capacity = scope->function->details.function.capacity;
 	int numInstructions = scope->function->details.function.numInstructions;
 	
 	if (capacity == numInstructions) {
 		INSTRUCTION * instructions = scope->function->details.function.instructions;
-		instructions = realloc(instructions, capacity + INCREMENT_SIZE); /* like malloc() if buf==0 */
+		instructions = realloc(instructions, (capacity + INCREMENT_SIZE) * sizeof(INSTRUCTION)); /* like malloc() if buf==0 */
         if (!instructions) {
-            fprintf(stderr, "Cannot expand name space (%d bytes)", capacity + INCREMENT_SIZE);
+            fprintf(stderr, "Cannot expand name space (%d instruction)", capacity + INCREMENT_SIZE);
             exit(1);
         }
 
@@ -47,19 +48,19 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 		return;
 	}
 
-	fprintf(stderr, "\n\n ------- Backpatching ---------\n");
-	fprintf(stderr, "New Location: %d\n", realLocation);
-	fprintf(stderr, "Num Locations to backpatch: %d\n", locations->size);
-	printLocations(locations);
-	fprintf(stderr, "Num Instructions: %d\n", scope->function->details.function.numInstructions);
+	if DEBUG fprintf(stderr, "\n\n ------- Backpatching ---------\n");
+	if DEBUG fprintf(stderr, "New Location: %d\n", realLocation);
+	if DEBUG fprintf(stderr, "Num Locations to backpatch: %d\n", locations->size);
+	if DEBUG printLocations(locations);
+	if DEBUG fprintf(stderr, "Num Instructions: %d\n", scope->function->details.function.numInstructions);
 
-	fprintf(stderr, "\n ------- Before backpatching ---------\n");
-	printAllInstruction(scope);
+	if DEBUG fprintf(stderr, "\n ------- Before backpatching ---------\n");
+	if DEBUG printAllInstructions(scope);
 	INSTRUCTION* instructions = scope->function->details.function.instructions;
 
 	for(int i = 0; i < locations->size; i++) {
 		int location = locations->locations[i];
-		fprintf(stderr, "backpatching location %d\n", location);
+		if DEBUG fprintf(stderr, "backpatching location %d\n", location);
 		switch (instructions[location].opcode)
 		{
 			case GOTO:
@@ -86,8 +87,8 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 				break;
 		}
 	}
-	fprintf(stderr, "\n ------- After backpatching ---------\n");
-	printAllInstruction(scope);
+	if DEBUG fprintf(stderr, "\n ------- After backpatching ---------\n");
+	if DEBUG printAllInstructions(scope);
 }
 
 // returns number of next (free) location in code sequence
@@ -96,7 +97,6 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 // prof did one per function, so maybe it's alright right now
 int next3AC(SYMBOL_TABLE* symbolTable) {
 	int res = symbolTable->function->details.function.numInstructions;
-	fprintf(stderr, "next 3AC %d", res);
 	return res;
 }
 
@@ -120,7 +120,7 @@ void emitEmptyGoto(SYMBOL_TABLE* scope) {
 	emit(scope, gen3AC(GOTO, 0, 0, 0));
 }
 
-void emitGoto(SYMBOL_TABLE* scope, SYMBOL_INFO* arg) {
+void emitGoto(SYMBOL_TABLE* scope, int arg) {
 	emit(scope, gen3AC(GOTO, arg, 0, 0));
 }
 
@@ -133,7 +133,7 @@ void print3AC(INSTRUCTION instruction) {
 	switch (instruction.opcode)
 	{
 		case GOTO:
-			fprintf(stdout, "GOTO %d\n", instruction.args[0]);
+			fprintf(stdout, "GOTO %d\n", (int) instruction.args[0]);
 			break;
 		case IFEQ:
 		case IFNEQ:
@@ -145,7 +145,7 @@ void print3AC(INSTRUCTION instruction) {
 			if (instruction.args[0]) printSymbol(stdout, instruction.args[0]);
 			fprintf(stdout, " ");
 			if (instruction.args[1]) printSymbol(stdout, instruction.args[1]);
-			fprintf(stdout, " %d\n", instruction.result);
+			fprintf(stdout, " %d\n", (int) instruction.result);
 			break;
 		default:
 			fprintf(stdout, "%s ", opcodeNames[instruction.opcode]);
@@ -159,9 +159,10 @@ void print3AC(INSTRUCTION instruction) {
 	}	
 }
 
-void printAllInstruction(SYMBOL_TABLE* scope) {
+void printAllInstructions(SYMBOL_TABLE* scope) {
 	INSTRUCTION * instructions = scope->function->details.function.instructions;
-	for(int i = 0; i < scope->function->details.function.numInstructions; i++) {
+	int numInstructions = scope->function->details.function.numInstructions;
+	for(int i = 0; i < numInstructions; i++) {
 		fprintf(stdout, "%d:  ", i);
 		print3AC(instructions[i]);
 	}

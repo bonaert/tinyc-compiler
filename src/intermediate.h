@@ -35,8 +35,9 @@ typedef enum {
 	DEREF,   // A = *B   - get the value pointed by B (dereferencing)
 	DEREFA,  // *A = B   - save a value B in the address pointed by A
 
-	WRITEOP,  // Write A   - writes the value of A
-	READOP,   // Read to A - read a value to A
+	WRITEOP,  // Write A     - writes the value of A
+	READOP,   // Read to A   - read a value to A
+	LENGTHOP, // Length of A - get the length of A
 
 	RETURNOP   // return A - returns the value A (put result on stack and change special registers to saved values)
 } OPCODE;
@@ -47,7 +48,7 @@ static char * opcodeNames[] = {"PLUS", "MINUS", "TIMES", "DIVIDE", "MINUS_SELF",
 					   "IF_SMALLER_OR_EQUAL", "IF_GREATER", "IF_SMALLER", 
 					   "PARAM", "CALL", "ARRAY ACCESS", "ARRAY MODIFICATION",
 					   "GET_ADDRESS", "GET_AT_ADDRESS", "SAVE_AT_ADDRESS",
-					   "WRITE", "READ", "RETURN"
+					   "WRITE", "READ", "LENGTH", "RETURN"
 };
 
 typedef struct instruction {
@@ -72,9 +73,10 @@ void emitBinary3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL
 void emitComparison3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result);
 void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg);
 void emitEmptyGoto(SYMBOL_TABLE* scope);
-void emitGoto(SYMBOL_TABLE* scope, SYMBOL_INFO* arg);
+void emitGoto(SYMBOL_TABLE* scope, int arg);
 
 
 void print3AC(INSTRUCTION instruction);
+void printAllInstructions(SYMBOL_TABLE* scope);
 
 #endif

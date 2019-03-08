@@ -31,7 +31,15 @@ void yyerror(char* s) {
 SYMBOL_TABLE* scope; // Current scope (e.g. symbol table) - initialized in the lexer (lex.l)
 
 
+void handleComparisonInCondition(CHOICE* choice, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, OPCODE opcode) {
+	checkArithOp(arg1, arg2); // TODO: transform into checkComparisonOP
+	
+	choice->toTrue = locationsAdd(locationsCreateSet(), next3AC(scope));
+	emit(scope, gen3AC(opcode, arg1, arg2, 0)); // true, backpatch later. TODO: fix backpatch (it may be need to insert at some other place than the first condition)
 
+	choice->toFalse = locationsAdd(locationsCreateSet(), next3AC(scope));
+	emit(scope, gen3AC(GOTO, 0, 0, 0)); // false, backpatch later
+}
 
 /**
  * Note: currently we only use IFNEQ for conditions, and don't use instruction such as IFLT
@@ -96,6 +104,8 @@ SYMBOL_TABLE* scope; // Current scope (e.g. symbol table) - initialized in the l
 %token NOT      /* ! */
 %token GREATER  /* > */
 %token LESS     /* < */
+%token GREATEREQUAL     /* >= */
+%token LESSEQUAL     /* <= */
 
 
 /*
@@ -225,15 +235,17 @@ funDeclaration: type NAME {
 			// Create a new child scope for the function and 
 			// associate it with the symbol of the new function
 			scope = createScope(scope);
-			scope->function = $<symbol>$;
+			scope->function = $<symbol>$;	
 		} LPAR functionParameters RPAR {
 			initFunctionSymbol($<symbol>3, scope, $1, $5);
-			fprintf(stderr, "SYMBOL TABLE\n");
-			printSymbolTableAndParents(stderr, scope);
+			//fprintf(stderr, "SYMBOL TABLE\n");
+			//printSymbolTableAndParents(stderr, scope);
 		} block {
 			// After parsing function, leave the function's scope and go back to original scope
+			//printSymbolTableAndParents(stderr, scope);
+			fprintf(stderr, "\n%s - instructions:\n", $2);
+			printAllInstructions(scope);
 			scope = scope->parent;
-			//$<symbol>$ = $3; 
 		};
 
 /* Example: int a, int b ; */
@@ -257,8 +269,6 @@ block: LBRACE blockContents RBRACE {
 };
 
 blockContents: blockContents blockEntry marker { 
-	fprintf(stderr, "backpatching after blockEntry!");
-	printLocations($1);
 	backpatch(scope, $2, $3);  // $$ = $1 = next, $2 = location
 	$$ = $2;            // The statements that need to be backpatched with the location after the current block are the ones in the last block entry
 };
@@ -278,17 +288,17 @@ blockEntry: varDeclaration { $$ = locationsCreateSet(); /* No blocks, so no next
 varDeclaration: type NAME SEMICOLON { // int a;
 	checkNameNotTaken(scope, $2);
 	insertVariableInSymbolTable(scope, $2, $1);
-	fprintf(stderr, "declaring variable %s without initializing it\n", $2); 
+	//fprintf(stderr, "declaring variable %s without initializing it\n", $2); 
 };
 
 varDeclaration: type NAME ASSIGN exp SEMICOLON {  // int a = 7;
 	checkNameNotTaken(scope, $2);
-	insertVariableInSymbolTable(scope, $2, $1);
+	SYMBOL_INFO* symbol = insertVariableInSymbolTable(scope, $2, $1);
 
 	
 	checkAssignmentInDeclaration($1, $4); 
-	// TODO: assignement
-	fprintf(stderr, "declaring variable %s and initializing it\n", $2); 
+	emitAssignement3AC(scope, $4, symbol);
+	//fprintf(stderr, "declaring variable %s and initializing it\n", $2); 
 };
 
 
@@ -315,27 +325,27 @@ statement: statementWithBlock  {   // a statement with a block can not be follow
 
 
 statementWithBlock: IF LPAR cond RPAR marker block   %prec LOW  {  // if statements
-	fprintf(stderr, "if\n"); 
+	//fprintf(stderr, "if\n"); 
 	backpatch(scope, $3.toTrue, $5);  // backpatch instruction that need to go to the if-block ($5 = location)
 	$$ = locationsUnion($6, $3.toFalse);  // in a if, the instruction that need to be backpatched to link to after the block are the ones insides of the block and the false exit ($$ = $6 = next)
 };
 
 statementWithBlock: IF LPAR cond RPAR marker block goend ELSE marker block  { // if-else statement 
-	fprintf(stderr, "if-else\n"); 
+	//fprintf(stderr, "if-else\n"); 
 	backpatch(scope, $3.toTrue, $5);  // where to go if exp = true,  $5 = location
 	backpatch(scope, $3.toFalse, $9); // where to go if exp = false, $9 = location
 	$$ = locationsUnion(locationsUnion($6, $7), $10);  // places where we might go to instruction after the if-else ($6 = $7 = $10 = $$ = next)
-	fprintf(stderr, "isinset: %d", isInSet($$, 4));
+	//fprintf(stderr, "isinset: %d", isInSet($$, 4));
 };
 
 statementWithBlock: WHILE LPAR marker cond RPAR marker block { // while loop 
-	fprintf(stderr, "while\n"); 
+	//fprintf(stderr, "while\n"); 
 	backpatch(scope, $4.toTrue, $6);   // if condition is true, go to the block ($6 = location)
 	backpatch(scope, $7, $3);          // at the end of the block, go back to the condition ($7 = next, $3 = location)
 	$$ = $4.toFalse;                   // we need to backpatch the false-exit of the condition to the first instruction after the block's end ($$ = next)
-	fprintf(stderr, "LQSDOQSDHQISHCQSHCIQSHIQSIHCIQSHCIQSICHIQSHCHIQSCHICH");
-	printLocations($4.toFalse);
-	emit(scope, gen3AC(GOTO, $3, 0, 0));  // at the end of the block, add a GOTO to the condition (whose position is indicated by the marker) ($3 = location)
+	
+	//printLocations($4.toFalse);
+	emitGoto(scope, $3); // at the end of the block, add a GOTO to the condition (whose position is indicated by the marker) ($3 = location) 
 };
 
 statementWithBlock: block { // nested block (which may contain inner statements)
@@ -358,43 +368,27 @@ cond: cond OR marker cond {
 
 /* TODO: the following code is very repetitive, make a function to make this much shorter ;*/
 cond: exp EQUAL exp          {
-	checkArithOp($1, $3); // TODO: transform into checkComparisonOP
-	
-	$$.toTrue = locationsAdd(locationsCreateSet(), next3AC(scope));
-	emit(scope, gen3AC(IFEQ, $1, $3, 0)); // true, backpatch later. TODO: fix backpatch (it may be need to insert at some other place than the first condition)
-
-	$$.toFalse = locationsAdd(locationsCreateSet(), next3AC(scope));
-	emit(scope, gen3AC(GOTO, 0, 0, 0)); // false, backpatch later 
+	handleComparisonInCondition(&$$, $1, $3, IFEQ);
 };
 
 cond: exp NEQUAL exp         {
-	checkArithOp($1, $3); // TODO: transform into checkComparisonOP
-	
-	$$.toTrue = locationsAdd(locationsCreateSet(), next3AC(scope));
-	emit(scope, gen3AC(IFNEQ, $1, $3, 0)); // true, backpatch later. TODO: fix backpatch (it may be need to insert at some other place than the first condition)
-
-	$$.toFalse = locationsAdd(locationsCreateSet(), next3AC(scope));
-	emit(scope, gen3AC(GOTO, 0, 0, 0)); // false, backpatch later 
+	handleComparisonInCondition(&$$, $1, $3, IFNEQ); 
 };
 
 cond: exp LESS exp {
-	checkArithOp($1, $3); // TODO: transform into checkComparisonOP
-	
-	$$.toTrue = locationsAdd(locationsCreateSet(), next3AC(scope));
-	emit(scope, gen3AC(IFS, $1, $3, 0)); // true, backpatch later. TODO: fix backpatch (it may be need to insert at some other place than the first condition)
+	handleComparisonInCondition(&$$, $1, $3, IFS);
+};
 
-	$$.toFalse = locationsAdd(locationsCreateSet(), next3AC(scope));
-	emit(scope, gen3AC(GOTO, 0, 0, 0)); // false, backpatch later
+cond: exp LESSEQUAL exp {
+	handleComparisonInCondition(&$$, $1, $3, IFSE);
 };
 
 cond: exp GREATER exp           {
-	checkArithOp($1, $3); // TODO: transform into checkComparisonOP
-	
-	$$.toTrue = locationsAdd(locationsCreateSet(), next3AC(scope));
-	emit(scope, gen3AC(IFG, $1, $3, 0)); // true, backpatch later. TODO: fix backpatch (it may be need to insert at some other place than the first condition)
+	handleComparisonInCondition(&$$, $1, $3, IFG);
+};
 
-	$$.toFalse = locationsAdd(locationsCreateSet(), next3AC(scope));
-	emit(scope, gen3AC(GOTO, 0, 0, 0)); // false, backpatch later
+cond: exp GREATEREQUAL exp {
+	handleComparisonInCondition(&$$, $1, $3, IFGE);
 };
 
 cond: NOT cond {
@@ -448,7 +442,7 @@ statementWithoutBlock: RETURN exp { // return statement
 };
 
 statementWithoutBlock:	NAME LPAR arguments RPAR {	// function call
-
+	// TODO: call function
 };
 
 statementWithoutBlock:	WRITE exp { // write statement
@@ -488,13 +482,22 @@ exp: NUMBER               {
 
 exp: NAME LPAR arguments RPAR      {
 	// Function call
-	fprintf(stderr, "calling function %s \n", $1);
+	//fprintf(stderr, "calling function %s \n", $1);
 	TYPE_INFO* typeInfo = checkFunctionCall(scope, $1, $3); 
 	$$ = newAnonVarWithType(scope, typeInfo);
 	
-	//SYMBOL_LIST
+	// TODO: this is in reverse because list insertion is broken, make this right
+	SYMBOL_LIST* arguments = $3;
+	for(; arguments->previous; arguments = arguments->previous) {} // Go to the beginning
 	
-	// emit instructions;
+	for(; arguments; arguments = arguments->next) {	
+		emit(scope, gen3AC(PARAM, arguments->info, 0, 0));
+	}
+
+	SYMBOL_INFO* function = findSymbolInSymbolTableAndParents(scope, $1); // TODO: check it's a function
+	emit(scope, gen3AC(CALL, function, 0, 0));
+
+	// TODO: assignement to set return value to variable
 };
 
 exp: QCHAR  { // A single character inside single quotes
@@ -504,7 +507,7 @@ exp: QCHAR  { // A single character inside single quotes
 exp: LENGTH lexp { // LENGTH of an array
 	checkIsArray($2);
 	$$ = newAnonVar(scope, int_t);
-	// TODO: add instruction
+	emit(scope, gen3AC(LENGTHOP, $2, 0, 0));
 };
 
 
@@ -518,7 +521,6 @@ non_empty_argument_list: exp                               { $$ = insertSymbolIn
   					   ;
 
 var: NAME {
-	fprintf(stderr, "ùùù %s ùùù", $1);
 	$$ = checkSymbol(scope, $1); 
 }
 
@@ -532,9 +534,6 @@ type: INT                       { $$ = createSimpleType(int_t); }
 
 int main(int argc, char* argv[]) {
 	return yyparse(); // yyparse is the function generated by this script
-	yydebug = 1;
-	fprintf(stderr, "SYMBOL TABLE\n");
-	printSymbolTableAndParents(stderr, scope);
 }
 
 

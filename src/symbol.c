@@ -35,10 +35,10 @@ SYMBOL_INFO* createConstantSymbol(TBASIC type, int value) {
     SYMBOL_INFO* symbolInfo = createBaseSymbol(newConstantSymbolName(), createSimpleType(type));
     if (type == char_t) {
         symbolInfo->details.constant.value.charValue = (char) value;
-        fprintf(stderr, "  -- created char constant of value %c\n", (char) value);
+        //fprintf(stderr, "  -- created char constant of value %c\n", (char) value);
     } else if (type == int_t) {
         symbolInfo->details.constant.value.intValue = value;
-        fprintf(stderr, "  -- created int constant of value %d\n", value);
+        //fprintf(stderr, "  -- created int constant of value %d\n", value);
     } else { // Should never happen
         fprintf(stderr, "Constant should be INT or CHAR but it actually is %d\n", type);
         exit(1);
@@ -73,6 +73,8 @@ SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symb
     SYMBOL_LIST* s = malloc(sizeof(SYMBOL_LIST));
     s->info = symbolInfo;
     s->next = symbolList;
+    s->previous = 0;
+    if (symbolList) { symbolList->previous = s; }
     return s;
 }
 
@@ -174,7 +176,6 @@ SYMBOL_TABLE* createScope(SYMBOL_TABLE* parentScope) {
  * If one exists, returns a pointer to it. Otherwise, returns 0
  */
 SYMBOL_INFO* findSymbolInSymbolList(SYMBOL_LIST* symbolList, char* name) {
-    fprintf(stderr, "^^ %s ^^", name);
     for(; symbolList; symbolList = symbolList->next) {
         if (strcmp(symbolList->info->name, name) == 0) {
             return symbolList->info;
@@ -209,8 +210,26 @@ SYMBOL_INFO* findSymbolInSymbolTableAndParents(SYMBOL_TABLE* symbolTable, char* 
  * Print a symbol type information and name
  */
 void printSymbol(FILE* output, SYMBOL_INFO* symbolInfo) {
-    printType(output, symbolInfo->type);
-    fprintf(output, " %s", symbolInfo->name);
+    if (symbolInfo == 0 ){
+        fprintf(stdout, "symbol info pointer is 0");
+        exit(1);
+    }
+
+    if (symbolInfo->type && symbolInfo->type->type == function_t) {
+        fprintf(output, "%s: ", symbolInfo->name);
+        printType(output, symbolInfo->type);
+    } else {
+        printType(output, symbolInfo->type);
+        fprintf(output, " %s", symbolInfo->name);
+        if (strncmp(symbolInfo->name, "const__", 7) == 0) {
+            if (symbolInfo->type->type == int_t) {
+                fprintf(output, " (= %d)", symbolInfo->details.constant.value.intValue);
+            } else {
+                fprintf(output, " (= '%c')", symbolInfo->details.constant.value.charValue);
+            }
+        }
+    }
+    
 }
 
 /**
@@ -260,7 +279,6 @@ char* newSymbolName() {
     anonSymbolNumber++;
     char * result = malloc(sizeof(char) * 20); // 19 characters should be enough
     sprintf(result, "anon__%d", anonSymbolNumber);
-    fprintf(stderr, "    - created anonymous variable %s\n", result);
     return result;
 }
 
@@ -269,14 +287,12 @@ char* newConstantSymbolName() {
     constantSymbolNumber++;
     char * result = malloc(sizeof(char) * 20); // 19 characters should be enough
     sprintf(result, "const__%d", constantSymbolNumber);
-    fprintf(stderr, "    - created constant variable %s\n", result);
     return result;
 }
 
 SYMBOL_INFO* newAnonVar(SYMBOL_TABLE* scope, TBASIC typeKind) {
     TYPE_INFO* typeInfo = createSimpleType(typeKind);
-    printType(stderr, typeInfo);
-	return newAnonVarWithType(scope, typeInfo);
+    return newAnonVarWithType(scope, typeInfo);
 }
 
 SYMBOL_INFO* newAnonVarWithType(SYMBOL_TABLE* scope, TYPE_INFO* typeInfo) {

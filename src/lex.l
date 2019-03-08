@@ -81,6 +81,8 @@ alphanumUnderscore [A-Za-z0-9_]
 "!" return NOT;
 ">" return GREATER;
 "<" return LESS;
+"<=" return LESSEQUAL;
+">=" return GREATEREQUAL;
 
 "&&" return AND;
 "||" return OR;

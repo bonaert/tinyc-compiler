@@ -157,6 +157,11 @@ int areTypeListsEqual(TYPE_LIST* typeList1, TYPE_LIST* typeList2) {
  * Print a description of a type in the given output.
  */
 void printType(FILE* output, TYPE_INFO* type) {
+    if (type == 0){
+        fprintf(output, "<type not declared>");
+        return;
+    }
+
     if (type->type == int_t) {
         fprintf(output, "int");
     } else if (type->type == char_t) {

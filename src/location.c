@@ -30,19 +30,19 @@ int isInSet(LOCATIONS_SET* locations, int location){
     return 0;
 }
 
-static int INCREMENT_SIZE = 20 * sizeof(int);
+static int INCREMENT_SIZE = 20;
 void growLocationsIfNeeded(LOCATIONS_SET* locations) {
     int capacity = locations->capacity;
-    if (locations->capacity == 0){ // Haven't allocated buffer yet
-        locations->locations = malloc(sizeof(int) * 20);
-        locations->capacity = 20;
+    if (capacity == 0){ // Haven't allocated buffer yet
+        locations->locations = malloc(sizeof(int) * INCREMENT_SIZE);
+        locations->capacity = INCREMENT_SIZE;
     } else if (locations->size == capacity) {  // Reached max
-        locations->locations = realloc(locations->locations, capacity + INCREMENT_SIZE); /* like malloc() if buf==0 */
+        locations->locations = realloc(locations->locations, capacity + INCREMENT_SIZE * sizeof(int)); /* like malloc() if buf==0 */
         if (!locations->locations) {
-            fprintf(stderr, "Cannot expand name space (%d bytes)", capacity + INCREMENT_SIZE);
+            fprintf(stderr, "Cannot expand name space (%d bytes)", capacity + INCREMENT_SIZE * sizeof(int));
             exit(1);
         }
-        locations->capacity = capacity + 20;
+        locations->capacity = capacity + INCREMENT_SIZE;
     }
 }
 
@@ -80,11 +80,6 @@ LOCATIONS_SET* locationsUnion(LOCATIONS_SET* locations1, LOCATIONS_SET* location
     for(int i = 0; i < locations2->size; i++){
         locationsAdd(newLocations, locations2->locations[i]);
     }
-
-    fprintf(stderr, "size 1:  %d     size2:  %d    finalSize:    %d  \n", locations1->size, locations2->size, newLocations->size);
-    printLocations(locations1);
-    printLocations(locations2);
-    printLocations(newLocations);
 
     return newLocations;
 }
