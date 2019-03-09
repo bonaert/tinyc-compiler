@@ -140,7 +140,7 @@ void handleComparisonInCondition(CHOICE* choice, SYMBOL_INFO* arg1, SYMBOL_INFO*
 
 %type <type> type baseType;
 
-%type <symbol> var lhs functionParameter funDeclaration exp;
+%type <symbol> var lhs functionParameter funDeclaration functionCall exp;
 %type <symbolList> functionParameters non_empty_argument_list arguments;
 
 %type <leftValue> lvalue;
@@ -224,8 +224,8 @@ funDeclaration: type NAME {
 		} block {
 			// After parsing function, leave the function's scope and go back to original scope
 			//printSymbolTableAndParents(stderr, scope);
-			fprintf(stderr, "\n%s - instructions:\n", $2);
-			printAllInstructions(scope);
+			//fprintf(stderr, "\n%s - instructions:\n", $2);
+			//printAllInstructions(scope);
 			scope = scope->parent;
 		};
 
@@ -279,7 +279,6 @@ varDeclaration: type NAME ASSIGN exp SEMICOLON {  // int a = 7;
 	checkNameNotTaken(scope, $2);
 	SYMBOL_INFO* symbol = insertVariableInSymbolTable(scope, $2, $1);
 
-	
 	checkAssignmentInDeclaration($1, $4); 
 	emitAssignement3AC(scope, $4, symbol);
 	//fprintf(stderr, "declaring variable %s and initializing it\n", $2); 
@@ -414,8 +413,6 @@ goend: %empty {
 
 
 
-
-
 statementWithoutBlock: lhs ASSIGN exp {
 	checkAssignment($1, $3); 
 	emitAssignement3AC(scope, $3, $1); 
@@ -426,9 +423,8 @@ statementWithoutBlock: RETURN exp { // return statement
 	emitReturn3AC(scope, $2);
 };
 
-statementWithoutBlock:	NAME LPAR arguments RPAR {	// function call
-	// TODO: call function
-};
+statementWithoutBlock: functionCall {};
+
 
 statementWithoutBlock:	WRITE exp { // write statement
 	emit(scope, gen3AC(WRITEOP, $2, 0, 0));
@@ -438,12 +434,6 @@ statementWithoutBlock:	READ lhs { // read statement
 	checkIsIntegerOrCharVariable($2);
 	emit(scope, gen3AC(READOP, $2, 0, 0));
 };
-
-
-
-
-
-
 
 
 /* LHS expression - What can be on the left side of an assignment statement; */
@@ -501,6 +491,14 @@ lhs: lvalue {
 };
 
 
+
+
+
+
+
+
+
+
 exp: lhs { $$ = $1; };
 
 
@@ -520,8 +518,26 @@ exp: NUMBER               {
 	insertCompleteSymbolInSymbolTable(scope, $$);
 };
 
-exp: NAME LPAR arguments RPAR      {
-	// Function call
+exp: functionCall {	$$ = $1; };
+
+exp: QCHAR  { // A single character inside single quotes
+	$$ = createConstantSymbol(char_t, (int) $1);
+};
+
+exp: LENGTH lhs { // LENGTH of an array
+	checkIsArray($2);
+	$$ = newAnonVar(scope, int_t);
+	emit(scope, gen3AC(LENGTHOP, $2, 0, $$));
+};
+
+
+
+
+
+functionCall: NAME LPAR arguments RPAR {	// function call
+	// we create an a variable to contain the result, even though in some cases
+	// it will never be used (the optimisation phase should get rid of it hopefully)
+
 	//fprintf(stderr, "calling function %s \n", $1);
 	SYMBOL_INFO* function = findSymbolInSymbolTableAndParents(scope, $1);
 	TYPE_INFO* typeInfo = checkFunctionCall(function, $1, $3); 
@@ -532,27 +548,9 @@ exp: NAME LPAR arguments RPAR      {
 		emit(scope, gen3AC(PARAM, arguments->info, 0, 0));
 	}
 	emit(scope, gen3AC(CALL, function, 0, 0));
-
-	// TODO: assignement to set return value to variable
+	emit(scope, gen3AC(GETRETURNVALUE, 0, 0, $$));
 };
 
-exp: QCHAR  { // A single character inside single quotes
-	$$ = createConstantSymbol(char_t, (int) $1);
-};
-
-exp: LENGTH lhs { // LENGTH of an array
-	checkIsArray($2);
-	$$ = newAnonVar(scope, int_t);
-	emit(scope, gen3AC(LENGTHOP, $2, 0, 0));
-};
-
-
-
-
-
-
-
-/* Arguments (used in function calls) */
 arguments: %empty                     { $$ = 0; }  // No arguments
          | non_empty_argument_list    { $$ = $1; } // 1 or more arguments
          ;

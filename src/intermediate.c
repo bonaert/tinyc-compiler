@@ -4,7 +4,7 @@
 #define DEBUG (0)
 
 INSTRUCTION gen3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result) {
-	if (opcode > RETURNOP) {
+	if (opcode > LENGTHOP) {
 		fprintf(stderr, "wrong opcode %d", opcode);
 		exit(1);
 	}

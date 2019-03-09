@@ -27,6 +27,8 @@ typedef enum {
 
 	PARAM,   // push param to stack before function call
 	CALL,    // call function F with n parameters
+	RETURNOP,   // return A - returns the value A (put result on stack and change special registers to saved values)
+	GETRETURNVALUE, // sets the return value of a call
 
 	AAC,     // A = B[I] - array access       (B = base address, I = offset)
 	AAS,     // A[I] = B - array modification (A = base address, I = offset)
@@ -39,16 +41,21 @@ typedef enum {
 	READOP,   // Read to A   - read a value to A
 	LENGTHOP, // Length of A - get the length of A
 
-	RETURNOP   // return A - returns the value A (put result on stack and change special registers to saved values)
+	
+	
 } OPCODE;
 
-static char * opcodeNames[] = {"PLUS", "MINUS", "TIMES", "DIVIDE", "MINUS_SELF", "FLOAT_TO_INTEGER", 
-					   "INTEGER_TO_FLOAT", "ASSIGN", "GOTO", 
-					   "IF_EQUAL", "IF_NOT_EQUAL", "IF_GREATER_OR_EQUAL", 
-					   "IF_SMALLER_OR_EQUAL", "IF_GREATER", "IF_SMALLER", 
-					   "PARAM", "CALL", "ARRAY ACCESS", "ARRAY MODIFICATION",
-					   "GET_ADDRESS", "GET_AT_ADDRESS", "SAVE_AT_ADDRESS",
-					   "WRITE", "READ", "LENGTH", "RETURN"
+static char * opcodeNames[] = {
+	"PLUS", "MINUS", "TIMES", "DIVIDE", "MINUS_SELF", 
+	"FLOAT_TO_INTEGER", "INTEGER_TO_FLOAT", 
+	"ASSIGN", 
+	"GOTO", 
+	"IF_EQUAL", "IF_NOT_EQUAL", "IF_GREATER_OR_EQUAL", 
+	"IF_SMALLER_OR_EQUAL", "IF_GREATER", "IF_SMALLER", 
+	"PARAM", "CALL", "RETURN", "GETRETURN"
+	"ARRAY ACCESS", "ARRAY MODIFICATION",
+	"GET_ADDRESS", "GET_AT_ADDRESS", "SAVE_AT_ADDRESS",
+	"WRITE", "READ", "LENGTH", 
 };
 
 typedef struct instruction {

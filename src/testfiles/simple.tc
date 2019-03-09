@@ -1,58 +1,10 @@
-int params(int a, int[7] b) {
-    // useless comment
-   	int i;
-    char testVar;
-    testVar = 'a';
-    
-	// testing while, if, if-else and conditions
-	while (i == 5) { 
-        int j;
 
-		// testing if-else
-		if (j != 6 + 2) {
-			write 5;
-		} else {
-			char x;
-			read i;
-		}
-
-		// testing if
-		if (i == 5) { j = i + 1; }
-
-		// testing empty blocks
-		if (i == 5) {} else {};
-
-		// return in inner block
-		return 5;
-	}
-
-	// Can start a block in the middle of another block
-	{ char d; int k; return 5 + 2; read k; } 
-
-	// testing complicated arithmetic expression with return
-	return (-1 + 2) * 3 - 4 / 5;
+int foo(int a, int b) {
+    return 5;
 }
 
 int main() {
-    // declarations
-	int b;
-	int c = 7 + 2;
-	int[7] d;
-
-	// read-write statemetns
-	read b;
-	write c;
-
-	char[5][7][8] array;
-	array[0][1][2] = 'b';
-
-    //params = 4;
-
-	// declarations can come after statements
-	int k = params(1, d); 
-    k = params(5 + 7, d); 
-
-	// return and length
-	return length d;
+    int i = 5;
+	return 5;
 }
 
