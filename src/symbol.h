@@ -17,6 +17,12 @@
 
 typedef struct instruction INSTRUCTION;
 
+typedef enum {
+	constant_s,
+	variable_s,
+	function_s
+} SYMBOL_KIND;
+
 /* Constant-specific information */
 typedef struct {
 	union { 
@@ -42,6 +48,7 @@ typedef struct {
 typedef struct {
 	char * name;
 	TYPE_INFO * type;
+	SYMBOL_KIND symbolKind;
 	union {
 		CONSTANT_INFO constant;
 		VARIABLE_INFO var;
@@ -59,7 +66,7 @@ typedef struct symbolCell {
 /* Symbol table for a given score, with a link to the parent scope (if there is one) */
 typedef struct symbolTable {
 	struct symbolTable* parent;     // symbol table of the parent scope
-	SYMBOL_INFO* function;          // Enclosing this function (TODO: unclear what this means)
+	SYMBOL_INFO* function;          // all symbol tables scopes are inside a function (except the topmost one); this points to the function symbol
 	SYMBOL_LIST* symbolList;        // symbols in the immediate scope
 } SYMBOL_TABLE;
 
@@ -68,14 +75,14 @@ typedef struct symbolTable {
 int areSymbolsEqual(SYMBOL_INFO* symbol1, SYMBOL_INFO* symbol2);
 int areSymbolListEqual(SYMBOL_LIST* symbolList1, SYMBOL_LIST* symbolList2);
 
-SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo);
+SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo, SYMBOL_KIND symbolKind);
 SYMBOL_INFO* createConstantSymbol(TBASIC type, int value);
 SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo);
 void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO* returnType, SYMBOL_LIST* arguments);
 
 SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symbolInfo);
 
-SYMBOL_INFO* insertSymbolInSymbolTable(SYMBOL_TABLE* symbolTable, char*name, TYPE_INFO* symbolInfo);
+SYMBOL_INFO* insertFunctionInSymbolTable(SYMBOL_TABLE* symbolTable, char*name, TYPE_INFO* symbolInfo);
 SYMBOL_INFO* insertVariableInSymbolTable(SYMBOL_TABLE* symbolTable, char* name, TYPE_INFO* typeInfo);
 SYMBOL_INFO* insertCompleteSymbolInSymbolTable(SYMBOL_TABLE* symbolTable, SYMBOL_INFO* symbolInfo);
 

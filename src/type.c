@@ -215,7 +215,3 @@ void printTypeList(FILE* output, TYPE_LIST* type, char separator) {
         i++;
     }
 }
-
-// TODO: currently inserting in a list has a bug, it insert elements at the end instead of the beginning
-// this isn't a problem, except when printing the type of the parameters of a function
-// they get reversed foo(int, char) -> char get written as foo(char, int) -> char

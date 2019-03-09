@@ -35,6 +35,54 @@ static void error1(char* s1, TYPE_INFO* t1) {
 
 
 
+
+
+void checkIsFunction(SYMBOL_INFO* functionSymbol){
+    if (functionSymbol->type->type != function_t) {
+        error2(functionSymbol->name, 0, " should be a function but is ", functionSymbol->type);
+    }
+}
+
+
+
+TYPE_INFO* checkIsNumeric(SYMBOL_INFO* numberSymbol){
+    if (numberSymbol->type->type != int_t && numberSymbol->type->type != char_t) {
+        error2(numberSymbol->name, 0, " should be integer or char but is ", numberSymbol->type);
+    }
+    return numberSymbol->type;
+}
+
+TYPE_INFO* checkIsNumber(SYMBOL_INFO* numberSymbol){
+    if (numberSymbol->type->type != int_t) {
+        error2(numberSymbol->name, 0, " should be integer but is ", numberSymbol->type);
+    }
+    return numberSymbol->type;
+}
+
+TYPE_INFO* checkIsArray(SYMBOL_INFO* arraySymbol) {
+    if (arraySymbol->type->type != array_t) {
+        error2(arraySymbol->name, 0, " should be array but is ", arraySymbol->type);
+    }
+    return arraySymbol->type;
+}
+
+TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* symbol) {
+    if (symbol->symbolKind != variable_s) {
+        fprintf(stderr, "Error: The symbol %s should be a variable but isn't.", symbol->name);
+        exit(1);
+    }
+    
+    checkIsNumeric(symbol);
+    return symbol->type;
+}
+
+
+
+
+
+
+
+
 void checkNameNotTaken(SYMBOL_TABLE* symbolTable, char* name) {
     if (findSymbolInSymbolList(symbolTable->symbolList, name)) {
         error("variable ", name, 0, " already declared!", 0 , 0);
@@ -74,16 +122,28 @@ TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index) {
     return array->type->info.array.base;
 }
 
-TYPE_INFO* checkArithOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
+void checkComparisonOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
+    checkIsNumeric(op1);
+    checkIsNumeric(op1);
     if (op1->type != op2->type) {
-        error2("type ", op1->type, " does not match ", op2->type);
+        fprintf(stderr, "Error: %s and %s don't have the same type\n", op1->name, op2->name);
+        exit(1);
     }
+}
 
-    if (op1->type->type != int_t) {
-        error1("first value should be an integer but is ", op1->type);
+TYPE_INFO* checkArithOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
+    checkIsNumeric(op1);
+    checkIsNumeric(op1);
+
+    if (op1->type == op2->type) {  // char + char or int + int
+        return op1->type;
+    } else if (op1->type->type == char_t) {  // char + int (convert to int)
+        fprintf(stderr, "Warning: arithmetic between a CHAR (%s) to an INT (%s)\n", op1->name, op2->name);
+        return op2->type;
+    } else { // int + char (convert to int)
+        fprintf(stderr, "Warning: arithmetic between an INT (%s) to a CHAR (%s)\n", op1->name, op2->name);
+        return op1->type;
     }
-
-    return op1->type;
 }
 
 TYPE_INFO* checkEqualityOp(SYMBOL_INFO* left, SYMBOL_INFO* right){
@@ -118,17 +178,12 @@ int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actual
 }
 
 
-TYPE_INFO* checkFunctionCall(SYMBOL_TABLE* scope, char* functionName, SYMBOL_LIST* arguments){
-    SYMBOL_INFO* symbol = findSymbolInSymbolTableAndParents(scope, functionName);
-
+TYPE_INFO* checkFunctionCall(SYMBOL_INFO* symbol, char* functionName, SYMBOL_LIST* arguments){
     if (!symbol) {
         error("undeclared function '", functionName, 0, "'", 0, 0);
     }
 
-    if (symbol->type->type != function_t) {
-        error(functionName, " should be a function but actually is of type ", symbol->type, 0, 0, 0);
-    }
-
+    checkIsFunction(symbol);
     if (!doArgumentsHaveTheCorrectTypes(symbol->type->info.function.arguments, arguments)) {
         error("bad arguments for function ", functionName, 0, 0, 0, 0);
     }
@@ -149,25 +204,3 @@ SYMBOL_INFO* checkSymbol(SYMBOL_TABLE* scope, char* name){
 
 
 
-
-TYPE_INFO* checkIsNumber(SYMBOL_INFO* numberSymbol){
-    if (numberSymbol->type->type != int_t) {
-        error1("type should be integer but is ", numberSymbol->type);
-    }
-    return numberSymbol->type;
-}
-
-TYPE_INFO* checkIsArray(SYMBOL_INFO* arraySymbol) {
-    if (arraySymbol->type->type != array_t) {
-        error1("type should be array but is ", arraySymbol->type);
-    }
-    return arraySymbol->type;
-}
-
-TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* symbol) {
-    // TODO: add a check to make sure it's a variable
-    if ((symbol->type->type != int_t) && (symbol->type->type != char_t)) {
-        error1("type should be integer or char but is ", symbol->type);
-    }
-    return symbol->type;
-}

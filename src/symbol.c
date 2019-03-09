@@ -16,15 +16,16 @@ TYPE_LIST* makeTypeList(SYMBOL_LIST* symbolList) {
     return typeList;
 }
 
-SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo) {
+SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo, SYMBOL_KIND symbolKind) {
     SYMBOL_INFO* symbolInfo = malloc(sizeof(SYMBOL_INFO));
     symbolInfo->name = name;
     symbolInfo->type = typeInfo;
+    symbolInfo->symbolKind = symbolKind;
     return symbolInfo;
 }
 
 SYMBOL_INFO* createConstantSymbol(TBASIC type, int value) {
-    SYMBOL_INFO* symbolInfo = createBaseSymbol(newConstantSymbolName(), createSimpleType(type));
+    SYMBOL_INFO* symbolInfo = createBaseSymbol(newConstantSymbolName(), createSimpleType(type), constant_s);
     if (type == char_t) {
         symbolInfo->details.constant.value.charValue = (char) value;
         //fprintf(stderr, "  -- created char constant of value %c\n", (char) value);
@@ -39,7 +40,7 @@ SYMBOL_INFO* createConstantSymbol(TBASIC type, int value) {
 }
 
 SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo) {
-    SYMBOL_INFO* symbolInfo = createBaseSymbol(name, typeInfo);
+    SYMBOL_INFO* symbolInfo = createBaseSymbol(name, typeInfo, variable_s);
     // TODO: add location
     symbolInfo->details.var.location = 0;
     return symbolInfo;
@@ -48,6 +49,7 @@ SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo) {
 void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO* returnType, SYMBOL_LIST* arguments) {
     TYPE_LIST* argumentTypes = makeTypeList(arguments);
     symbolInfo->type = createFunctionType(returnType, argumentTypes);
+    symbolInfo->symbolKind = function_s;
     
     symbolInfo->details.function.scope = scope;
     symbolInfo->details.function.numInstructions = 0;
@@ -78,11 +80,11 @@ SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symb
 }
 
 /**
- * Inserts a symbol with the given name and type in the symbol table.
+ * Inserts a function symbl with the given name and type in the symbol table.
  * Returns a pointer to the newly created SYMBOL_INFO?
  */
-SYMBOL_INFO* insertSymbolInSymbolTable(SYMBOL_TABLE* symbolTable, char* name, TYPE_INFO* typeInfo) {
-    SYMBOL_INFO* symbolInfo = createBaseSymbol(name, typeInfo);
+SYMBOL_INFO* insertFunctionInSymbolTable(SYMBOL_TABLE* symbolTable, char* name, TYPE_INFO* typeInfo) {
+    SYMBOL_INFO* symbolInfo = createBaseSymbol(name, typeInfo, function_s);
     symbolTable->symbolList = insertSymbolInSymbolList(symbolTable->symbolList, symbolInfo);
     return symbolInfo;
 }

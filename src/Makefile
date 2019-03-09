@@ -1,8 +1,8 @@
 CFLAGS= -Wall -g
 CC= gcc
 
-CCFILES= symbol.c intermediate.c check.c type.c location.c array.c
-HHFILES= symbol.h intermediate.h check.h type.h location.h array.h
+CCFILES= symbol.c intermediate.c check.c type.c location.c array.c assembly.c optimise.c
+HHFILES= symbol.h intermediate.h check.h type.h location.h array.h assembly.h optimise.h
 SOURCE= Makefile $(CCFILES) $(HHFILES) tinyc.y lex.l
 
 all: tinyc
@@ -14,7 +14,7 @@ tinyc: tinyc.tab.o lex.yy.o $(CCFILES:%.c=%.o)
 	gcc $(CFLAGS) -o $@ $^
 
 lex.yy.c: lex.l tinyc.tab.h
-	flex lex.l
+	flex lex.l 
 
 
 

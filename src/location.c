@@ -2,6 +2,13 @@
 #include <stdlib.h> /* malloc */
 #include "location.h"
 
+#define INVALID_LOCATION -100000
+
+void initializeEmptyLocations(LOCATIONS_SET* locationsSet, int start, int end) {
+    for (int i = start; i < end; i++) { 
+        locationsSet->locations[i] = INVALID_LOCATION;
+    }
+}
 
 LOCATIONS_SET* locationsCreateSet() {
     LOCATIONS_SET* locationsSet = malloc(sizeof(LOCATIONS_SET));
@@ -14,7 +21,8 @@ LOCATIONS_SET* locationsCreateSet() {
 LOCATIONS_SET* locationsCreateSetWithCapacity(int capacity) {
     LOCATIONS_SET* locationsSet = malloc(sizeof(LOCATIONS_SET));
     locationsSet->size = 0;
-    locationsSet->locations = malloc(sizeof(int) * capacity);
+    locationsSet->locations = malloc(sizeof(int) * capacity); 
+    initializeEmptyLocations(locationsSet, 0, capacity);
     locationsSet->capacity = capacity;
     return locationsSet;
 }
@@ -22,7 +30,6 @@ LOCATIONS_SET* locationsCreateSetWithCapacity(int capacity) {
 
 int isInSet(LOCATIONS_SET* locations, int location){
     for(int i = 0; i < locations->size; i++) {
-        // TODO: random garbage in unnocupied part of buffer may be equal to location by coincidence, may need to initialize to -1
         if (locations->locations[i] == location) { 
             return 1;
         }
@@ -36,8 +43,10 @@ void growLocationsIfNeeded(LOCATIONS_SET* locations) {
     if (capacity == 0){ // Haven't allocated buffer yet
         locations->locations = malloc(sizeof(int) * INCREMENT_SIZE);
         locations->capacity = INCREMENT_SIZE;
+        initializeEmptyLocations(locations, 0, INCREMENT_SIZE);
     } else if (locations->size == capacity) {  // Reached max
         locations->locations = realloc(locations->locations, (capacity + INCREMENT_SIZE) * sizeof(int)); /* like malloc() if buf==0 */
+        initializeEmptyLocations(locations, capacity, capacity + INCREMENT_SIZE);
         if (!locations->locations) {
             fprintf(stderr, "Cannot expand name space (%d bytes)", (int) ((capacity + INCREMENT_SIZE) * sizeof(int)));
             exit(1);
