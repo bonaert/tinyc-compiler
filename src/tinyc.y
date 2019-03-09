@@ -310,26 +310,20 @@ statement: statementWithBlock  {   // a statement with a block can not be follow
 
 
 statementWithBlock: IF LPAR cond RPAR marker block   %prec LOW  {  // if statements
-	//fprintf(stderr, "if\n"); 
 	backpatch(scope, $3.toTrue, $5);  // backpatch instruction that need to go to the if-block ($5 = location)
 	$$ = locationsUnion($6, $3.toFalse);  // in a if, the instruction that need to be backpatched to link to after the block are the ones insides of the block and the false exit ($$ = $6 = next)
 };
 
 statementWithBlock: IF LPAR cond RPAR marker block goend ELSE marker block  { // if-else statement 
-	//fprintf(stderr, "if-else\n"); 
 	backpatch(scope, $3.toTrue, $5);  // where to go if exp = true,  $5 = location
 	backpatch(scope, $3.toFalse, $9); // where to go if exp = false, $9 = location
 	$$ = locationsUnion(locationsUnion($6, $7), $10);  // places where we might go to instruction after the if-else ($6 = $7 = $10 = $$ = next)
-	//fprintf(stderr, "isinset: %d", isInSet($$, 4));
 };
 
 statementWithBlock: WHILE LPAR marker cond RPAR marker block { // while loop 
-	//fprintf(stderr, "while\n"); 
 	backpatch(scope, $4.toTrue, $6);   // if condition is true, go to the block ($6 = location)
 	backpatch(scope, $7, $3);          // at the end of the block, go back to the condition ($7 = next, $3 = location)
 	$$ = $4.toFalse;                   // we need to backpatch the false-exit of the condition to the first instruction after the block's end ($$ = next)
-	
-	//printLocations($4.toFalse);
 	emitGoto(scope, $3); // at the end of the block, add a GOTO to the condition (whose position is indicated by the marker) ($3 = location) 
 };
 
@@ -423,7 +417,7 @@ statementWithoutBlock: RETURN exp { // return statement
 	emitReturn3AC(scope, $2);
 };
 
-statementWithoutBlock: functionCall {};
+statementWithoutBlock: functionCall { /* we can call a function without storing the result */ }; 
 
 
 statementWithoutBlock:	WRITE exp { // write statement
@@ -538,7 +532,6 @@ functionCall: NAME LPAR arguments RPAR {	// function call
 	// we create an a variable to contain the result, even though in some cases
 	// it will never be used (the optimisation phase should get rid of it hopefully)
 
-	//fprintf(stderr, "calling function %s \n", $1);
 	SYMBOL_INFO* function = findSymbolInSymbolTableAndParents(scope, $1);
 	TYPE_INFO* typeInfo = checkFunctionCall(function, $1, $3); 
 	$$ = newAnonVarWithType(scope, typeInfo);
