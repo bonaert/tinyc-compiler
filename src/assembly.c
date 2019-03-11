@@ -41,32 +41,113 @@ void unsupported(INSTRUCTION* instruction) {
     exit(1);
 }
 
+void outputWithRegister(char* string, int registerNum) {
+    fputs("\t", stdout);
+    fprintf(stdout, string, registerNum);
+    fputs("\n", stdout);
+}
+
 int getAddress(SYMBOL_INFO* symbol) {}
 
+
+
+
 // Jumps
-void jump(int instrNum, SYMBOL_INFO* destination) {}
-void conditionalJump(int instrNum, INSTRUCTION* instruction){};
+void jump(int instrNum, int destination) {
+    fprintf(stdout, "\tjmp %d\n", getInstructionDest(destination)); // Check
+}
+
+void conditionalJump(char* instructionName, int instrNum, INSTRUCTION* instruction){
+    char * leftRegister = getRegisterName(instrNum, instruction->args[0]);
+    char * rightRegister = getRegisterName(instrNum, instruction->args[1]);
+    
+    // Compare the two numbers and set flags so that the jump will work correctly
+    fprintf(stdout, "\tcmpl %s, %s\n", leftRegister, rightRegister);
+
+    // Jump to the correct place
+    fprintf(stdout, "\t%s %d\n", instructionName, getInstructionDest((int) instruction->result));
+};
+
+
+
+
+
+
+
 
 // Function call and return values
 void call(int instrNum, SYMBOL_INFO* function) {}
 void getReturnValue(int instrNum, SYMBOL_INFO* target) {}
 void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {}
 
-// Pushing from the stack
-void push(int instrNum, SYMBOL_INFO* symbol) {}
+
+
+
+
+
+// Pushing and popping from the stack
+void push(int instrNum, SYMBOL_INFO* symbol) {
+    outputWithRegister("pushq %s", getRegisterName(instrNum, symbol)); // Check
+}
+
+void pop(int instrNum, SYMBOL_INFO* symbol) {
+    outputWithRegister("popq %s", getRegisterName(instrNum, symbol)); // Check
+}
+
+
+
+
 
 // Moves
-void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target){};
-void moveConstant(int instrNum, int value, SYMBOL_INFO* target){};
-void moveIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* dest){};
-void moveFromMemory(int instrNum, SYMBOL_INFO* memoryAddress, SYMBOL_INFO* dest){};
-void moveToMemory(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* memoryAddress){};
+void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target){
+    
+};
 
-// Multiplication
-void add(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {}
-void sub(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {}
-void times(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {}
-void divide(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {}
+void moveConstant(int instrNum, int value, SYMBOL_INFO* target) {
+    fprintf(stdout, "\tmovl %d, %s\n", value, getRegisterName(instrNum, target)); // Check
+}
+
+void moveIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* dest){
+
+};
+
+void moveFromMemory(int instrNum, SYMBOL_INFO* memoryAddress, SYMBOL_INFO* dest){
+
+};
+
+void moveToMemory(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* memoryAddress){
+
+};
+
+
+
+
+// Maths
+void outputMathOperation(char * operation, int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {
+    char * valueLocation = setupSymbol(instrNum, value);
+    char * targetLocation = setupSymbol(instrNum, target);
+    fprintf(stdout, "\t%s %d, %s\n", operation, valueLocation, targetLocation); 
+}
+
+void add(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {
+    outputMathOperation("addl", instrNum, value, target); // Check
+}
+
+void sub(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {
+    outputMathOperation("subl", instrNum, value, target); // Check
+}
+
+void times(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {
+    outputMathOperation("imull", instrNum, value, target); // Check
+}
+
+void divide(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* target) {
+    outputMathOperation("idivl", instrNum, value, target); // Check
+}
+
+
+
+
 
 // Syscalls
 void read(int instrNum, SYMBOL_INFO* symbol) {
@@ -94,7 +175,17 @@ void outputExit() {
     outputLine("syscall           # make syscall");
 }
 
-void length(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target){};
+void length(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target){
+    // TODO: see how to handle variable length arrays
+    moveConstant(instrNum, getArrayTotalSize(array), target);
+};
+
+
+
+
+
+
+
 
 void setup() {
     fputs("\t.text\n", stdout);
@@ -175,15 +266,25 @@ void translateInstruction(int instrNum, INSTRUCTION* instruction) {
             move(instrNum, instruction->args[0], instruction->result);
             break;
         case GOTO:  // goto
-            jump(instrNum, instruction->args[0]);
+            jump(instrNum, (int) instruction->args[0]);
             break;
         case IFEQ:   // if equal (jump)
+            conditionalJump("je", instrNum, instruction);
+            break;
         case IFNEQ:  // if not equal (jump)
+            conditionalJump("jne", instrNum, instruction);
+            break;
         case IFGE:   // if greater or equal (jump)
+            conditionalJump("jge", instrNum, instruction);
+            break;
         case IFSE:   // if smaller or equal (jump)
+            conditionalJump("jle", instrNum, instruction);
+            break;
         case IFG:    // if greater (jump)
+            conditionalJump("jg", instrNum, instruction);
+            break;
         case IFS:    // if smaller (jump)
-            conditionalJump(instrNum, instruction);
+            conditionalJump("jl", instrNum, instruction);
             break;
         case PARAM:  // push param to stack before function call
             push(instrNum, instruction->args[0]);

@@ -69,6 +69,9 @@ SYMBOL_LIST* getLastSymbolCell(SYMBOL_LIST* symbolList) {
  * Returns a pointer to the new SYMBOL_LIST.
  */ 
 SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symbolInfo) {
+    // TODO: store location of the instruction 
+    // TODO: maybe convert everything to a list so that manipulation becomes easier
+    // as the prof suggested
     SYMBOL_LIST* s = malloc(sizeof(SYMBOL_LIST));
     SYMBOL_LIST* lastCell = getLastSymbolCell(symbolList);
 

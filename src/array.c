@@ -50,3 +50,16 @@ int areDimensionsEqual(DIMENSIONS* dimensions1, DIMENSIONS* dimensions2) {
     
     return 1;
 }
+
+
+
+
+
+int getArrayTotalSize(SYMBOL_INFO* symbol) {
+    int res = 1;
+    DIMENSIONS* dimensions = symbol->type->info.array.dimensions;
+    for(int i = 0; i < dimensions->numDimensions; i++) {
+        res = res * dimensions->dimensions[i];
+    }
+    return res;
+}
