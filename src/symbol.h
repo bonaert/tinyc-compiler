@@ -103,4 +103,8 @@ char* newConstantSymbolName();
 SYMBOL_INFO* newAnonVar(SYMBOL_TABLE* scope, TBASIC typeKind);
 SYMBOL_INFO* newAnonVarWithType(SYMBOL_TABLE* scope, TYPE_INFO* typeInfo);
 
+
+int getSymbolSize(SYMBOL_INFO* symbol);
+
+
 #endif

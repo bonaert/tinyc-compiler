@@ -1,6 +1,9 @@
 #include "assembly.h"
+#include "function.h"
 #include <stdlib.h>
 
+// TODO: he implements _start himself, which makes it possible to use the linker
+// without linking to the C standard library. I should try that too.
 #define PROLOGUE \
     "\
 .section .text\n\
@@ -16,6 +19,7 @@ main:\n\
 	pushl %ebp /* save base(frame) pointer on stack */\n\
 	movl %esp, %ebp /* base pointer is stack pointer */\n\
 "
+
 
 #define EPILOGUE \
     "\
@@ -48,7 +52,19 @@ void outputWithRegister(char* string, int registerNum) {
 }
 
 int getAddress(SYMBOL_INFO* symbol) {}
+int getInstructionDest(int destination) {};
+char* getRegisterName(int instrNum, SYMBOL_INFO* symbol) {};
+char* getMemoryValue(int instrNum, SYMBOL_INFO* value) {};
+char* setupSymbol(int instrNum, SYMBOL_INFO* value) {};
 
+int needDynamicStack(SYMBOL_INFO* function) {
+    // Currently we never need a dynamic stack, since we know the size of all local variables 
+    // at compilation time. This is true because currently I only allows array with fixed constant size
+    // char[5][2] b;              is allowed
+    // char[numStrings][5] c;     is forbidden
+    // TODO: update this when I add support for variable length arrays
+    return 0;
+};
 
 
 
@@ -75,10 +91,66 @@ void conditionalJump(char* instructionName, int instrNum, INSTRUCTION* instructi
 
 
 
+
+
 // Function call and return values
-void call(int instrNum, SYMBOL_INFO* function) {}
-void getReturnValue(int instrNum, SYMBOL_INFO* target) {}
-void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {}
+void call(int instrNum, SYMBOL_INFO* function) {
+    // If I remember well, some registers need to be saved by the caller
+    // TODO: save those registers (maybe be need to be done before the first param translation
+    // or at the call instruction, if the function has no parameters)
+    // 
+    // Apparently, these are the register that the callee is required to save
+    // EBX, ESI, EDI, EBP, DS, ES, and SS
+    // source: https://wiki.osdev.org/Calling_Conventions
+    // Question: do I want to follow this convention? 
+    // TODO: if yes, do that! I need to always save EAX and EDX, and need
+    // to save the other registers that are currently used by my function
+    fprintf(stdout, "\tcall %s\n", function->name);
+
+    // TODO: do some register need to be restored after the function call?
+}
+
+static char* parametersRegisters = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
+int numParameterRegisterUsed = 0;
+void addParameter(int instrNum, SYMBOL_INFO* parameter) {
+    // TODO: do some register need to be saved before the first add parameter?
+
+    // https://cs.brown.edu/courses/cs033/docs/guides/x64_cheatsheet.pdf
+    // To call a function, the program should place the first six integer or pointer 
+    // parameters in the registers %rdi, %rsi, %rdx, %rcx, %r8, and %r9; subsequent 
+    // parameters (or parameters larger than 64 bits) should be pushed onto the stack, 
+    // with the first argument topmost.
+
+    // Example: Call foo(1, 15)
+    //      movq $1, %rdi      # Move 1 into %rdi
+    //      movq $15, %rsi     # Move 15 into %rsi
+    //      call foo           # Push return address and jump to label foo
+
+    // TODO: how do I handle array parameters?
+    if (numParameterRegisterUsed < 6) {
+        fprintf(stdout, "\tmovq %s, %s\n",
+                getRegisterName(instrNum, parameter), 
+                parametersRegisters[numParameterRegisterUsed]);
+        numParameterRegisterUsed++;
+    } else {
+        push(instrNum, parameter);
+    }
+}
+
+
+
+
+void getReturnValue(int instrNum, SYMBOL_INFO* target) {
+    // If the function has a return value, it will be stored in %rax after the function call.
+    fprintf(stdout, "\tmovq %%rax, %s\n", getRegisterName(instrNum, target));
+}
+
+void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
+    // If the function has a return value, it will be stored in %rax after the function call.
+    fprintf(stdout, "\tmovq %s, %%rax\n", getRegisterName(instrNum, symbol));
+}
+
+
 
 
 
@@ -100,7 +172,7 @@ void pop(int instrNum, SYMBOL_INFO* symbol) {
 
 // Moves
 void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target){
-    
+    fprintf(stdout, "\tmovl %s, %s\n", getRegisterName(instrNum, source), getRegisterName(instrNum, target)); // Check
 };
 
 void moveConstant(int instrNum, int value, SYMBOL_INFO* target) {
@@ -108,15 +180,16 @@ void moveConstant(int instrNum, int value, SYMBOL_INFO* target) {
 }
 
 void moveIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* dest){
-
+    
 };
 
 void moveFromMemory(int instrNum, SYMBOL_INFO* memoryAddress, SYMBOL_INFO* dest){
-
+    // Assumes it's a register
+    fprintf(stdout, "\tmovl [%s], %s\n", getRegisterName(instrNum, memoryAddress), getRegisterName(instrNum, dest)); // Check
 };
 
 void moveToMemory(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* memoryAddress){
-
+    fprintf(stdout, "\tmovl %s, [%s]\n", getMemoryValue(instrNum, value), getRegisterName(instrNum, memoryAddress)); // Check
 };
 
 
@@ -177,61 +250,13 @@ void outputExit() {
 
 void length(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target){
     // TODO: see how to handle variable length arrays
-    moveConstant(instrNum, getArrayTotalSize(array), target);
+    moveConstant(instrNum, getArrayTotalSize(array->type), target);
 };
 
 
 
 
 
-
-
-
-void setup() {
-    fputs("\t.text\n", stdout);
-};
-
-void end() {
-    outputExit();
-}
-
-void generateAssemblyForFunction(SYMBOL_INFO* function) {
-	
-    fprintf(stdout, ".type %s, @function\n", function->name);
-    fprintf(stdout, "%s:\n", function->name);
-	INSTRUCTION * instructions = function->details.function.instructions;
-	int numInstructions = function->details.function.numInstructions;
-	for(int i = 0; i < numInstructions; i++) {
-		translateInstruction(i, &(instructions[i]));
-	}
-}
-
-int isMainFunction(SYMBOL_INFO* function) { return strcmp("main", function->name) == 0; }
-
-void markFunctionGlobal(SYMBOL_INFO* function) {
-	fprintf(stdout, "\t.globl %s\n", function->name);
-}
-
-void buildAssembly(SYMBOL_TABLE* scope) {
-    setup();
-
-    // Since global variables aren't supported by my grammer, all names in the
-    // top-level scope refer to functions
-    SYMBOL_LIST* functions = scope->symbolList;
-    for (; functions; functions = functions->next) {
-		//fputs(functions->info->name, stdout);
-		//printAllInstructions(functions->info->details.function.scope);
-
-        int isMain = isMainFunction(functions->info);
-        if (isMain) {
-            markFunctionGlobal(functions->info);
-        }
-        generateAssemblyForFunction(functions->info);
-		if (isMain) {
-            outputExit();
-        }
-    }
-}
 
 void translateInstruction(int instrNum, INSTRUCTION* instruction) {
     switch (instruction->opcode) {
@@ -287,7 +312,7 @@ void translateInstruction(int instrNum, INSTRUCTION* instruction) {
             conditionalJump("jl", instrNum, instruction);
             break;
         case PARAM:  // push param to stack before function call
-            push(instrNum, instruction->args[0]);
+            addParameter(instrNum, instruction->args[0]);
             break;
         case CALL:  // call function F with n parameters
             call(instrNum, instruction->args[0]);
@@ -328,8 +353,6 @@ void translateInstruction(int instrNum, INSTRUCTION* instruction) {
             returnFromFunction(instrNum, instruction->args[0]);
             break;
         case GETRETURNVALUE:  // return A - returns the value A (put result on stack and change special registers to saved values)
-            // TODO: this instruction needs to be created after a function call, but this is currently
-            // not done in the parser. I will need to update my parser so that it works
             getReturnValue(instrNum, instruction->result);
             break;
         default:
@@ -338,3 +361,152 @@ void translateInstruction(int instrNum, INSTRUCTION* instruction) {
             break;
     }
 }
+
+
+
+
+
+
+
+
+int isMainFunction(SYMBOL_INFO* function) { return strcmp("main", function->name) == 0; }
+
+void markFunctionGlobal(SYMBOL_INFO* function) {
+	fprintf(stdout, "\t.globl %s\n", function->name);
+}
+
+void functionSetup(SYMBOL_INFO* function) {
+    // The first 6 pameters are put in the registers. We use a global variable to
+    // record how many of those register we have already used (to implement PARAM correctly).
+    // We need to reset this global variable at the beginning of each new function.
+    int numParameterRegisterUsed = 0;
+
+
+    // Function meta data and label
+    fprintf(stdout, ".type %s, @function\n", function->name);
+    fprintf(stdout, "%s:\n", function->name);
+
+    // In some cases, we can't have a static stack, because we don't know in advance how big
+    // our local variables will be. Example: 
+    //      char[n] a;         # n is a variable we compute during the function - not a constant
+    //
+    // To make it work, we save the base of the stack frame into the base pointer register. 
+    // Since %rbp is a callee-save register, it needs to be saved before we change it.
+    // TODO: understand why we need to readjust the base pointer register
+    if (needDynamicStack(function)) {
+        outputLine("pushq %rbp          # Use base pointer");
+        outputLine("movq %rsp, %rbp");
+    }
+
+    // 1) Some registers must be saved by the callee if the callee uses them
+    //    because the caller expects them to stay intact after the call
+    //    These registers are: RBX, RBP, R12, R13, R14, R15
+    //    To save them, we simply push them onto the stack
+    //    Example:
+    //             pushq %rbx # Save registers, if needed
+    //             pushq %r12
+    //             pushq %r13
+
+    // 2) Allocate local variables by using registers or making space on the stack
+    //    Example: if there the local variables that up 12 bytes do
+    //             sub rsp, 12
+    
+
+    
+}
+
+void functionTeardown(SYMBOL_INFO* function){
+    // The return value must be value in eax
+    // Normally the RETURNOP should take care of this -> no need to do anything
+
+
+    // 2) De-allocate local variables. There are 2 situations:
+    //    a) We have a fixed stack size. Then we just need to add to RSP
+    //       the same amount that was added in step 1 of functionSetup
+    //    b) We have a dynamic stack. Since we later restore %rsp using %rbp,
+    //       we don't need to do anything here!
+    if (!needDynamicStack(function)) {
+        fprintf(stdout, "\taddq %d, %%rsp\n", getLocalVariablesSize(function));
+    }
+    
+
+
+    // 1) Restore the callee-saved register that were used by the function
+    //    These registers are: RBX, RBP, R12, R13, R14, R15
+    //    Note: these registers must be popped in reverse order they were pushed
+    //          (and the stack pointer must be at the right place for the popping to work)
+    if (needDynamicStack(function)) {
+        // TODO: restore registers using the base of frame register (%rbp),
+        // which we are sure is correct
+        // Example where we restore two registers that were saved (in the order %rbx %r12): 
+        //      movq (%rbp), %r12         # Restore registers from base of frame
+        //      movq 0x8(%rbp), %rbx
+    } else {
+        // If we have a static stack, then it's a lot simpler, we can just pop all
+        // the values in the stack into the registers in reverse order
+        // Example where we restore two registers that were saved (in the order %r12 %r13): 
+        //      popq %r13    # Restore registers
+        //      popq %r12
+    }
+
+    
+    // The epilogue makes sure that no matter what you do to the stack pointer 
+    // in the function body, you will always return it to the right place when you return
+    if (needDynamicStack(function)) {
+        outputLine("movq %rbp, %rsp   # Reset stack pointer and restore base pointer");
+        outputLine("popq %rbp");
+    }
+
+    // 0) Return to the caller using the 'ret' instruction
+    outputLine("ret");
+}
+
+void generateAssemblyForFunction(SYMBOL_INFO* function) {
+    functionSetup(function); 
+
+	INSTRUCTION * instructions = function->details.function.instructions;
+	int numInstructions = function->details.function.numInstructions;
+	for(int i = 0; i < numInstructions; i++) {
+		translateInstruction(i, &(instructions[i]));
+	}
+
+    functionTeardown(function);
+}
+
+
+
+
+
+
+void setup() {
+    fputs("\t.text\n", stdout);
+};
+
+void end() {
+    outputExit();
+}
+
+
+
+
+void buildAssembly(SYMBOL_TABLE* scope) {
+    setup();
+
+    // Since global variables aren't supported by my grammer, all names in the
+    // top-level scope refer to functions
+    SYMBOL_LIST* functions = scope->symbolList;
+    for (; functions; functions = functions->next) {
+		//fputs(functions->info->name, stdout);
+		//printAllInstructions(functions->info->details.function.scope);
+
+        int isMain = isMainFunction(functions->info);
+        if (isMain) {
+            markFunctionGlobal(functions->info);
+        }
+        generateAssemblyForFunction(functions->info);
+		if (isMain) {
+            outputExit();
+        }
+    }
+}
+

@@ -305,3 +305,8 @@ SYMBOL_INFO* newAnonVarWithType(SYMBOL_TABLE* scope, TYPE_INFO* typeInfo) {
     return symbol;
 }
 
+
+int getSymbolSize(SYMBOL_INFO* symbol) {
+    return getTypeSize(symbol->type);
+}
+

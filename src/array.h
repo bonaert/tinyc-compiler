@@ -38,6 +38,6 @@ typedef struct dimensions {
 DIMENSIONS* initDimensions();
 void addDimension(DIMENSIONS* dimensions, int dimension);
 
-int getArrayTotalSize(SYMBOL_INFO* array);
+int getArrayTotalSize(TYPE_INFO* array);
 
 #endif

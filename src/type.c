@@ -215,3 +215,18 @@ void printTypeList(FILE* output, TYPE_LIST* type, char separator) {
         i++;
     }
 }
+
+
+
+
+int getTypeSize(TYPE_INFO* type) {
+    TBASIC typeKind = type->type;
+    if       (typeKind == char_t) { return sizeof(char); }
+    else if  (typeKind == int_t) { return sizeof(int); }
+    else if  (typeKind == array_t) { 
+        return getArrayTotalSize(type) * getTypeSize(type->info.array.base);
+    } else {
+        fprintf(stderr, "Trying to get the symbol");
+        exit(1);
+    }
+}

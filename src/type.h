@@ -67,5 +67,7 @@ void printTypeList(FILE * output, TYPE_LIST* type, char separator);
 TYPE_INFO* getBaseType(TYPE_INFO* typeInfo);
 
 
+int getTypeSize(TYPE_INFO* type);
+
 
 #endif

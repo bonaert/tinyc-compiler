@@ -55,9 +55,9 @@ int areDimensionsEqual(DIMENSIONS* dimensions1, DIMENSIONS* dimensions2) {
 
 
 
-int getArrayTotalSize(SYMBOL_INFO* symbol) {
+int getArrayTotalSize(TYPE_INFO* type) {
     int res = 1;
-    DIMENSIONS* dimensions = symbol->type->info.array.dimensions;
+    DIMENSIONS* dimensions = type->info.array.dimensions;
     for(int i = 0; i < dimensions->numDimensions; i++) {
         res = res * dimensions->dimensions[i];
     }

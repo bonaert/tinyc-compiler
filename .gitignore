@@ -66,3 +66,7 @@ tinyc.output
 tinyc.tab.c
 tinyc.tab.h
 src/.vscode/c_cpp_properties.json
+
+# PDFs and images
+*.pdf
+*.png
