@@ -1,0 +1,9 @@
+
+int main() {
+    int j;
+    while (5 > 2) {
+        j = 5;
+    }
+    return 5;
+}
+

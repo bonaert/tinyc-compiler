@@ -126,11 +126,11 @@ void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg) {
 }
 
 
-void print3AC(INSTRUCTION instruction) {
+void print3AC(FILE* output, INSTRUCTION instruction) {
 	switch (instruction.opcode)
 	{
 		case GOTO:
-			fprintf(stdout, "GOTO %d\n", (int) instruction.args[0]);
+			fprintf(output, "GOTO %d\n", (int) instruction.args[0]);
 			break;
 		case IFEQ:
 		case IFNEQ:
@@ -138,20 +138,20 @@ void print3AC(INSTRUCTION instruction) {
 		case IFSE:
 		case IFG:
 		case IFGE: 
-			fprintf(stdout, "%s ", opcodeNames[instruction.opcode]);
-			if (instruction.args[0]) printSymbol(stdout, instruction.args[0]);
-			fprintf(stdout, " ");
-			if (instruction.args[1]) printSymbol(stdout, instruction.args[1]);
-			fprintf(stdout, " %d\n", (int) instruction.result);
+			fprintf(output, "%s ", opcodeNames[instruction.opcode]);
+			if (instruction.args[0]) printSymbol(output, instruction.args[0]);
+			fprintf(output, " ");
+			if (instruction.args[1]) printSymbol(output, instruction.args[1]);
+			fprintf(output, " %d\n", (int) instruction.result);
 			break;
 		default:
-			fprintf(stdout, "%s ", opcodeNames[instruction.opcode]);
-			if (instruction.args[0]) printSymbol(stdout, instruction.args[0]);
-			fprintf(stdout, " ");
-			if (instruction.args[1]) printSymbol(stdout, instruction.args[1]);
-			fprintf(stdout, " ");
-			if (instruction.result)  printSymbol(stdout, instruction.result);
-			fprintf(stdout, " \n");
+			fprintf(output, "%s ", opcodeNames[instruction.opcode]);
+			if (instruction.args[0]) printSymbol(output, instruction.args[0]);
+			fprintf(output, " ");
+			if (instruction.args[1]) printSymbol(output, instruction.args[1]);
+			fprintf(output, " ");
+			if (instruction.result)  printSymbol(output, instruction.result);
+			fprintf(output, " \n");
 			break;
 	}	
 }
@@ -160,7 +160,7 @@ void printAllInstructions(SYMBOL_TABLE* scope) {
 	INSTRUCTION * instructions = scope->function->details.function.instructions;
 	int numInstructions = scope->function->details.function.numInstructions;
 	for(int i = 0; i < numInstructions; i++) {
-		fprintf(stdout, "%d:  ", i);
-		print3AC(instructions[i]);
+		fprintf(stderr, "%d:  ", i);
+		print3AC(stderr, instructions[i]);
 	}
 }

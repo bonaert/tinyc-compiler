@@ -39,20 +39,53 @@ int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
  * The goal is to avoid re-allocating on the heap types that were already created, thus saving memory.
  */
 TYPE_INFO* findType(TYPE_INFO* type) {
-    TYPE_LIST* typeList;
-    for (typeList = currentTypeList; typeList; typeList = typeList->next) {
-        if (areTypesEqual(typeList->type, type)) {
-            return typeList->type;
+    if (currentTypeList == 0) {
+        currentTypeList = initTypeList();
+    }
+    for(int i = 0; i < currentTypeList->size; i++) {
+        if (areTypesEqual(currentTypeList->types[i], type)) {
+            return currentTypeList->types[i];
         }
     }
     return 0;
 }
 
-TYPE_LIST* getLastTypeCell(TYPE_LIST* typeList) {
-    if (typeList == 0) { return 0; }
-    for(; typeList->next; typeList = typeList->next) {}
+
+static int TYPES_INCREMENT_SIZE = 20;
+void growTypeListIfNeeded(TYPE_LIST* types) {
+    int capacity = types->capacity;
+    if (capacity == 0){ // Haven't allocated buffer yet
+        types->types = malloc(sizeof(TYPE_INFO*) * TYPES_INCREMENT_SIZE);
+        types->capacity = TYPES_INCREMENT_SIZE;
+        types->size = 0;
+    } else if (types->size == capacity) {  // Reached max
+        types->types = realloc(types->types, (capacity + TYPES_INCREMENT_SIZE) * sizeof(TYPE_INFO*)); /* like malloc() if buf==0 */
+        if (!types->types) {
+            fprintf(stderr, "Cannot expand type list space (%d type pointers)", (int) ((capacity + TYPES_INCREMENT_SIZE)));
+            exit(1);
+        }
+        types->capacity = capacity + TYPES_INCREMENT_SIZE;
+    }
+}
+
+
+TYPE_LIST* initTypeList() {
+    TYPE_LIST* types = (TYPE_LIST*) malloc(sizeof(TYPE_LIST));
+    types->capacity = 0;
+    types->size = 0;
+    types->types = 0;
+    return types;
+}
+
+
+TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList) {
+    growTypeListIfNeeded(typeList);
+    typeList->types[typeList->size] = newType;
+    typeList->size++;
+    // TODO: store location of the instruction 
     return typeList;
 }
+
 
 /**
  * Utility function that heap-allocates a TYPE_INFO object with the given typeKind
@@ -60,26 +93,22 @@ TYPE_LIST* getLastTypeCell(TYPE_LIST* typeList) {
  * Returns a pointer to the TYPE_INFO that was created.
  */
 TYPE_INFO* createType(TBASIC typeKind) {
+    if (currentTypeList == 0) {
+        currentTypeList = initTypeList();
+    }
+
+
     TYPE_INFO* type = malloc(sizeof(TYPE_INFO));
     type->type = typeKind;
 
-    TYPE_LIST* typeList = insertTypeInList(type, currentTypeList);
-    if (currentTypeList == 0) { currentTypeList = typeList; }
+    insertTypeInList(type, currentTypeList);
     return type;
 }
 
 
-TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList) {
-    TYPE_LIST* typeCell = malloc(sizeof(TYPE_LIST));
-    typeCell->type = newType;
-    typeCell->next = 0;
 
-    TYPE_LIST* lastTypeCell = getLastTypeCell(typeList);
-    typeCell->prev = lastTypeCell;
-    if (lastTypeCell != 0) { lastTypeCell->next = typeCell; }
 
-    return typeList ? typeList : typeCell;
-}
+
 
 /**
  * Creates a TYPE_INFO describing either a INT or a CHAR; returns a pointer to it.
@@ -157,20 +186,20 @@ TYPE_INFO* createArrayType(TYPE_INFO* baseType, DIMENSIONS* dimensions) {
  */
 int areTypeListsEqual(TYPE_LIST* typeList1, TYPE_LIST* typeList2) {
     if (typeList1 == typeList2) {
-        return 1;  // if both pointers point to the same type list, then the type lists are equal
+        return 1; // if both pointers point to the same symbol list, the symbol lists are equal
     }
 
-    // loop over both lists and compare types
-    while (typeList1 && typeList2) {
-        if (!areTypesEqual(typeList1->type, typeList2->type)) {
+    if (typeList1->size != typeList2->size) {
+        return 0;
+    }
+
+    for(int i = 0; i < typeList1->size; i++){
+         if (!(areTypesEqual(typeList1->types[i], typeList2->types[i]))) {
             return 0;
         }
-        typeList1 = typeList1->next;
-        typeList2 = typeList2->next;
     }
 
-    // Return true if we reached the end of both list, which means they have same size
-    return (typeList1 == NULL) && (typeList2 == NULL);
+    return 1;
 }
 
 /*
@@ -205,14 +234,12 @@ void printType(FILE* output, TYPE_INFO* type) {
  * Print all a description of all the types in a type list in the given output, 
  * separating them by the character separator.
  */
-void printTypeList(FILE* output, TYPE_LIST* type, char separator) {
-    int i = 0;
-    for (; type; type = type->next) {
+void printTypeList(FILE* output, TYPE_LIST* types, char separator) {
+    for(int i = 0; i < types->size ; i++) {
         if (i > 0) {
             fprintf(output, "%c", separator);
         }
-        printType(output, type->type);
-        i++;
+        printType(output, types->types[i]);
     }
 }
 

@@ -46,9 +46,9 @@ typedef struct type_info {
 } TYPE_INFO;
 
 typedef struct type_list {
-    TYPE_INFO *type;
-    struct type_list *next;
-    struct type_list *prev;
+    TYPE_INFO ** types; // Array of pointer to types
+    int size;
+    int capacity;
 } TYPE_LIST;
 
 
@@ -56,6 +56,7 @@ TYPE_INFO* createSimpleType(TBASIC typeKind);
 TYPE_INFO* createFunctionType(TYPE_INFO* returnType, TYPE_LIST* argumentTypes);
 TYPE_INFO* createArrayType(TYPE_INFO* baseType, DIMENSIONS* dimensions);
 
+TYPE_LIST* initTypeList();
 TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList);
 
 int areTypesEqual(TYPE_INFO* type1, TYPE_INFO* type2);

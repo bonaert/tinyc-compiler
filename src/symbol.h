@@ -58,9 +58,9 @@ typedef struct {
 
 /* We'll store all the symbols in a linked list */
 typedef struct symbolCell {
-	SYMBOL_INFO* info;
-	struct symbolCell* next;
-	struct symbolCell* previous;
+	SYMBOL_INFO** symbols; // array of pointer to symbols
+	int size;
+	int capacity;
 } SYMBOL_LIST;
 
 /* Symbol table for a given score, with a link to the parent scope (if there is one) */
@@ -77,9 +77,11 @@ int areSymbolListEqual(SYMBOL_LIST* symbolList1, SYMBOL_LIST* symbolList2);
 
 SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo, SYMBOL_KIND symbolKind);
 SYMBOL_INFO* createConstantSymbol(TBASIC type, int value);
+int isConstantSymbol(SYMBOL_INFO* symbol);
 SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo);
 void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO* returnType, SYMBOL_LIST* arguments);
 
+SYMBOL_LIST* initSymbolList();
 SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symbolInfo);
 
 SYMBOL_INFO* insertFunctionInSymbolTable(SYMBOL_TABLE* symbolTable, char*name, TYPE_INFO* symbolInfo);
@@ -105,6 +107,7 @@ SYMBOL_INFO* newAnonVarWithType(SYMBOL_TABLE* scope, TYPE_INFO* typeInfo);
 
 
 int getSymbolSize(SYMBOL_INFO* symbol);
-
+char* getNameOrValue(SYMBOL_INFO* symbol, char* res);
+char* getConstantValue(SYMBOL_INFO* constant, char* res);
 
 #endif

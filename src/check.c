@@ -154,27 +154,25 @@ TYPE_INFO* checkEqualityOp(SYMBOL_INFO* left, SYMBOL_INFO* right){
 }
 
 int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actualArguments) {
-    int i = 1;
-    while (actualArguments && argumentTypes) {
-        if (!areTypesEqual(argumentTypes->type, actualArguments->info->type)) {
+    if (argumentTypes->size > actualArguments->size) {
+        fprintf(stderr, "Gave too few arguments - ");
+        return 0;
+    } else if (argumentTypes->size < actualArguments->size) {
+        fprintf(stderr, "Gave too many arguments - ");
+        return 0;
+    }
+
+    for(int i = 0; i < argumentTypes->size; i++){
+        if (!areTypesEqual(argumentTypes->types[i], actualArguments->symbols[i]->type)) {
             fprintf(stderr, "Argument %d has an incorrect type. Wanted ", i);
-            printType(stderr, argumentTypes->type);
+            printType(stderr, argumentTypes->types[i]);
             fprintf(stderr, " but actually got ");
-            printType(stderr, actualArguments->info->type);
+            printType(stderr, actualArguments->symbols[i]->type);
             return 0;
         }
-
-        actualArguments = actualArguments->next;
-        argumentTypes = argumentTypes->next;
-        i++;
     }
-    if (argumentTypes) {
-        fprintf(stderr, "Gave too few arguments - ");
-    } else if (actualArguments) {
-        fprintf(stderr, "Gave too many arguments - ");
-    }
-
-    return (actualArguments == 0) && (argumentTypes == 0);
+    
+    return 1;
 }
 
 

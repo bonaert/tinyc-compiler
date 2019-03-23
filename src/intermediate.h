@@ -52,10 +52,10 @@ static char * opcodeNames[] = {
 	"GOTO", 
 	"IF_EQUAL", "IF_NOT_EQUAL", "IF_GREATER_OR_EQUAL", 
 	"IF_SMALLER_OR_EQUAL", "IF_GREATER", "IF_SMALLER", 
-	"PARAM", "CALL", "RETURN", "GETRETURN"
+	"PARAM", "CALL", "RETURN", "GETRETURN",
 	"ARRAY ACCESS", "ARRAY MODIFICATION",
 	"GET_ADDRESS", "GET_AT_ADDRESS", "SAVE_AT_ADDRESS",
-	"WRITE", "READ", "LENGTH", 
+	"WRITE", "READ", "LENGTH"
 };
 
 typedef struct instruction {
@@ -83,7 +83,7 @@ void emitEmptyGoto(SYMBOL_TABLE* scope);
 void emitGoto(SYMBOL_TABLE* scope, int arg);
 
 
-void print3AC(INSTRUCTION instruction);
+void print3AC(FILE* output, INSTRUCTION instruction);
 void printAllInstructions(SYMBOL_TABLE* scope);
 
 #endif

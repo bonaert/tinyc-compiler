@@ -9,6 +9,7 @@
 #include "check.h"
 #include "type.h"
 #include "location.h"
+#include "optimise.h"
 #include "array.h"
 #include "assembly.h"
 
@@ -225,14 +226,15 @@ funDeclaration: type NAME {
 			// After parsing function, leave the function's scope and go back to original scope
 			//printSymbolTableAndParents(stderr, scope);
 			//fprintf(stderr, "\n%s - instructions:\n", $2);
-			//printAllInstructions(scope);
+			fprintf(stderr, "%s: \n", scope->function->name);
+			printAllInstructions(scope);
 			scope = scope->parent;
 		};
 
 /* Example: int a, int b ; */
 functionParameters: functionParameters COMMA functionParameter    { $$ = insertSymbolInSymbolList($1, $3); }  // 2 or more parameters
-		          | functionParameter                             { $$ = insertSymbolInSymbolList(0, $1); }   // 1 parameter
-		          | %empty                                        { $$ = 0; }                                  // 0 parameters
+		          | functionParameter                             { $$ = insertSymbolInSymbolList(initSymbolList(), $1); }   // 1 parameter
+		          | %empty                                        { $$ = initSymbolList(); }                                  // 0 parameters
 		          ;
 
 functionParameter: type NAME {
@@ -280,7 +282,7 @@ varDeclaration: type NAME ASSIGN exp SEMICOLON {  // int a = 7;
 	SYMBOL_INFO* symbol = insertVariableInSymbolTable(scope, $2, $1);
 
 	checkAssignmentInDeclaration($1, $4); 
-	emitAssignement3AC(scope, $4, symbol);
+	emitAssignement3AC(scope, symbol, $4);
 	//fprintf(stderr, "declaring variable %s and initializing it\n", $2); 
 };
 
@@ -409,7 +411,7 @@ goend: %empty {
 
 statementWithoutBlock: lhs ASSIGN exp {
 	checkAssignment($1, $3); 
-	emitAssignement3AC(scope, $3, $1); 
+	emitAssignement3AC(scope, $1, $3); 
 };
 
 statementWithoutBlock: RETURN exp { // return statement
@@ -499,7 +501,7 @@ exp: lhs { $$ = $1; };
 exp:  exp PLUS exp           { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, type->type); emitBinary3AC(scope, A2PLUS, $1, $3, $$); }
     | exp MINUS exp          { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, type->type); emitBinary3AC(scope, A2MINUS, $1, $3, $$); }
 	| exp TIMES exp          { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, type->type); emitBinary3AC(scope, A2TIMES, $1, $3, $$); }
-	| exp DIVIDE exp         { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, int_t); emitBinary3AC(scope, A2DIVIDE, $1, $3, $$); }
+	| exp DIVIDE exp         { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, type->type); emitBinary3AC(scope, A2DIVIDE, $1, $3, $$); }
 	;
 
 exp: MINUS exp %prec UMINUS { checkIsNumber($2); $$ = newAnonVar(scope, int_t); emitUnary3AC(scope, A1MINUS, $2, $$); }
@@ -537,8 +539,8 @@ functionCall: NAME LPAR arguments RPAR {	// function call
 	$$ = newAnonVarWithType(scope, typeInfo);
 	
 	SYMBOL_LIST* arguments = $3;
-	for(; arguments; arguments = arguments->next) {	
-		emit(scope, gen3AC(PARAM, arguments->info, 0, 0));
+	for(int i = 0; i < arguments->size; i++) {
+		emit(scope, gen3AC(PARAM, arguments->symbols[i], 0, 0));
 	}
 	emit(scope, gen3AC(CALL, function, 0, 0));
 	emit(scope, gen3AC(GETRETURNVALUE, 0, 0, $$));
@@ -548,7 +550,7 @@ arguments: %empty                     { $$ = 0; }  // No arguments
          | non_empty_argument_list    { $$ = $1; } // 1 or more arguments
          ;
 
-non_empty_argument_list: exp                               { $$ = insertSymbolInSymbolList(0, $1);  }  // 1 argument 
+non_empty_argument_list: exp                               { $$ = insertSymbolInSymbolList(initSymbolList(), $1);  }  // 1 argument 
   				       | non_empty_argument_list COMMA exp { $$ = insertSymbolInSymbolList($1, $3); }  // previous arguments + COMMA + (nonempty) exp
   					   ;
 

@@ -27,7 +27,22 @@
 
 # Code generation
 
-- [ ] Create a function that converts each IR instruction into the appropriate assembler instructions 
+- [x] Create a function that converts each IR instruction into the appropriate assembler instructions 
 - [ ] Implement the algorithm to find out to which register each symbolic register should be associated
 - [ ] Implement the logic to put on the stack and pop back from the stack the symbolic register that couldn't be associated to a real register
+
+### Instructions
+
+- [ ] Get register / Setup Symbol
+- [x] Push / Pop
+- [ ] Move: moveIndexed incomplete
+- [x] Jump
+- [ ] Function calls: params, call, return DONE; need to save registers
+- [x] Math: +, -, times, divide
+- [ ] Syscalls: write DONE; read and exit need to be converted to x86 64;
+- [x] Length of an array
+- [ ] AAS: array modification
+- [ ] ADDR: get address
+- [x] DEREF, DEREFA: move from/to memory
+
 

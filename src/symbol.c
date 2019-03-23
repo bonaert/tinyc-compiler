@@ -9,9 +9,9 @@
 
 
 TYPE_LIST* makeTypeList(SYMBOL_LIST* symbolList) {
-    TYPE_LIST* typeList = 0;
-    for(; symbolList; symbolList = symbolList->next) {
-        typeList = insertTypeInList(symbolList->info->type, typeList);
+    TYPE_LIST* typeList = initTypeList();
+    for(int i = 0; i < symbolList->size; i++){
+        insertTypeInList(symbolList->symbols[i]->type, typeList);
     }
     return typeList;
 }
@@ -39,6 +39,10 @@ SYMBOL_INFO* createConstantSymbol(TBASIC type, int value) {
     return symbolInfo;
 }
 
+int isConstantSymbol(SYMBOL_INFO* symbol) {
+    return symbol->symbolKind == constant_s;
+}
+
 SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo) {
     SYMBOL_INFO* symbolInfo = createBaseSymbol(name, typeInfo, variable_s);
     // TODO: add location
@@ -58,10 +62,34 @@ void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO*
 }
 
 
-SYMBOL_LIST* getLastSymbolCell(SYMBOL_LIST* symbolList) {
-    if (symbolList == 0) { return 0; }
-    for(; symbolList->next; symbolList = symbolList->next) {}
-    return symbolList;
+
+
+static int SYMBOL_INCREMENT_SIZE = 20;
+void growSymbolListIfNeeded(SYMBOL_LIST* symbols) {
+    int capacity = symbols->capacity;
+    if (capacity == 0){ // Haven't allocated buffer yet
+        symbols->symbols = malloc(sizeof(SYMBOL_INFO*) * SYMBOL_INCREMENT_SIZE);
+        symbols->capacity = SYMBOL_INCREMENT_SIZE;
+        symbols->size = 0;
+    } else if (symbols->size == capacity) {  // Reached max
+        symbols->symbols = realloc(symbols->symbols, (capacity + SYMBOL_INCREMENT_SIZE) * sizeof(SYMBOL_INFO*)); /* like malloc() if buf==0 */
+        if (!symbols->symbols) {
+            fprintf(stderr, "Cannot expand symbol list space (%d symbol pointers)", (int) ((capacity + SYMBOL_INCREMENT_SIZE)));
+            exit(1);
+        }
+        symbols->capacity = capacity + SYMBOL_INCREMENT_SIZE;
+    }
+}
+
+
+
+
+SYMBOL_LIST* initSymbolList() {
+    SYMBOL_LIST* symbols = (SYMBOL_LIST*) malloc(sizeof(SYMBOL_LIST));
+    symbols->capacity = 0;
+    symbols->size = 0;
+    symbols->symbols = 0;
+    return symbols;
 }
 
 /**
@@ -69,17 +97,11 @@ SYMBOL_LIST* getLastSymbolCell(SYMBOL_LIST* symbolList) {
  * Returns a pointer to the new SYMBOL_LIST.
  */ 
 SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symbolInfo) {
+    growSymbolListIfNeeded(symbolList);
+    symbolList->symbols[symbolList->size] = symbolInfo;
+    symbolList->size++;
     // TODO: store location of the instruction 
-    // TODO: maybe convert everything to a list so that manipulation becomes easier
-    // as the prof suggested
-    SYMBOL_LIST* s = malloc(sizeof(SYMBOL_LIST));
-    SYMBOL_LIST* lastCell = getLastSymbolCell(symbolList);
-
-    s->info = symbolInfo;
-    s->next = 0;
-    s->previous = lastCell;
-    if (lastCell) { lastCell->next = s; }
-    return symbolList ? symbolList : s;
+    return symbolList;
 }
 
 /**
@@ -143,15 +165,17 @@ int areSymbolListEqual(SYMBOL_LIST* s1, SYMBOL_LIST* s2) {
         return 1; // if both pointers point to the same symbol list, the symbol lists are equal
     }
 
-    while (s1 && s2) {
-        if (!(areSymbolsEqual(s1->info, s2->info))) {
-            return 0;
-        }
-        s1 = s1->next;
-        s2 = s2->next;
+    if (s1->size != s2->size) {
+        return 0;
     }
 
-    return (s1 == NULL) && (s2 == NULL);
+    for(int i = 0; i < s1->size; i++){
+         if (!(areSymbolsEqual(s1->symbols[i], s2->symbols[i]))) {
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
 
@@ -165,7 +189,7 @@ int areSymbolListEqual(SYMBOL_LIST* s1, SYMBOL_LIST* s2) {
 SYMBOL_TABLE* createScope(SYMBOL_TABLE* parentScope) {
     SYMBOL_TABLE* subscope = malloc(sizeof(SYMBOL_TABLE));
     subscope->parent = parentScope;
-    subscope->symbolList = 0;
+    subscope->symbolList = initSymbolList();
     subscope->function = parentScope ? parentScope->function : 0;
     return subscope;
 }
@@ -180,11 +204,12 @@ SYMBOL_TABLE* createScope(SYMBOL_TABLE* parentScope) {
  * If one exists, returns a pointer to it. Otherwise, returns 0
  */
 SYMBOL_INFO* findSymbolInSymbolList(SYMBOL_LIST* symbolList, char* name) {
-    for(; symbolList; symbolList = symbolList->next) {
-        if (strcmp(symbolList->info->name, name) == 0) {
-            return symbolList->info;
+    for(int i = 0; i < symbolList->size; i++) {
+        if (strcmp(symbolList->symbols[i]->name, name) == 0) {
+            return symbolList->symbols[i];
         }
     }
+    
     return 0;
 }
 
@@ -241,10 +266,10 @@ void printSymbol(FILE* output, SYMBOL_INFO* symbolInfo) {
  * the char separator.
  */
 void printSymbolList(FILE* output, SYMBOL_LIST* symbolList, char separator) {
-    for (; symbolList; symbolList = symbolList->next) {
-        printSymbol(output, symbolList->info);
+    for(int i = 0; i < symbolList->size; i++) {
+        printSymbol(output, symbolList->symbols[i]);
         
-        if (symbolList->next) {
+        if (i < symbolList->size - 1) {
             fprintf(output, "%c", separator);
         }
     }
@@ -310,3 +335,24 @@ int getSymbolSize(SYMBOL_INFO* symbol) {
     return getTypeSize(symbol->type);
 }
 
+
+char* getConstantValue(SYMBOL_INFO* constant, char* res) {
+    if (constant->type->type == char_t) {
+        sprintf(res, "$%c", constant->details.constant.value.charValue);
+    } else if ((constant->type->type == int_t)) {
+        sprintf(res, "$%d", constant->details.constant.value.intValue);
+    } else {
+        fprintf(stderr, "Error, array or function is considered a constant!");
+        exit(1);
+    }
+    return res;
+}
+
+char* getNameOrValue(SYMBOL_INFO* symbol, char* res) {
+    if (isConstantSymbol(symbol)) {
+        getConstantValue(symbol, res);
+        return res;
+    } else {
+        return symbol->name;
+    }
+}
