@@ -1,0 +1,5 @@
+int main() {
+    char[7] a;
+    write length a / 10;
+    return 1;
+}

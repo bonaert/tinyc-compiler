@@ -1,0 +1,10 @@
+int main() {
+    int a = 0;
+    char c = '0';
+
+    read c;
+    write c;
+
+    read a;
+    write a;
+}

@@ -294,18 +294,25 @@ void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
 // Moves
 void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target) {
     if (isConstantSymbol(source)) {
-        fprintf(stdout, "\tmovl %s, %s     # %s = %s\n", 
-            getConstantValue(source, op1), 
-            getLocation(instrNum, target, op2),
-            target->name,
-            getConstantValue(source, op1));  // Check
+        getConstantValue(source, op1);
+        getConstantValue(source, extraInfo1);
     } else {
-        fprintf(stdout, "\tmovl %s, %s  # %s = %s\n", 
-            moveToDefaultRegister(instrNum, source, op1), 
-            getLocation(instrNum, target, op2),
-            target->name,
-            getNameOrValue(source, extraInfo1));  // Check
+        moveToDefaultRegister(instrNum, source, op1);
+        getNameOrValue(source, extraInfo1);
     }
+
+    char * moveType = "movl";
+    if (target->type->type == char_t) {
+        moveType = "movb";
+    }
+
+    fprintf(stdout, "\t%s %s, %s     # %s = %s\n",
+        moveType, 
+        op1, 
+        getLocation(instrNum, target, op2),
+        target->name,
+        extraInfo1
+    );  // Check
 
 };
 
@@ -394,17 +401,30 @@ void division(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* 
 
 // Syscalls
 void read(int instrNum, SYMBOL_INFO* symbol) {
+    if (symbol->type->type == char_t) {
+        outputLine("call readChar");
+        fprintf(stdout, "\tmovb %%al, %s\n", getLocation(instrNum, symbol, op1));
+    } else { // int_t
+        outputLine("call readInt");
+        fprintf(stdout, "\tmovl %%eax, %s\n", getLocation(instrNum, symbol, op1));
+    }
+    /*
     outputLine("movl $0, %rax    # read syscall");
     outputLine("movl $0, %rdi    # read from stdin");
     fprintf(stdout, "\tmovl %d,  %%rsi    # place where the buffer is in memory \n", getAddress(symbol));
     outputLine("movl $1, %rdx    # write 1 character");
     outputLine("syscall          # make syscall");
+    */
 }
 
 void write(int instrNum, SYMBOL_INFO* symbol) {
-    // Uses outside-world convention, so I have to put the parameter in %edi instead of in the stack
+    // Uses outside-world convention, so I have to put the parameter in %edi instead of putting it in the stack
     moveToRegister(instrNum, symbol, op1, RDI); 
-    outputLine("call printInteger"); // This function call the printf function
+    if (symbol->type->type == char_t) {
+        outputLine("call printChar");
+    } else {
+        outputLine("call printInteger");
+    }
 }
 
 void outputExit() {
