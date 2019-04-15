@@ -381,7 +381,7 @@ void moveAddress(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target) {
     int offset = getRelativeLocation(instrNum, array);
     getLocation(instrNum, target, op1);
     fprintf(stdout, "\tmovq %rbp, %s\n", op1);
-    fprintf(stdout, "\tadd $%d, %s\n", offset, op1);
+    fprintf(stdout, "\taddq $%d, %s\n", offset, op1);
 }
 
 /*

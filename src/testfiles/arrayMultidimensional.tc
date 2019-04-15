@@ -1,6 +1,6 @@
 int main() {
 
-    int[7] a;
+    int[7][5] a;
     write length a;
     
     // TODO: write 'b'
@@ -8,9 +8,9 @@ int main() {
     write space;
     
     
-    a[2] = 7;
-    a[5] = 10;
-    int b = a[2] + a[5];
+    a[2][3] = 7;
+    a[5][7] = 10;
+    int b = a[2][3] + a[5][7];
     write b;    
     
     return 1;
