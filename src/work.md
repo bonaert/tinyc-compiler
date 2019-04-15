@@ -21,7 +21,7 @@
 
 - [x] Decide on representation for the IR: 3 Access Code (3AC)
 - [x] Generate the appropriate 3AC codes
-- [ ] Handle function calls (almost finished, need to see how to handle using the return value)
+- [x] Handle function calls
 - [x] Handle backpatching for if/if-else/while statements
 - [x] Handle array accesses even for high-dimensional arrays
 
@@ -37,7 +37,7 @@
 - [x] Push / Pop
 - [x] Move
 - [x] Jump
-- [] Function calls: params, call, return DONE; need to save registers
+- [ ] Function calls: params, call, return DONE; need to save registers
 - [x] Math: +, -, times, divide
 - [x] Syscalls: write, read 
 - [x] LENGTH: Length of an array
