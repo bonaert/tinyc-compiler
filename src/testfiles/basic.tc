@@ -3,7 +3,9 @@ int main() {
     if (i == 5) {
         i = i + i;
     }
-    i = 7;
+    i = 5 + (7 + i) * 3 + 12 / 3;
+
+    write i;
 
     return i;
 }

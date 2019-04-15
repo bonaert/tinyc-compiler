@@ -23,6 +23,7 @@ static char* op2;
 static char* extraInfo1;
 
 static char* DEFAULT_REGISTER = "%r10d";
+static char* DEFAULT_REGISTER_EXTENDED = "%r10d";
 static char* OTHER_REGISTER = "%r11d";
 
 
@@ -59,7 +60,7 @@ char* getLocation(int instrNum, SYMBOL_INFO* symbol, char* res){
             addSymbolToStack(symbol, stack);
         }
         int location = getSymbolLocationOnStack(symbol, stack);
-        sprintf(res, "%d(%%rbp)", location);
+        sprintf(res, "-%d(%%rbp)", location);
     }
     
     return res;
@@ -112,7 +113,7 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
     SYMBOL_INFO* left = instruction->args[0];
     SYMBOL_INFO* right = instruction->args[1];
     
-    // In AT&T syntax needs the constant to be on the left
+    // AT&T syntax requires the constant to be on the left
     if (isConstantSymbol(right)) { 
         left = instruction->args[1];
         right = instruction->args[0];
@@ -142,7 +143,8 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
 
 // Pushing and popping from the stack
 void push(int instrNum, SYMBOL_INFO* symbol) {
-    outputWithRegister("pushq %s", moveToDefaultRegister(instrNum, symbol, op1));  // Check
+    moveToRegister(instrNum, symbol, op1, "%edi");
+    //outputWithRegister("pushq %s", "%r11");  // Check
 }
 
 void pop(int instrNum, SYMBOL_INFO* symbol) {
@@ -275,7 +277,7 @@ void moveRegToMem(int instrNum, char* reg, SYMBOL_INFO* dest) {
 
 
 // Maths
-void outputMathOperation(char* operation, int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
+void outputSimpleMathOperation(char* operation, int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
     fprintf(stdout, "\t# Math operation - Start: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(left, op2));
     moveToRegister(instrNum, left, op1, DEFAULT_REGISTER);
     moveToRegister(instrNum, right, op1, OTHER_REGISTER);
@@ -283,6 +285,37 @@ void outputMathOperation(char* operation, int instrNum, SYMBOL_INFO* left, SYMBO
 
     moveRegToMem(instrNum, DEFAULT_REGISTER, target);
     fprintf(stdout, "\t# Math operation - End: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(left, op2));
+}
+
+void multiplication(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
+    fprintf(stdout, "\t# Multiplication - Start: %s = %s x %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(left, op2));
+    moveToRegister(instrNum, left, op1, "%eax");
+    moveToRegister(instrNum, right, op1, DEFAULT_REGISTER);
+    fprintf(stdout, "\timull %s\n", DEFAULT_REGISTER);
+    
+
+    moveRegToMem(instrNum, "%eax", target);
+    fprintf(stdout, "\t# Multiplication - End: %s = %s x %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(left, op2));
+}
+
+void division(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
+    fprintf(stdout, "\t# Division - Start: %s = %s / %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(left, op2));
+    
+    /* To divide A by B, 
+     * 1) Put A in %rax
+     * 2) Sign extend %rax into %rdx
+     * 3) Use the idiv instruction with B
+     * The quotient is in %rax and the remainder in %rdx
+     */ 
+    moveToRegister(instrNum, left, op1, "%eax");
+    outputLine("cdq             # sign-extend %rax into %rdx");
+
+    moveToRegister(instrNum, right, op1, DEFAULT_REGISTER);
+
+    fprintf(stdout, "\tidivl %s\n", DEFAULT_REGISTER);
+
+    moveRegToMem(instrNum, "%eax", target);
+    fprintf(stdout, "\t# Division - End: %s = %s / %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(left, op2));
 }
 
 
@@ -300,12 +333,8 @@ void read(int instrNum, SYMBOL_INFO* symbol) {
 }
 
 void write(int instrNum, SYMBOL_INFO* symbol) {
-    // When I want to print 97, I have to print '9' and '7' which is then 41 and 39
-    // Thankfully, the prof provided a x86_64 function that allows printing integer easily
-    // We can just call that procedure
-    // However, I might need to adapt it to x86_64 (since it's built on x86)
     push(instrNum, symbol);
-    outputLine("call print_int");
+    outputLine("call printInteger"); // This function call the printf function
 }
 
 void outputExit() {
@@ -339,16 +368,16 @@ void length(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target) {
 void translateInstruction(SYMBOL_INFO* function, int instrNum, INSTRUCTION* instruction) {
     switch (instruction->opcode) {
         case A2PLUS:  // c = a + b
-            outputMathOperation("addl", instrNum, instruction->args[0], instruction->args[1], instruction->result);
+            outputSimpleMathOperation("addl", instrNum, instruction->args[0], instruction->args[1], instruction->result);
             break;
         case A2MINUS:  // a - b
-            outputMathOperation("subl", instrNum, instruction->args[0], instruction->args[1], instruction->result);
+            outputSimpleMathOperation("subl", instrNum, instruction->args[0], instruction->args[1], instruction->result);
             break;
         case A2TIMES:  // a * b
-            outputMathOperation("imull", instrNum, instruction->args[0], instruction->args[1], instruction->result);
+            multiplication(instrNum, instruction->args[0], instruction->args[1], instruction->result);
             break;
         case A2DIVIDE:  // a / b
-            outputMathOperation("idivl", instrNum, instruction->args[0], instruction->args[1], instruction->result);
+            division(instrNum, instruction->args[0], instruction->args[1], instruction->result);
             break;
         case A1MINUS:  // b = -a
             unsupported(instrNum);
@@ -581,6 +610,7 @@ void setup() {
     extraInfo1 = (char *) malloc(sizeof(char) * 100);  // This should be more than enough
 
     fputs("\t.text\n", stdout);
+    fputs("\t.include \"printInteger.s\"\n", stdout);
 };
 
 void teardown() {
