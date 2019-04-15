@@ -338,8 +338,8 @@ int getSymbolSize(SYMBOL_INFO* symbol) {
 
 char* getConstantValue(SYMBOL_INFO* constant, char* res) {
     if (constant->type->type == char_t) {
-        sprintf(res, "$%c", constant->details.constant.value.charValue);
-    } else if ((constant->type->type == int_t)) {
+        sprintf(res, "$%d", constant->details.constant.value.charValue);
+    } else if (constant->type->type == int_t) {
         sprintf(res, "$%d", constant->details.constant.value.intValue);
     } else {
         fprintf(stderr, "Error, array or function is considered a constant!");

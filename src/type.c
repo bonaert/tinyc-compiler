@@ -19,6 +19,7 @@ int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
 
     switch (t1->type) {
         case int_t:
+        case address_t:
         case char_t:
             return 1;  // In the case of INT and CHAR, if the kinds are equal then the types are equal
         case array_t:
@@ -215,6 +216,8 @@ void printType(FILE* output, TYPE_INFO* type) {
         fprintf(output, "int");
     } else if (type->type == char_t) {
         fprintf(output, "char");
+    } else if (type->type == address_t) {
+        fprintf(output, "address");
     } else if (type->type == array_t) {
         fprintf(output, "array[");
         printType(output, type->info.array.base);
@@ -250,6 +253,7 @@ int getTypeSize(TYPE_INFO* type) {
     TBASIC typeKind = type->type;
     if       (typeKind == char_t) { return sizeof(char); }
     else if  (typeKind == int_t) { return sizeof(int); }
+    else if  (typeKind == address_t) { return sizeof(int *); }
     else if  (typeKind == array_t) { 
         return getArrayTotalSize(type) * getTypeSize(type->info.array.base);
     } else {

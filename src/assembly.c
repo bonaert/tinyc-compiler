@@ -92,28 +92,31 @@ void outputWithRegister(char* string, char* registerUsed) {
 
 int getAddress(SYMBOL_INFO* symbol) {}
 
-char* getLocation(int instrNum, SYMBOL_INFO* symbol, char* res){
-    if (symbol->symbolKind == constant_s) {
-        getConstantValue(symbol, res);
-        return res;
-    }
-    
+int getRelativeLocation(int instrNum, SYMBOL_INFO* symbol) {
     int parameterPos = getParameterIndex(symbol, CURRENT_FUNCTION);
     if (parameterPos >= 0) { // It's an argument
         // Return address (8) + Saved %RBP (8)
         int offset = 16 + parameterPos * 8;
-        sprintf(res, "%d(%%rbp)", offset);
+        return offset;
     } else { // It's a local variable
         if (!symbolIsOnStack(symbol, stack)) {
             addSymbolToStack(symbol, stack);
         }
         int location = getSymbolLocationOnStack(symbol, stack);
-        sprintf(res, "-%d(%%rbp)", location);
-
+        return -location;
     }
-    
-    return res;
+}
+
+char* getLocation(int instrNum, SYMBOL_INFO* symbol, char* res){
+    if (symbol->symbolKind == constant_s) {
+        getConstantValue(symbol, res);
+    } else {
+        int offset = getRelativeLocation(instrNum, symbol);
+        sprintf(res, "%d(%%rbp)", offset);
+    }
+    return res; 
 };
+
 char* getMemoryValue(int instrNum, SYMBOL_INFO* value){};
 
 
@@ -130,6 +133,12 @@ char* moveToRegister(int instrNum, SYMBOL_INFO* value, char* op, int targetReg){
         fprintf(stdout, "\tmovl %s, %s\n", reg, registerNames32[targetReg]);
         return registerNames32[targetReg]; 
     }
+};
+
+char* moveToRegister64(int instrNum, SYMBOL_INFO* value, char* op, int targetReg){
+    char *reg = getLocation(instrNum, value, op);
+    fprintf(stdout, "\tmovq %s, %s\n", reg, registerNames64[targetReg]);
+    return registerNames64[targetReg]; 
 };
 
 char* moveToDefaultRegister(int instrNum, SYMBOL_INFO* value, char* op){
@@ -293,22 +302,25 @@ void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
 
 // Moves
 void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target) {
+    char * location; 
     if (isConstantSymbol(source)) {
-        getConstantValue(source, op1);
-        getConstantValue(source, extraInfo1);
+        location = getConstantValue(source, op1);
+        extraInfo1 = getConstantValue(source, extraInfo1);
     } else {
-        moveToDefaultRegister(instrNum, source, op1);
-        getNameOrValue(source, extraInfo1);
+        // IMPORTANt: we can't do op1 = moveToDefaultRegister(instrNum, source, op1);
+        //            because op1 should never be modifier!
+        // TODO: improve structure so that this is never possible
+        location = moveToDefaultRegister(instrNum, source, op1);
+        extraInfo1 = getNameOrValue(source, extraInfo1);
     }
 
     char * moveType = "movl";
     if (target->type->type == char_t) {
         moveType = "movb";
     }
-
     fprintf(stdout, "\t%s %s, %s     # %s = %s\n",
         moveType, 
-        op1, 
+        location, 
         getLocation(instrNum, target, op2),
         target->name,
         extraInfo1
@@ -320,9 +332,57 @@ void moveConstant(int instrNum, int value, SYMBOL_INFO* target) {
     fprintf(stdout, "\tmovl $%d, %s\n", value, getLocation(instrNum, target, op1));  // Check
 }
 
-void moveIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* dest){
+void moveFromIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* dest){
+    moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
+    fprintf("\tmov $0, %s      # We clear all the bits to 0 (the upper 32 bits need to be 0)\n", registerNames64[OTHER_REGISTER]);
+    moveToRegister(instrNum, offset, op2, OTHER_REGISTER);
+    getLocation(instrNum, dest, extraInfo1);
+    
+    if (dest->type->type == char_t) {
+        fprintf(stdout, "\tmov  $0, %r12\n");
+        fprintf(stdout, "\tmovb 0(%s, %s, 1), %r12b        # array access \n", 
+            registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
+        fprintf(stdout, "\tmovb %r12b, %s \n", extraInfo1);
+    } else if (dest->type->type == int_t) {
+        fprintf(stdout, "\tmov  $0, %r12\n");
+        fprintf(stdout, "\tmovl 0(%s, %s, 1), %r12d        # array access \n", 
+            registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
+        fprintf(stdout, "\tmovl %r12d, %s \n", extraInfo1);
+    } 
 
+    fprintf(stdout, "\tmov $0, %s      # Reset register that was used in 64 bit mode\n", registerNames64[DEFAULT_REGISTER]);
 };
+
+
+void moveToIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* source){
+    moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
+    fprintf("\tmov $0, %s      # We clear all the bits to 0 (the upper 32 bits need to be 0)\n", registerNames64[OTHER_REGISTER]);
+    moveToRegister(instrNum, offset, op2, OTHER_REGISTER);
+    getLocation(instrNum, source, extraInfo1);
+    
+    if (source->type->type == char_t) {
+        fprintf(stdout, "\tmov  $0, %r12\n");
+        fprintf(stdout, "\tmovb %s, %r12b \n", extraInfo1);
+        fprintf(stdout, "\tmovb %r12b, 0(%s, %s, 1)        # array modification \n", 
+            registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
+        
+    } else if (source->type->type == int_t) {
+        fprintf(stdout, "\tmov  $0, %r12\n");
+        fprintf(stdout, "\tmovl %s, %r12d \n", extraInfo1);
+        fprintf(stdout, "\tmovl %r12d, 0(%s, %s, 1)        # array modification \n", 
+            registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
+        
+    } 
+
+    fprintf(stdout, "\tmov $0, %s      # Reset register that was used in 64 bit mode\n", registerNames64[DEFAULT_REGISTER]);
+};
+
+void moveAddress(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target) {
+    int offset = getRelativeLocation(instrNum, array);
+    getLocation(instrNum, target, op1);
+    fprintf(stdout, "\tmovq %rbp, %s\n", op1);
+    fprintf(stdout, "\tadd $%d, %s\n", offset, op1);
+}
 
 /*
 void moveFromMemory(int instrNum, SYMBOL_INFO* memoryAddress, SYMBOL_INFO* dest) {
@@ -354,24 +414,24 @@ void moveRegToMem(int instrNum, char* regName, SYMBOL_INFO* dest) {
 
 // Maths
 void outputSimpleMathOperation(char* operation, int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
-    fprintf(stdout, "\t# Math operation - Start: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(left, op2));
+    fprintf(stdout, "\t# Math operation - Start: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(right, op2));
     moveToRegister(instrNum, left, op1, DEFAULT_REGISTER);
     moveToRegister(instrNum, right, op1, OTHER_REGISTER);
     fprintf(stdout, "\t%s %s, %s\n", operation, registerNames32[OTHER_REGISTER], registerNames32[DEFAULT_REGISTER]);
 
     moveRegToMem(instrNum, registerNames32[DEFAULT_REGISTER], target);
-    fprintf(stdout, "\t# Math operation - End: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(left, op2));
+    fprintf(stdout, "\t# Math operation - End: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(right, op2));
 }
 
 void multiplication(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
-    fprintf(stdout, "\t# Multiplication - Start: %s = %s x %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(left, op2));
+    fprintf(stdout, "\t# Multiplication - Start: %s = %s x %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(right, op2));
     moveToRegister(instrNum, left, op1, RAX); // TODO: maybe switch to EAX here for clarity
     moveToRegister(instrNum, right, op1, DEFAULT_REGISTER);
     fprintf(stdout, "\timull %s\n", registerNames32[DEFAULT_REGISTER]);
     
 
     moveRegToMem(instrNum, "%eax", target);
-    fprintf(stdout, "\t# Multiplication - End: %s = %s x %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(left, op2));
+    fprintf(stdout, "\t# Multiplication - End: %s = %s x %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(right, op2));
 }
 
 void division(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
@@ -513,17 +573,18 @@ void translateInstruction(SYMBOL_INFO* function, int instrNum, INSTRUCTION* inst
             break;
         case AAC:  // A = B[I] - array access       (B = base address, I = offset)
                    //     args[0] = place       args[1] = offset      result = dest
-            moveIndexed(instrNum, instruction->args[0], instruction->args[1], instruction->result);
+            moveFromIndexed(instrNum, instruction->args[0], instruction->args[1], instruction->result);
             break;
-        case AAS:                      // A[I] = B - array modification (A = base address, I = offset)
-            unsupported(instruction);  // TODO: handle this case in the parser
+        case AAS:  // A[I] = B - array modification (A = base address, I = offset)
+                   //         args[0] = base       args[1] = offset      result = source
+            moveToIndexed(instrNum, instruction->args[0], instruction->args[1], instruction->result);
             break;
         case ADDR:  // A = &B   - get the address of B
                     // TODO: not sure what kind of move I should use...
                     // maybe use a label? but what if the array is used in a function call?
                     // TODO: figure out what
                     // moveConstant(instruction->args[0] , instruction->result);
-            unsupported(instruction);
+            moveAddress(instrNum, instruction->args[0], instruction->result);
             break;
         case DEREF:  // A = *B   - get the value pointed by B (dereferencing)
             unsupported(instruction);

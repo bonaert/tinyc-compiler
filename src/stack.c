@@ -12,8 +12,7 @@ int getStackSize(SYMBOL_LIST* stack) {
 int getSymbolLocationOnStack(SYMBOL_INFO* symbol, SYMBOL_LIST* stack) {
     int res = 0;
     
-    for(int i = 0; i < stack->size; i++) {
-        
+    for(int i = 0; i < stack->size; i++) {  
         res += getTypeSize(stack->symbols[i]->type);
         if (stack->symbols[i] == symbol) {
             return res;

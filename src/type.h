@@ -23,7 +23,8 @@ typedef enum {
     int_t,
     char_t,
     function_t, 
-    array_t
+    array_t,
+    address_t
 } TBASIC;
 
 

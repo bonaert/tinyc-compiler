@@ -411,10 +411,17 @@ goend: %empty {
 
 
 
-statementWithoutBlock: lhs ASSIGN exp {
-	checkAssignment($1, $3); 
-	emitAssignement3AC(scope, $1, $3); 
+statementWithoutBlock: lvalue ASSIGN exp {
+	if ($1.offset == NIL) {
+		checkAssignment($1.place, $3);
+		emitAssignement3AC(scope, $1.place, $3);  
+	} else {
+		// TODO
+		// checkTypeIsRIght($1.typeKind, $3);
+		emit(scope, gen3AC(AAS, $1.place, $1.offset, $3));  
+	}
 };
+
 
 statementWithoutBlock: RETURN exp { // return statement
 	checkReturnType(scope, $2);
@@ -461,8 +468,8 @@ elist: elist RBRACK LBRACK exp {
 };
 
 lvalue: elist RBRACK {
-	$$.place = newAnonVar(scope, int_t);   // TODO: check if this type is right
-	$$.offset = newAnonVar(scope, int_t);  // TODO: check if this type is right
+	$$.place = newAnonVar(scope, address_t);   
+	$$.offset = newAnonVar(scope, int_t);  
 	$$.typeKind = getBaseType(($1.array)->type)->type;
 
 	/* base = addr a - array_base(a) */

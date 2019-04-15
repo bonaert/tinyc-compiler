@@ -6,29 +6,29 @@ factorial:
 	movq %rsp, %rbp      # Set new base pointer
 	movl $1, -4(%rbp)     # res = $1
 	movq 16(%rbp), %r10
-	movl %r10d, -8(%rbp)  # factor = n
+	movl %r10d, -8(%rbp)     # factor = n
 factorial_2:
 	movl -8(%rbp), %r10d
 	cmpl $1, %r10d
 	jg factorial_4
 	jmp factorial_9
 factorial_4:
-	# Multiplication - Start: anon__1 = res x res
+	# Multiplication - Start: anon__1 = res x factor
 	movl -4(%rbp), %eax
 	movl -8(%rbp), %r10d
 	imull %r10d
 	movl %eax, -12(%rbp)
-	# Multiplication - End: anon__1 = res x res
+	# Multiplication - End: anon__1 = res x factor
 	movl -12(%rbp), %r10d
-	movl %r10d, -4(%rbp)  # res = anon__1
-	# Math operation - Start: anon__2 = factor subl factor
+	movl %r10d, -4(%rbp)     # res = anon__1
+	# Math operation - Start: anon__2 = factor subl $1
 	movl -8(%rbp), %r10d
 	movl $1, %r11d
 	subl %r11d, %r10d
 	movl %r10d, -16(%rbp)
-	# Math operation - End: anon__2 = factor subl factor
+	# Math operation - End: anon__2 = factor subl $1
 	movl -16(%rbp), %r10d
-	movl %r10d, -8(%rbp)  # factor = anon__2
+	movl %r10d, -8(%rbp)     # factor = anon__2
 	jmp factorial_2
 factorial_9:
 	movq $0, %rax        # return - set all 64 bits to 0 
@@ -49,7 +49,7 @@ main:
 	call factorial
 	movl %eax, -4(%rbp)
 	movl -4(%rbp), %r10d
-	movl %r10d, -8(%rbp)  # b = anon__3
+	movl %r10d, -8(%rbp)     # b = anon__3
 	movl -8(%rbp), %edi
 	call printInteger
 	movq %rbp, %rsp      # Reset stack to previous base pointer
