@@ -238,6 +238,8 @@ functionParameters: functionParameters COMMA functionParameter    { $$ = insertS
 		          ;
 
 functionParameter: type NAME {
+	// Important: this lines makes it so that the parameters are the first symbols in the symbol table!
+	// This convention is used in the getParameterIndex() function in functions.c
 	$$ = insertVariableInSymbolTable(scope, $2, $1);
 };
 

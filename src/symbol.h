@@ -57,7 +57,7 @@ typedef struct {
 } SYMBOL_INFO;
 
 /* We'll store all the symbols in a linked list */
-typedef struct symbolCell {
+typedef struct symbolList {
 	SYMBOL_INFO** symbols; // array of pointer to symbols
 	int size;
 	int capacity;

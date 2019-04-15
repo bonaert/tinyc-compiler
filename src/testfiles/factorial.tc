@@ -1,0 +1,14 @@
+int factorial(int n) {
+    int res = 1;
+    int factor = n;
+    while (factor > 1) {
+        res = res * factor;
+        factor = factor - 1;
+    }
+    return res;
+}
+
+int main() {
+    int b = factorial(10);
+    write b;
+}

@@ -1,0 +1,12 @@
+int factorialRecursive(int n) {
+    int res = 1;
+    if (n > 1) {
+        res = n * factorialRecursive(n - 1);
+    }
+    return res;
+}
+
+int main() {
+    int b = factorialRecursive(10);
+    write b;
+}

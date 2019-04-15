@@ -22,9 +22,49 @@ static char* op1;
 static char* op2;
 static char* extraInfo1;
 
-static char* DEFAULT_REGISTER = "%r10d";
-static char* DEFAULT_REGISTER_EXTENDED = "%r10d";
-static char* OTHER_REGISTER = "%r11d";
+
+SYMBOL_INFO* CURRENT_FUNCTION;
+
+
+
+
+
+enum REGISTERS {
+    R8 = 0,  // 8 new general purpose registers introduced in x86 64
+    R9,
+    R10,
+    R11,
+    R12,
+    R13,
+    R14,
+    R15,
+    RAX,     // 4 general purpose registers that already existed in x86 (but now they're 64 bits)
+    RBX,
+    RCX, 
+    RDX,
+    RSI,    // No idea
+    RDI,    // No idea
+    RBP,    // Frame base pointer
+    RSP    // Top of the stack pointer
+};
+
+static char* registerNames32[] = {
+    "%r8d", "%r9d", "%r10d", "%r11d", "%r12d", "%r13d", "%r14d", "%r15d", 
+    "%eax", "%ebx", "%ecx", "%edx",
+    "%esi", "%edi", 
+    "%rbp", "%rsp"  // For the special register, we always use the 64 bit version
+};
+
+static char* registerNames64[] = {
+    "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", 
+    "%rax", "%rbx", "%rcx", "%rdx",
+    "%rsi", "%rdi",
+    "%rbp", "%rsp"  // For the special register, we always use the 64 bit version
+};
+
+static int DEFAULT_REGISTER = R10;
+static int DEFAULT_REGISTER_EXTENDED = R10;
+static int OTHER_REGISTER = R11;
 
 
 // Utility functions
@@ -55,12 +95,21 @@ int getAddress(SYMBOL_INFO* symbol) {}
 char* getLocation(int instrNum, SYMBOL_INFO* symbol, char* res){
     if (symbol->symbolKind == constant_s) {
         getConstantValue(symbol, res);
-    } else {
+        return res;
+    }
+    
+    int parameterPos = getParameterIndex(symbol, CURRENT_FUNCTION);
+    if (parameterPos >= 0) { // It's an argument
+        // Return address (8) + Saved %RBP (8)
+        int offset = 16 + parameterPos * 8;
+        sprintf(res, "%d(%%rbp)", offset);
+    } else { // It's a local variable
         if (!symbolIsOnStack(symbol, stack)) {
             addSymbolToStack(symbol, stack);
         }
         int location = getSymbolLocationOnStack(symbol, stack);
         sprintf(res, "-%d(%%rbp)", location);
+
     }
     
     return res;
@@ -70,14 +119,21 @@ char* getMemoryValue(int instrNum, SYMBOL_INFO* value){};
 
 
 
-char* moveToRegister(int instrNum, SYMBOL_INFO* value, char* op, char* regName){
+char* moveToRegister(int instrNum, SYMBOL_INFO* value, char* op, int targetReg){
     char *reg = getLocation(instrNum, value, op);
-    fprintf(stdout, "\tmovl %s, %s\n", reg, regName);
-    return DEFAULT_REGISTER; 
+    if (getParameterIndex(value, CURRENT_FUNCTION) >= 0) {
+        // TODO: very hacky, very shitty, immediately clean this up
+        // I need a better system to handle 32-64 bit register and pushes
+        fprintf(stdout, "\tmovq %s, %s\n", reg, registerNames64[targetReg]); // Get extended version for correctness
+        return registerNames32[targetReg];  // we always use 32 bits registers in practice
+    } else {
+        fprintf(stdout, "\tmovl %s, %s\n", reg, registerNames32[targetReg]);
+        return registerNames32[targetReg]; 
+    }
 };
 
 char* moveToDefaultRegister(int instrNum, SYMBOL_INFO* value, char* op){
-    moveToRegister(instrNum, value, op, DEFAULT_REGISTER);
+    return moveToRegister(instrNum, value, op, DEFAULT_REGISTER);
 };
 
 
@@ -142,8 +198,18 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
 
 
 // Pushing and popping from the stack
-void push(int instrNum, SYMBOL_INFO* symbol) {
-    moveToRegister(instrNum, symbol, op1, "%edi");
+int numParamsUsed = 0;
+void pushParam(int instrNum, SYMBOL_INFO* symbol) {
+    if (numParamsUsed == 0) { // Adjust top of stack pointer
+        fprintf(stdout, "\tmov %rbp, %rsp\n");
+        fprintf(stdout, "\tsub $%d, %rsp\n", getStackSize(stack));
+    }
+
+    fprintf(stdout, "\txor %s, %s\n", registerNames64[DEFAULT_REGISTER], registerNames64[DEFAULT_REGISTER]);
+    moveToDefaultRegister(instrNum, symbol, op1);
+    outputWithRegister("pushq %s", registerNames64[DEFAULT_REGISTER]);  // Check
+    numParamsUsed++;
+    //moveToRegister(instrNum, symbol, op1, "%edi");
     //outputWithRegister("pushq %s", "%r11");  // Check
 }
 
@@ -170,11 +236,14 @@ void call(int instrNum, SYMBOL_INFO* function) {
     // TODO: if yes, do that! I need to always save EAX and EDX, and need
     // to save the other registers that are currently used by my function
     fprintf(stdout, "\tcall %s\n", function->name);
+    
+
+    numParamsUsed = 0;
 
     // TODO: do some register need to be restored after the function call?
 }
 
-static char* parametersRegisters[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
+static int parametersRegisters[] = {RDI, RSI, RDX, RCX, R8, R9};
 int numParameterRegisterUsed = 0;
 void addParameter(int instrNum, SYMBOL_INFO* parameter) {
     // TODO: do some register need to be saved before the first add parameter?
@@ -197,13 +266,13 @@ void addParameter(int instrNum, SYMBOL_INFO* parameter) {
                 parametersRegisters[numParameterRegisterUsed]);
         numParameterRegisterUsed++;
     } else {*/
-        push(instrNum, parameter);
+        pushParam(instrNum, parameter);
     /*}*/
 }
 
 void getReturnValue(int instrNum, SYMBOL_INFO* target) {
     // If the function has a return value, it will be stored in %rax after the function call.
-    fprintf(stdout, "\tmovl %%rax, %s\n", getLocation(instrNum, target, op1));
+    fprintf(stdout, "\tmovl %%eax, %s\n", getLocation(instrNum, target, op1));
 }
 
 void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
@@ -262,9 +331,9 @@ void moveToMemory(int instrNum, SYMBOL_INFO* value, SYMBOL_INFO* memoryAddress) 
 
 
 
-void moveRegToMem(int instrNum, char* reg, SYMBOL_INFO* dest) {
+void moveRegToMem(int instrNum, char* regName, SYMBOL_INFO* dest) {
     // Assumes it's a register
-    fprintf(stdout, "\tmovl %s, %s\n", reg, getLocation(instrNum, dest, op2));  // Check
+    fprintf(stdout, "\tmovl %s, %s\n", regName, getLocation(instrNum, dest, op2));  // Check
 };
 
 
@@ -281,17 +350,17 @@ void outputSimpleMathOperation(char* operation, int instrNum, SYMBOL_INFO* left,
     fprintf(stdout, "\t# Math operation - Start: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(left, op2));
     moveToRegister(instrNum, left, op1, DEFAULT_REGISTER);
     moveToRegister(instrNum, right, op1, OTHER_REGISTER);
-    fprintf(stdout, "\t%s %s, %s\n", operation, OTHER_REGISTER, DEFAULT_REGISTER);
+    fprintf(stdout, "\t%s %s, %s\n", operation, registerNames32[OTHER_REGISTER], registerNames32[DEFAULT_REGISTER]);
 
-    moveRegToMem(instrNum, DEFAULT_REGISTER, target);
+    moveRegToMem(instrNum, registerNames32[DEFAULT_REGISTER], target);
     fprintf(stdout, "\t# Math operation - End: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(left, op2));
 }
 
 void multiplication(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
     fprintf(stdout, "\t# Multiplication - Start: %s = %s x %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(left, op2));
-    moveToRegister(instrNum, left, op1, "%eax");
+    moveToRegister(instrNum, left, op1, RAX); // TODO: maybe switch to EAX here for clarity
     moveToRegister(instrNum, right, op1, DEFAULT_REGISTER);
-    fprintf(stdout, "\timull %s\n", DEFAULT_REGISTER);
+    fprintf(stdout, "\timull %s\n", registerNames32[DEFAULT_REGISTER]);
     
 
     moveRegToMem(instrNum, "%eax", target);
@@ -307,12 +376,12 @@ void division(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* 
      * 3) Use the idiv instruction with B
      * The quotient is in %rax and the remainder in %rdx
      */ 
-    moveToRegister(instrNum, left, op1, "%eax");
+    moveToRegister(instrNum, left, op1, RAX); // TODO: switch to EAX for clarity
     outputLine("cdq             # sign-extend %rax into %rdx");
 
     moveToRegister(instrNum, right, op1, DEFAULT_REGISTER);
 
-    fprintf(stdout, "\tidivl %s\n", DEFAULT_REGISTER);
+    fprintf(stdout, "\tidivl %s\n", registerNames32[DEFAULT_REGISTER]);
 
     moveRegToMem(instrNum, "%eax", target);
     fprintf(stdout, "\t# Division - End: %s = %s / %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), getNameOrValue(left, op2));
@@ -333,7 +402,8 @@ void read(int instrNum, SYMBOL_INFO* symbol) {
 }
 
 void write(int instrNum, SYMBOL_INFO* symbol) {
-    push(instrNum, symbol);
+    // Uses outside-world convention, so I have to put the parameter in %edi instead of in the stack
+    moveToRegister(instrNum, symbol, op1, RDI); 
     outputLine("call printInteger"); // This function call the printf function
 }
 
@@ -542,7 +612,7 @@ void functionTeardown(SYMBOL_INFO* function) {
     //    b) We have a dynamic stack. Since we later restore %rsp using %rbp,
     //       we don't need to do anything here!
     if (!needDynamicStack(function)) {
-        fprintf(stdout, "\taddq $%d, %%rsp\n", getLocalVariablesSize(function));
+        //fprintf(stdout, "\taddq $%d, %%rsp\n", getLocalVariablesSize(function));
     }
 
     // 1) Restore the callee-saved register that were used by the function
@@ -579,7 +649,10 @@ void functionTeardown(SYMBOL_INFO* function) {
     outputLine("ret                  # return to the caller");
 }
 
+
+
 void generateAssemblyForFunction(SYMBOL_INFO* function, int isMainFunction) {
+    CURRENT_FUNCTION = function;
     functionSetup(function);
 
     INSTRUCTION* instructions = function->details.function.instructions;
@@ -601,6 +674,7 @@ void generateAssemblyForFunction(SYMBOL_INFO* function, int isMainFunction) {
     //} else {
         functionTeardown(function);
     //}
+    CURRENT_FUNCTION = NULL;
 }
 
 void setup() {

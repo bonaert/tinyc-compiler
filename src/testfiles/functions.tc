@@ -1,0 +1,16 @@
+
+int sum(int a, int b, int c) {
+    return a + b + c;
+}
+
+int main() {
+    int i = 10;
+    int j = 0;
+
+    int result = sum(10, 20, 30) * 3;
+
+    write result;
+
+    return 0;
+}
+
