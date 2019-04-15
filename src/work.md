@@ -33,16 +33,17 @@
 
 ### Instructions
 
-- [ ] Get register / Setup Symbol
+- [x] Get register / Setup Symbol
 - [x] Push / Pop
-- [ ] Move: moveIndexed incomplete
+- [x] Move
 - [x] Jump
-- [ ] Function calls: params, call, return DONE; need to save registers
+- [] Function calls: params, call, return DONE; need to save registers
 - [x] Math: +, -, times, divide
-- [ ] Syscalls: write DONE; read and exit need to be converted to x86 64;
-- [x] Length of an array
-- [ ] AAS: array modification
-- [ ] ADDR: get address
-- [x] DEREF, DEREFA: move from/to memory
+- [x] Syscalls: write, read 
+- [x] LENGTH: Length of an array
+- [x] AAC: array access
+- [x] AAS: array modification
+- [x] ADDR: get address
+- [ ] DEREF, DEREFA: move from/to memory
 
 
