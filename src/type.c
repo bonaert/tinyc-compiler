@@ -255,7 +255,8 @@ int getTypeSize(TYPE_INFO* type) {
     else if  (typeKind == int_t) { return sizeof(int); }
     else if  (typeKind == address_t) { return sizeof(int *); }
     else if  (typeKind == array_t) { 
-        return getArrayTotalSize(type) * getTypeSize(type->info.array.base);
+        //  address size + size of all elements
+        return 8 + getArrayTotalSize(type) * getTypeSize(type->info.array.base);
     } else {
         fprintf(stderr, "Trying to get the symbol");
         exit(1);

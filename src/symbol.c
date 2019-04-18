@@ -356,3 +356,25 @@ char* getNameOrValue(SYMBOL_INFO* symbol, char* res) {
         return symbol->name;
     }
 }
+
+
+
+
+
+
+int isArray(SYMBOL_INFO* symbol) {
+	return symbol->type->type == array_t;
+}
+
+int isAddress(SYMBOL_INFO* symbol) {
+	return symbol->type->type == address_t;
+}
+
+
+int isChar(SYMBOL_INFO* symbol){
+	return symbol->type->type == char_t;
+}
+
+int isInt(SYMBOL_INFO* symbol){
+	return symbol->type->type == int_t;
+}

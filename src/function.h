@@ -5,5 +5,6 @@
 
 int getLocalVariablesSize(SYMBOL_INFO* function);
 int getParameterIndex(SYMBOL_INFO* symbol, SYMBOL_INFO* function);
+int isParameter(SYMBOL_INFO* symbol, SYMBOL_INFO* function);
 
 #endif

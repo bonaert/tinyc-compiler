@@ -98,7 +98,7 @@ void checkAssignmentInDeclaration(TYPE_INFO* left, SYMBOL_INFO* right) {
 }
 
 void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right) {
-    if (getBaseType(left->type) != right->type) {
+    if (left->type != right->type) {
         error2("cannot assign ", right->type, " to ", getBaseType(left->type));
     }
 }

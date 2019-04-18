@@ -50,6 +50,9 @@ main:
 	movl %eax, -4(%rbp)
 	movl -4(%rbp), %r10d
 	movl %r10d, -8(%rbp)     # b = anon__3
+	mov %rbp, %rsp
+	sub $8, %rsp
+	movq $0, %rdi
 	movl -8(%rbp), %edi
 	call printInteger
 	movq %rbp, %rsp      # Reset stack to previous base pointer

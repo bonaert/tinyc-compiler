@@ -101,6 +101,11 @@ int getRelativeLocation(int instrNum, SYMBOL_INFO* symbol) {
     } else { // It's a local variable
         if (!symbolIsOnStack(symbol, stack)) {
             addSymbolToStack(symbol, stack);
+            if (isArray(symbol)) {
+                int location = -getSymbolLocationOnStack(symbol, stack);
+                fprintf(stdout, "\tmovq %rbp, %d(%rbp)     # Setting up array address\n", location);
+                fprintf(stdout, "\taddq $%d, %d(%rbp)      # Setting up array address\n", location, location);
+            }
         }
         int location = getSymbolLocationOnStack(symbol, stack);
         return -location;
@@ -208,16 +213,32 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
 
 // Pushing and popping from the stack
 int numParamsUsed = 0;
+
+void adjustRegistersForCall() {
+    fprintf(stdout, "\tmov %rbp, %rsp\n");
+    fprintf(stdout, "\tsub $%d, %rsp\n", getStackSize(stack));
+}
+
 void pushParam(int instrNum, SYMBOL_INFO* symbol) {
     if (numParamsUsed == 0) { // Adjust top of stack pointer
-        fprintf(stdout, "\tmov %rbp, %rsp\n");
-        fprintf(stdout, "\tsub $%d, %rsp\n", getStackSize(stack));
+        adjustRegistersForCall();    
     }
-
-    fprintf(stdout, "\txor %s, %s\n", registerNames64[DEFAULT_REGISTER], registerNames64[DEFAULT_REGISTER]);
-    moveToDefaultRegister(instrNum, symbol, op1);
-    outputWithRegister("pushq %s", registerNames64[DEFAULT_REGISTER]);  // Check
     numParamsUsed++;
+
+    if (isConstantSymbol(symbol)) {
+        getConstantValue(symbol, op1);
+        fprintf(stdout, "\tpushq %s\n", op1);
+        return;
+    }
+    
+    if (isAddress(symbol)) {
+        moveToRegister64(instrNum, symbol, op1, DEFAULT_REGISTER);
+    } else {
+        fprintf(stdout, "\txor %s, %s\n", registerNames64[DEFAULT_REGISTER], registerNames64[DEFAULT_REGISTER]);
+        moveToDefaultRegister(instrNum, symbol, op1);
+    } 
+    outputWithRegister("pushq %s", registerNames64[DEFAULT_REGISTER]);  // Check
+    
     //moveToRegister(instrNum, symbol, op1, "%edi");
     //outputWithRegister("pushq %s", "%r11");  // Check
 }
@@ -281,13 +302,24 @@ void addParameter(int instrNum, SYMBOL_INFO* parameter) {
 
 void getReturnValue(int instrNum, SYMBOL_INFO* target) {
     // If the function has a return value, it will be stored in %rax after the function call.
-    fprintf(stdout, "\tmovl %%eax, %s\n", getLocation(instrNum, target, op1));
+    if (isArray(target)) {
+        fprintf(stdout, "\tmovq %%rax, %s\n", getLocation(instrNum, target, op1));
+    } else {
+        fprintf(stdout, "\tmovl %%eax, %s\n", getLocation(instrNum, target, op1));
+    }
 }
 
 void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
     // If the function has a return value, it will be stored in %rax after the function call.
-    fprintf(stdout, "\tmovq $0, %%rax        # return - set all 64 bits to 0 \n");
-    fprintf(stdout, "\tmovl %s, %%eax   # return - move 32 bit value to return register\n", getLocation(instrNum, symbol, op1));
+    
+    if (isArray(symbol)) {  // Array - can only be a parameter, so the real value is the address
+        fprintf(stdout, "\tmovq %s, %%rax   # return - move 64 bit address of array parameter in return register\n", getLocation(instrNum, symbol, op1)); 
+    } else if (isAddress(symbol)) { // Array address - non parameter array address (precomputed)
+        fprintf(stdout, "\tmovq %s, %%rax   # return - move 64 bit address of non-parameter array in return register\n", getLocation(instrNum, symbol, op1)); 
+    } else {
+        fprintf(stdout, "\tmovq $0, %%rax        # return - set all 64 bits to 0 \n");
+        fprintf(stdout, "\tmovl %s, %%eax   # return - move 32 bit value to return register\n", getLocation(instrNum, symbol, op1));
+    }
 }
 
 
@@ -310,14 +342,21 @@ void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target) {
         // IMPORTANt: we can't do op1 = moveToDefaultRegister(instrNum, source, op1);
         //            because op1 should never be modifier!
         // TODO: improve structure so that this is never possible
-        location = moveToDefaultRegister(instrNum, source, op1);
+        if (isArray(source)) {
+            location = moveToRegister64(instrNum, source, op1, DEFAULT_REGISTER);
+        } else {
+            location = moveToDefaultRegister(instrNum, source, op1);
+        }    
         extraInfo1 = getNameOrValue(source, extraInfo1);
     }
 
     char * moveType = "movl";
-    if (target->type->type == char_t) {
+    if (isChar(target)) {
         moveType = "movb";
+    } else if (isArray(target)) {
+        moveType = "movq";
     }
+
     fprintf(stdout, "\t%s %s, %s     # %s = %s\n",
         moveType, 
         location, 
@@ -333,19 +372,27 @@ void moveConstant(int instrNum, int value, SYMBOL_INFO* target) {
 }
 
 void moveFromIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* dest){
-    moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
+    if (isParameter(base, CURRENT_FUNCTION)) {
+        // We have the address
+        moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
+    } else {
+        moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
+    }
+    
+
+
     fprintf("\tmov $0, %s      # We clear all the bits to 0 (the upper 32 bits need to be 0)\n", registerNames64[OTHER_REGISTER]);
     moveToRegister(instrNum, offset, op2, OTHER_REGISTER);
     getLocation(instrNum, dest, extraInfo1);
     
     if (dest->type->type == char_t) {
         fprintf(stdout, "\tmov  $0, %r12\n");
-        fprintf(stdout, "\tmovb 0(%s, %s, 1), %r12b        # array access \n", 
+        fprintf(stdout, "\tmovb 8(%s, %s, 1), %r12b        # array access \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
         fprintf(stdout, "\tmovb %r12b, %s \n", extraInfo1);
     } else if (dest->type->type == int_t) {
         fprintf(stdout, "\tmov  $0, %r12\n");
-        fprintf(stdout, "\tmovl 0(%s, %s, 1), %r12d        # array access \n", 
+        fprintf(stdout, "\tmovl 8(%s, %s, 1), %r12d        # array access \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
         fprintf(stdout, "\tmovl %r12d, %s \n", extraInfo1);
     } 
@@ -355,7 +402,14 @@ void moveFromIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBO
 
 
 void moveToIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* source){
-    moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
+    if (isParameter(base, CURRENT_FUNCTION)) {
+        // We have the address
+        moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
+    } else {
+        moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
+    }
+
+
     fprintf("\tmov $0, %s      # We clear all the bits to 0 (the upper 32 bits need to be 0)\n", registerNames64[OTHER_REGISTER]);
     moveToRegister(instrNum, offset, op2, OTHER_REGISTER);
     getLocation(instrNum, source, extraInfo1);
@@ -363,13 +417,13 @@ void moveToIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_
     if (source->type->type == char_t) {
         fprintf(stdout, "\tmov  $0, %r12\n");
         fprintf(stdout, "\tmovb %s, %r12b \n", extraInfo1);
-        fprintf(stdout, "\tmovb %r12b, 0(%s, %s, 1)        # array modification \n", 
+        fprintf(stdout, "\tmovb %r12b, 8(%s, %s, 1)        # array modification \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
         
     } else if (source->type->type == int_t) {
         fprintf(stdout, "\tmov  $0, %r12\n");
         fprintf(stdout, "\tmovl %s, %r12d \n", extraInfo1);
-        fprintf(stdout, "\tmovl %r12d, 0(%s, %s, 1)        # array modification \n", 
+        fprintf(stdout, "\tmovl %r12d, 8(%s, %s, 1)        # array modification \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
         
     } 
@@ -378,10 +432,14 @@ void moveToIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_
 };
 
 void moveAddress(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target) {
-    int offset = getRelativeLocation(instrNum, array);
-    getLocation(instrNum, target, op1);
-    fprintf(stdout, "\tmovq %rbp, %s\n", op1);
-    fprintf(stdout, "\taddq $%d, %s\n", offset, op1);
+    getLocation(instrNum, array, op1);
+    getLocation(instrNum, target, op2);
+    
+    fprintf(stdout, "\tmovq %s, %s\n", op1, registerNames64[DEFAULT_REGISTER]);
+    fprintf(stdout, "\tmovq %s, %s\n", registerNames64[DEFAULT_REGISTER], op2);
+
+    /*fprintf(stdout, "\tmovq %rbp, %s\n", op1);
+    fprintf(stdout, "\taddq $%d, %s\n", offset, op1);*/
 }
 
 /*
@@ -461,6 +519,7 @@ void division(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* 
 
 // Syscalls
 void read(int instrNum, SYMBOL_INFO* symbol) {
+    adjustRegistersForCall();
     if (symbol->type->type == char_t) {
         outputLine("call readChar");
         fprintf(stdout, "\tmovb %%al, %s\n", getLocation(instrNum, symbol, op1));
@@ -478,7 +537,9 @@ void read(int instrNum, SYMBOL_INFO* symbol) {
 }
 
 void write(int instrNum, SYMBOL_INFO* symbol) {
+    adjustRegistersForCall();
     // Uses outside-world convention, so I have to put the parameter in %edi instead of putting it in the stack
+    fprintf(stdout, "\tmovq $0, %rdi\n");
     moveToRegister(instrNum, symbol, op1, RDI); 
     if (symbol->type->type == char_t) {
         outputLine("call printChar");

@@ -10,12 +10,12 @@ factorialRecursive:
 	jg factorialRecursive_3
 	jmp factorialRecursive_9
 factorialRecursive_3:
-	# Math operation - Start: anon__1 = n subl n
+	# Math operation - Start: anon__1 = n subl $1
 	movq 16(%rbp), %r10
 	movl $1, %r11d
 	subl %r11d, %r10d
 	movl %r10d, -8(%rbp)
-	# Math operation - End: anon__1 = n subl n
+	# Math operation - End: anon__1 = n subl $1
 	mov %rbp, %rsp
 	sub $8, %rsp
 	xor %r10, %r10
@@ -23,14 +23,14 @@ factorialRecursive_3:
 	pushq %r10
 	call factorialRecursive
 	movl %eax, -12(%rbp)
-	# Multiplication - Start: anon__3 = n x n
+	# Multiplication - Start: anon__3 = n x anon__2
 	movq 16(%rbp), %rax
 	movl -12(%rbp), %r10d
 	imull %r10d
 	movl %eax, -16(%rbp)
-	# Multiplication - End: anon__3 = n x n
+	# Multiplication - End: anon__3 = n x anon__2
 	movl -16(%rbp), %r10d
-	movl %r10d, -4(%rbp)  # res = anon__3
+	movl %r10d, -4(%rbp)     # res = anon__3
 factorialRecursive_9:
 	movq $0, %rax        # return - set all 64 bits to 0 
 	movl -4(%rbp), %eax   # return - move 32 bit value to return register
@@ -50,7 +50,10 @@ main:
 	call factorialRecursive
 	movl %eax, -4(%rbp)
 	movl -4(%rbp), %r10d
-	movl %r10d, -8(%rbp)  # b = anon__4
+	movl %r10d, -8(%rbp)     # b = anon__4
+	mov %rbp, %rsp
+	sub $8, %rsp
+	movq $0, %rdi
 	movl -8(%rbp), %edi
 	call printInteger
 	movq %rbp, %rsp      # Reset stack to previous base pointer

@@ -29,3 +29,7 @@ int getParameterIndex(SYMBOL_INFO* symbol, SYMBOL_INFO* function) {
     }
     return -1;
 }
+
+int isParameter(SYMBOL_INFO* symbol, SYMBOL_INFO* function) {
+    return getParameterIndex(symbol, function) != -1;
+}

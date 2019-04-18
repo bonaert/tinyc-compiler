@@ -4,7 +4,7 @@
 
 /* return size of dimension 'dimension' of array */
 int arrayDimSize(SYMBOL_INFO* array, int dimension) {
-    return array->type->info.array.dimensions->dimensions[dimension];
+    return array->type->info.array.dimensions->dimensions[dimension - 1];
 } 
 
 /* return constant C associated with array */

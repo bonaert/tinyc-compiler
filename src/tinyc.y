@@ -12,10 +12,11 @@
 #include "optimise.h"
 #include "array.h"
 #include "assembly.h"
+#include "function.h"
 
 #define YYDEBUG 1
 
-#define NIL 0x0FFFFFFF
+#define NIL ((void *) 0x0FFFFFFF)
 
 /* Number of current source line. Used in the lexer (see lex.y), which increments it when it sees a newline character */
 int lineno = 1;
@@ -141,7 +142,7 @@ void handleComparisonInCondition(CHOICE* choice, SYMBOL_INFO* arg1, SYMBOL_INFO*
 
 %type <type> type baseType;
 
-%type <symbol> var lhs functionParameter funDeclaration functionCall exp;
+%type <symbol> var lhs functionParameter funDeclaration functionCall exp number;
 %type <symbolList> functionParameters non_empty_argument_list arguments;
 
 %type <leftValue> lvalue;
@@ -227,6 +228,9 @@ funDeclaration: type NAME {
 			//printSymbolTableAndParents(stderr, scope);
 			//fprintf(stderr, "\n%s - instructions:\n", $2);
 			fprintf(stderr, "%s: \n", scope->function->name);
+			fprintf(stderr, "Type:  ");
+			printType(stderr, scope->function->type);
+			fprintf(stderr, "\n");
 			printAllInstructions(scope);
 			scope = scope->parent;
 		};
@@ -425,7 +429,18 @@ statementWithoutBlock: lvalue ASSIGN exp {
 
 statementWithoutBlock: RETURN exp { // return statement
 	checkReturnType(scope, $2);
-	emitReturn3AC(scope, $2);
+
+	if (isArray($2)) {
+		if (isParameter($2, scope->function)) {  // Already an address, we can simply use it
+			emitReturn3AC(scope, $2);
+		} else {  // Need to compute address of array first, then return it
+			SYMBOL_INFO* arrayAddress = newAnonVar(scope, address_t);
+			emit(scope, gen3AC(ADDR, $2, 0, arrayAddress));
+			emitReturn3AC(scope, arrayAddress);
+		}
+	} else {
+		emitReturn3AC(scope, $2);
+	}
 };
 
 statementWithoutBlock: functionCall { /* we can call a function without storing the result */ }; 
@@ -448,18 +463,21 @@ lvalue: var  {
 	$$.typeKind = getBaseType($1->type)->type;
 };
 
-elist: var LBRACK exp {
+elist: var LBRACK number {
 	// TODO: checkArrayAccess($1, $3); $$ = $1;
 	$$.place = $3;
 	$$.array = $1;
-	$$.ndim = 1;
+	$$.ndim = 0;
+	fprintf(stderr, "value: %d   ", $3);
 };
 
-elist: elist RBRACK LBRACK exp {
+elist: elist RBRACK LBRACK number {
 	int limit = arrayDimSize($1.array, $1.ndim + 1);
 	$$.place = newAnonVar(scope, int_t); // TODO: check if this type is right
 
 	/* offset(next) = offset(prev)*limit(prev) + index(next) */
+	fprintf(stderr, "limit: %d   ", limit);
+	fprintf(stderr, "ndim: %d   ", $1.ndim+1);
 	emit(scope, gen3AC(A2TIMES, $1.place, createConstantSymbol(int_t, limit), $$.place));  /* offset(prev)*limit(prev) */
 	emit(scope, gen3AC(A2PLUS, $$.place, $4, $$.place)); /* + index(next) */
 
@@ -468,15 +486,21 @@ elist: elist RBRACK LBRACK exp {
 };
 
 lvalue: elist RBRACK {
-	$$.place = newAnonVar(scope, address_t);   
+	
 	$$.offset = newAnonVar(scope, int_t);  
 	$$.typeKind = getBaseType(($1.array)->type)->type;
 
 	/* base = addr a - array_base(a) */
 	// Note: in my case my indexing starts from zero, so a = array_base(a), and I don't need the
 	// instruction with base
-	emit(scope, gen3AC(ADDR, $1.array, 0, $$.place));
-	//emit(scope, gen3AC(A2MINUS, $$.place, arrayBase($1.array), $$.place));
+	if (isParameter($1.array, scope->function)) { 
+		$$.place = $1.array; // We pass parameters by address, so no need to compute the address of the array
+	} else {
+		$$.place = newAnonVar(scope, address_t);
+		emit(scope, gen3AC(ADDR, $1.array, 0, $$.place));   
+	}
+
+	
 	
 	/* offset = elist.offset * sizeof(element) */
 	emit(scope, gen3AC(A2TIMES, $1.place, createConstantSymbol(int_t, arrayElementSize($1.array)), $$.offset));
@@ -518,10 +542,7 @@ exp: MINUS exp %prec UMINUS { checkIsNumber($2); $$ = newAnonVar(scope, int_t); 
 
 exp: LPAR exp RPAR         { $$ = $2;  /* (a) */ };
 
-exp: NUMBER               {
-	$$ = createConstantSymbol(int_t, $1);
-	insertCompleteSymbolInSymbolTable(scope, $$);
-};
+exp: number { $$ = $1; }
 
 exp: functionCall {	$$ = $1; };
 
@@ -533,6 +554,11 @@ exp: LENGTH lhs { // LENGTH of an array
 	checkIsArray($2);
 	$$ = newAnonVar(scope, int_t);
 	emit(scope, gen3AC(LENGTHOP, $2, 0, $$));
+};
+
+number: NUMBER               {
+	$$ = createConstantSymbol(int_t, $1);
+	insertCompleteSymbolInSymbolTable(scope, $$);
 };
 
 
@@ -549,7 +575,14 @@ functionCall: NAME LPAR arguments RPAR {	// function call
 	
 	SYMBOL_LIST* arguments = $3;
 	for(int i = 0; i < arguments->size; i++) {
-		emit(scope, gen3AC(PARAM, arguments->symbols[i], 0, 0));
+		SYMBOL_INFO* symbol = arguments->symbols[i];
+		SYMBOL_INFO* finalSymbol = symbol;
+		if (isArray(symbol)) {  // We pass arrays by address
+			finalSymbol = newAnonVar(scope, address_t);
+			emit(scope, gen3AC(ADDR, symbol, 0, finalSymbol));
+		}
+
+		emit(scope, gen3AC(PARAM, finalSymbol, 0, 0));
 	}
 	emit(scope, gen3AC(CALL, function, 0, 0));
 	emit(scope, gen3AC(GETRETURNVALUE, 0, 0, $$));
@@ -587,6 +620,7 @@ dimensionsList: dimensionsList LBRACK NUMBER RBRACK {
 	// TODO: check type (what should I allow in the brackets?)
 	//checkIsNumber($3); 
 	addDimension($1, $3); 
+	fprintf(stderr, "dimension: %d   ", $3);
 	$$ = $1; 
 };
 dimensionsList: %empty { $$ = initDimensions(); };
