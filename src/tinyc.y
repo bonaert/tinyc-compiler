@@ -224,6 +224,8 @@ funDeclaration: type NAME {
 			//fprintf(stderr, "SYMBOL TABLE\n");
 			//printSymbolTableAndParents(stderr, scope);
 		} block {
+			ensureFunctionHasReturn(scope->function, scope);
+
 			// After parsing function, leave the function's scope and go back to original scope
 			//printSymbolTableAndParents(stderr, scope);
 			//fprintf(stderr, "\n%s - instructions:\n", $2);

@@ -1,4 +1,5 @@
 #include "function.h"
+#include "intermediate.h"
 
 int getLocalVariablesSize(SYMBOL_INFO* function) {
     SYMBOL_TABLE* scope = function->details.function.scope;
@@ -32,4 +33,16 @@ int getParameterIndex(SYMBOL_INFO* symbol, SYMBOL_INFO* function) {
 
 int isParameter(SYMBOL_INFO* symbol, SYMBOL_INFO* function) {
     return getParameterIndex(symbol, function) != -1;
+}
+
+int ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope) {
+    int numInstructions = function->details.function.numInstructions;
+    INSTRUCTION lastInstruction = function->details.function.instructions[numInstructions - 1];
+    if (lastInstruction.opcode != RETURNOP) {
+        TBASIC type = function->type->info.function.target->type;
+        SYMBOL_INFO* symbol = createConstantSymbol(type, 0);
+        emitReturn3AC(scope, symbol);
+
+        fprintf(stderr, "\nWARNING: function %s doesn't end with a return statement!\n", function->name);
+    }
 }

@@ -19,12 +19,12 @@ printArray_3:
 	jmp printArray_7
 printArray_5:
 	mov %rbp, %rsp
-	sub $88, %rsp
+	sub $84, %rsp
 	movq $0, %rdi
 	movl -4(%rbp), %edi
 	call printInteger
 	mov %rbp, %rsp
-	sub $88, %rsp
+	sub $84, %rsp
 	movq $0, %rdi
 	movl $58, %edi
 	call printChar
@@ -42,12 +42,12 @@ printArray_7:
 	movl %r12d, -12(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 	mov %rbp, %rsp
-	sub $88, %rsp
+	sub $84, %rsp
 	movq $0, %rdi
 	movl -12(%rbp), %edi
 	call printInteger
 	mov %rbp, %rsp
-	sub $88, %rsp
+	sub $84, %rsp
 	movq $0, %rdi
 	movl $10, %edi
 	call printChar
@@ -231,7 +231,7 @@ main_1:
 	jmp main_10
 main_3:
 	mov %rbp, %rsp
-	sub $128, %rsp
+	sub $124, %rsp
 	call readInt
 	movl %eax, -8(%rbp)
 	movq %rbp, -56(%rbp)     # Setting up array address
@@ -263,21 +263,21 @@ main_10:
 	movq -56(%rbp), %r10
 	movq %r10, -80(%rbp)
 	mov %rbp, %rsp
-	sub $128, %rsp
+	sub $124, %rsp
 	movq -80(%rbp), %r10
 	pushq %r10
 	pushq $5
 	call bubblesort
 	movl %eax, -84(%rbp)
 	mov %rbp, %rsp
-	sub $128, %rsp
+	sub $124, %rsp
 	movq $0, %rdi
 	movl $10, %edi
 	call printChar
 	movq -56(%rbp), %r10
 	movq %r10, -92(%rbp)
 	mov %rbp, %rsp
-	sub $128, %rsp
+	sub $124, %rsp
 	movq -92(%rbp), %r10
 	pushq %r10
 	pushq $5

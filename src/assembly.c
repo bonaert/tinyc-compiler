@@ -786,12 +786,12 @@ void functionTeardown(SYMBOL_INFO* function) {
     // The epilogue makes sure that no matter what you do to the stack pointer
     // in the function body, you will always return it to the right place when you return
     //if (needDynamicStack(function)) {
-        outputLine("movq %rbp, %rsp      # Reset stack to previous base pointer");
-        outputLine("popq %rbp            # Recover previous base pointer");
+    //    outputLine("movq %rbp, %rsp      # Reset stack to previous base pointer");
+    //    outputLine("popq %rbp            # Recover previous base pointer");
     //}
 
 
-    addFunctionReturn();
+    //addFunctionReturn();
 }
 
 

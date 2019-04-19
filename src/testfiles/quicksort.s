@@ -184,11 +184,6 @@ split_33:
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	ret                  # return to the caller
 .type qsort, @function
 qsort:
 	pushq %rbp           # Save the base pointer Use base pointer
@@ -208,7 +203,7 @@ qsort_3:
 	movq 32(%rbp), %r10
 	movq %r10, -8(%rbp)
 	mov %rbp, %rsp
-	sub $120, %rsp
+	sub $116, %rsp
 	movq -8(%rbp), %r10
 	pushq %r10
 	xor %r10, %r10
@@ -230,7 +225,7 @@ qsort_3:
 	movq 32(%rbp), %r10
 	movq %r10, -28(%rbp)
 	mov %rbp, %rsp
-	sub $120, %rsp
+	sub $116, %rsp
 	movq -28(%rbp), %r10
 	pushq %r10
 	xor %r10, %r10
@@ -250,7 +245,7 @@ qsort_3:
 	movq 32(%rbp), %r10
 	movq %r10, -44(%rbp)
 	mov %rbp, %rsp
-	sub $120, %rsp
+	sub $116, %rsp
 	movq -44(%rbp), %r10
 	pushq %r10
 	xor %r10, %r10
@@ -263,11 +258,6 @@ qsort_3:
 	movl %eax, -48(%rbp)
 	movq $0, %rax        # return - set all 64 bits to 0 
 	movl $0, %eax   # return - move 32 bit value to return register
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	ret                  # return to the caller
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
@@ -290,12 +280,12 @@ printArray_3:
 	jmp printArray_7
 printArray_5:
 	mov %rbp, %rsp
-	sub $88, %rsp
+	sub $84, %rsp
 	movq $0, %rdi
 	movl -4(%rbp), %edi
 	call printInteger
 	mov %rbp, %rsp
-	sub $88, %rsp
+	sub $84, %rsp
 	movq $0, %rdi
 	movl $58, %edi
 	call printChar
@@ -313,12 +303,12 @@ printArray_7:
 	movl %r12d, -12(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 	mov %rbp, %rsp
-	sub $88, %rsp
+	sub $84, %rsp
 	movq $0, %rdi
 	movl -12(%rbp), %edi
 	call printInteger
 	mov %rbp, %rsp
-	sub $88, %rsp
+	sub $84, %rsp
 	movq $0, %rdi
 	movl $10, %edi
 	call printChar
@@ -337,11 +327,6 @@ printArray_14:
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	ret                  # return to the caller
 	.globl main
 .type main, @function
 main:
@@ -356,7 +341,7 @@ main_1:
 	jmp main_10
 main_3:
 	mov %rbp, %rsp
-	sub $132, %rsp
+	sub $128, %rsp
 	call readInt
 	movl %eax, -8(%rbp)
 	movq %rbp, -56(%rbp)     # Setting up array address
@@ -388,7 +373,7 @@ main_10:
 	movq -56(%rbp), %r10
 	movq %r10, -80(%rbp)
 	mov %rbp, %rsp
-	sub $132, %rsp
+	sub $128, %rsp
 	movq -80(%rbp), %r10
 	pushq %r10
 	pushq $0
@@ -396,14 +381,14 @@ main_10:
 	call qsort
 	movl %eax, -84(%rbp)
 	mov %rbp, %rsp
-	sub $132, %rsp
+	sub $128, %rsp
 	movq $0, %rdi
 	movl $10, %edi
 	call printChar
 	movq -56(%rbp), %r10
 	movq %r10, -92(%rbp)
 	mov %rbp, %rsp
-	sub $132, %rsp
+	sub $128, %rsp
 	movq -92(%rbp), %r10
 	pushq %r10
 	pushq $5
@@ -412,11 +397,6 @@ main_10:
 	movl %eax, -96(%rbp)
 	movq $0, %rax        # return - set all 64 bits to 0 
 	movl $0, %eax   # return - move 32 bit value to return register
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	ret                  # return to the caller
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller

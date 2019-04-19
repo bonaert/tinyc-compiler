@@ -49,7 +49,27 @@
 ### Example programs
 
 - [x] Bubble sort
+- [x] (Recursive) quick sort
+- [x] Iterative fibonnaci
+- [x] Recursive fibonnaci
 
 ### Bugs
 
-- [ ] Methods with no return statements have a bug when using ifs and whiles
+None known
+
+### Questions
+
+**Should I create a new scope for every while / if statement?**
+
+If I don't do this, I may accept the following code.
+
+int a;
+read a;
+if (a > 2) {
+    int b;
+    read b;
+}
+write b;
+
+In this scenario, *b* is only created if we go inside the if-statement and so may be undefined 
+when we try to write it. As such, it's better if this code is illegal, as it may lead to unsafe code.

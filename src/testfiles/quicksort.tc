@@ -34,7 +34,6 @@ int qsort(int[10] a, int start, int end) {
     int s = split(a, start, end);
     qsort(a, start, s - 1);
     qsort(a, s + 1, end);
-    return 0;
 }
 
 
@@ -51,9 +50,6 @@ int printArray(int[10] n, int count, int withIndex) {
         write '*';
         a = a + 1;
     }
-
-    // TODO: deal with the situation where there's no return value
-    return 0;
 }
 
 
@@ -74,8 +70,4 @@ int main(){
 
     write '*';
     printArray(numbers, 5, 1);
-
-   
-
-    return 0;
 }
