@@ -28,10 +28,8 @@ SYMBOL_INFO* createConstantSymbol(TBASIC type, int value) {
     SYMBOL_INFO* symbolInfo = createBaseSymbol(newConstantSymbolName(), createSimpleType(type), constant_s);
     if (type == char_t) {
         symbolInfo->details.constant.value.charValue = (char) value;
-        //fprintf(stderr, "  -- created char constant of value %c\n", (char) value);
     } else if (type == int_t) {
         symbolInfo->details.constant.value.intValue = value;
-        //fprintf(stderr, "  -- created int constant of value %d\n", value);
     } else { // Should never happen
         fprintf(stderr, "Constant should be INT or CHAR but it actually is %d\n", type);
         exit(1);
@@ -348,6 +346,18 @@ char* getConstantValue(SYMBOL_INFO* constant, char* res) {
     return res;
 }
 
+char* getHumanConstantValue(SYMBOL_INFO* constant, char* res) {
+    if (constant->type->type == char_t) {
+        sprintf(res, "%d", constant->details.constant.value.charValue);
+    } else if (constant->type->type == int_t) {
+        sprintf(res, "%d", constant->details.constant.value.intValue);
+    } else {
+        fprintf(stderr, "Error, array or function is considered a constant!");
+        exit(1);
+    }
+    return res;
+}
+
 char* getNameOrValue(SYMBOL_INFO* symbol, char* res) {
     if (isConstantSymbol(symbol)) {
         getConstantValue(symbol, res);
@@ -377,4 +387,8 @@ int isChar(SYMBOL_INFO* symbol){
 
 int isInt(SYMBOL_INFO* symbol){
 	return symbol->type->type == int_t;
+}
+
+int isFunction(SYMBOL_INFO* symbol) {
+    return symbol->type->type == function_t;
 }

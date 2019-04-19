@@ -8,9 +8,7 @@
  * Note: since we only have on TYPE_INFO object per type, comparing types is really easy:
  * we can just check if the pointers to the type are equal.
  */
-
 extern int lineno; /* defined in minic.y */
-
 
 
 static void error(char* s1, char* s2, TYPE_INFO* t1, char* s3, char* s4, TYPE_INFO* t2) {
@@ -37,33 +35,33 @@ static void error1(char* s1, TYPE_INFO* t1) {
 
 
 
-void checkIsFunction(SYMBOL_INFO* functionSymbol){
-    if (functionSymbol->type->type != function_t) {
-        error2(functionSymbol->name, 0, " should be a function but is ", functionSymbol->type);
+void checkIsFunction(SYMBOL_INFO* symbol){
+    if (!isFunction(symbol)) {
+        error2(symbol->name, 0, " should be a function but is ", symbol->type);
     }
 }
 
 
 
-TYPE_INFO* checkIsNumeric(SYMBOL_INFO* numberSymbol){
-    if (numberSymbol->type->type != int_t && numberSymbol->type->type != char_t) {
-        error2(numberSymbol->name, 0, " should be integer or char but is ", numberSymbol->type);
+TYPE_INFO* checkIsNumeric(SYMBOL_INFO* symbol){
+    if (!isInt(symbol) && !isChar(symbol)) {
+        error2(symbol->name, 0, " should be integer or char but is ", symbol->type);
     }
-    return numberSymbol->type;
+    return symbol->type;
 }
 
-TYPE_INFO* checkIsNumber(SYMBOL_INFO* numberSymbol){
-    if (numberSymbol->type->type != int_t) {
-        error2(numberSymbol->name, 0, " should be integer but is ", numberSymbol->type);
+TYPE_INFO* checkIsNumber(SYMBOL_INFO* symbol){
+    if (!isInt(symbol)) {
+        error2(symbol->name, 0, " should be integer but is ", symbol->type);
     }
-    return numberSymbol->type;
+    return symbol->type;
 }
 
-TYPE_INFO* checkIsArray(SYMBOL_INFO* arraySymbol) {
-    if (arraySymbol->type->type != array_t) {
-        error2(arraySymbol->name, 0, " should be array but is ", arraySymbol->type);
+TYPE_INFO* checkIsArray(SYMBOL_INFO* symbol) {
+    if (!isArray(symbol)) {
+        error2(symbol->name, 0, " should be array but is ", symbol->type);
     }
-    return arraySymbol->type;
+    return symbol->type;
 }
 
 TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* symbol) {
@@ -114,9 +112,9 @@ void checkReturnType(SYMBOL_TABLE* scope, SYMBOL_INFO* returnVal) {
 }
 
 TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index) {
-    if (array->type->type != array_t) {
+    if (!isArray(array)) {
         error1("not an array", array->type);
-    } else if (index->type->type != int_t) {
+    } else if (!isInt(index)) {
         error1("index should be an integer but is ", index->type);
     }
     return array->type->info.array.base;
@@ -137,7 +135,7 @@ TYPE_INFO* checkArithOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
 
     if (op1->type == op2->type) {  // char + char or int + int
         return op1->type;
-    } else if (op1->type->type == char_t) {  // char + int (convert to int)
+    } else if (isChar(op1)) {  // char + int (convert to int)
         fprintf(stderr, "Warning: arithmetic between a CHAR (%s) to an INT (%s)\n", op1->name, op2->name);
         return op2->type;
     } else { // int + char (convert to int)

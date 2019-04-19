@@ -10,6 +10,7 @@ split:
 	imull %r10d
 	movl %eax, -4(%rbp)
 	# Multiplication - End: anon__1 = start x $4
+	# Array access for array a  (a[anon__1])
 	movq 32(%rbp), %r10
 	movl -4(%rbp), %r11d
 	mov  $0, %r12
@@ -35,6 +36,7 @@ split_7:
 	imull %r10d
 	movl %eax, -24(%rbp)
 	# Multiplication - End: anon__3 = i x $4
+	# Array access for array a  (a[anon__3])
 	movq 32(%rbp), %r10
 	movl -24(%rbp), %r11d
 	mov  $0, %r12
@@ -63,6 +65,7 @@ split_14:
 	imull %r10d
 	movl %eax, -36(%rbp)
 	# Multiplication - End: anon__6 = j x $4
+	# Array access for array a  (a[anon__6])
 	movq 32(%rbp), %r10
 	movl -36(%rbp), %r11d
 	mov  $0, %r12
@@ -97,6 +100,7 @@ split_23:
 	imull %r10d
 	movl %eax, -48(%rbp)
 	# Multiplication - End: anon__9 = i x $4
+	# Array access for array a  (a[anon__9])
 	movq 32(%rbp), %r10
 	movl -48(%rbp), %r11d
 	mov  $0, %r12
@@ -117,6 +121,7 @@ split_23:
 	imull %r10d
 	movl %eax, -64(%rbp)
 	# Multiplication - End: anon__12 = j x $4
+	# Array access for array a  (a[anon__12])
 	movq 32(%rbp), %r10
 	movl -64(%rbp), %r11d
 	mov  $0, %r12
@@ -155,6 +160,7 @@ split_33:
 	imull %r10d
 	movl %eax, -80(%rbp)
 	# Multiplication - End: anon__16 = j x $4
+	# Array access for array a  (a[anon__16])
 	movq 32(%rbp), %r10
 	movl -80(%rbp), %r11d
 	mov  $0, %r12
@@ -296,6 +302,7 @@ printArray_7:
 	imull %r10d
 	movl %eax, -8(%rbp)
 	# Multiplication - End: anon__27 = a x $4
+	# Array access for array n  (n[anon__27])
 	movq 32(%rbp), %r10
 	movl -8(%rbp), %r11d
 	mov  $0, %r12

@@ -18,9 +18,6 @@ typedef struct arrayAccessInfo {
 /* return size of dimension 'dimension' of array */
 int arrayDimSize(SYMBOL_INFO* array, int dimension);
 
-/* return constant C associated with array */
-//int arrayBase(SYMBOL_INFO* array); 
-
 /* return size of element of array */
 int arrayElementSize(SYMBOL_INFO* array);
 

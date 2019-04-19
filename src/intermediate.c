@@ -1,7 +1,24 @@
 #include <stdlib.h> /* for exit() */
+#include <stdint.h> /* for intptr */
 #include "intermediate.h"
 
+
 #define DEBUG (0)
+
+
+char * opcodeNames[] = {
+	"PLUS", "MINUS", "TIMES", "DIVIDE", "MINUS_SELF", 
+	"FLOAT_TO_INTEGER", "INTEGER_TO_FLOAT", 
+	"ASSIGN", 
+	"GOTO", 
+	"IF_EQUAL", "IF_NOT_EQUAL", "IF_GREATER_OR_EQUAL", 
+	"IF_SMALLER_OR_EQUAL", "IF_GREATER", "IF_SMALLER", 
+	"PARAM", "CALL", "RETURN", "GETRETURN",
+	"ARRAY ACCESS", "ARRAY MODIFICATION",
+	"GET_ADDRESS", "GET_AT_ADDRESS", "SAVE_AT_ADDRESS",
+	"WRITE", "READ", "LENGTH"
+};
+
 
 INSTRUCTION gen3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result) {
 	if (opcode > LENGTHOP) {
@@ -65,7 +82,7 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 		{
 			case GOTO:
 				// GOTO location 0 0
-				instructions[location].args[0] = realLocation;
+				instructions[location].args[0] = (SYMBOL_INFO*) (intptr_t) realLocation;
 				break;
 			
 			case IFEQ:
@@ -75,7 +92,7 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 			case IFGE:
 			case IFSE:
 				// EX: IFEQ a.location b.location location
-				instructions[location].result = realLocation;
+				instructions[location].result = (SYMBOL_INFO*) (intptr_t) realLocation;
 				break;
 		
 			default:
@@ -89,9 +106,6 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 }
 
 // returns number of next (free) location in code sequence
-// TODO: currently i'm doing it just for this code sequence of the function
-// but maybe there should only be a global code sequence
-// prof did one per function, so maybe it's alright right now
 int next3AC(SYMBOL_TABLE* symbolTable) {
 	int res = symbolTable->function->details.function.numInstructions;
 	return res;
@@ -118,7 +132,7 @@ void emitEmptyGoto(SYMBOL_TABLE* scope) {
 }
 
 void emitGoto(SYMBOL_TABLE* scope, int arg) {
-	emit(scope, gen3AC(GOTO, arg, 0, 0));
+	emit(scope, gen3AC(GOTO, (SYMBOL_INFO*) (intptr_t) arg, 0, 0));
 }
 
 void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg) {
@@ -130,7 +144,7 @@ void print3AC(FILE* output, INSTRUCTION instruction) {
 	switch (instruction.opcode)
 	{
 		case GOTO:
-			fprintf(output, "GOTO %d\n", (int) instruction.args[0]);
+			fprintf(output, "GOTO %d\n", (int) (intptr_t) instruction.args[0]);
 			break;
 		case IFEQ:
 		case IFNEQ:
@@ -142,7 +156,7 @@ void print3AC(FILE* output, INSTRUCTION instruction) {
 			if (instruction.args[0]) printSymbol(output, instruction.args[0]);
 			fprintf(output, " ");
 			if (instruction.args[1]) printSymbol(output, instruction.args[1]);
-			fprintf(output, " %d\n", (int) instruction.result);
+			fprintf(output, " %d\n", (int) (intptr_t) instruction.result);
 			break;
 		default:
 			fprintf(output, "%s ", opcodeNames[instruction.opcode]);

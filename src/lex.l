@@ -23,7 +23,9 @@ void lexInit() {
 %}
 
 
-
+/* Remove input out unput methods that I don't use and that generate compiler warnings */
+%option noinput
+%option nounput
 
 alpha [A-Za-z]
 digit [0-9]

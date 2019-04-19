@@ -8,6 +8,6 @@ int getParameterIndex(SYMBOL_INFO* symbol, SYMBOL_INFO* function);
 int isParameter(SYMBOL_INFO* symbol, SYMBOL_INFO* function);
 
 
-int ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope);
+void ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope);
 
 #endif

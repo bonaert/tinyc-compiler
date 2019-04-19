@@ -35,14 +35,13 @@ int isParameter(SYMBOL_INFO* symbol, SYMBOL_INFO* function) {
     return getParameterIndex(symbol, function) != -1;
 }
 
-int ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope) {
+void ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope) {
     int numInstructions = function->details.function.numInstructions;
     INSTRUCTION lastInstruction = function->details.function.instructions[numInstructions - 1];
     if (lastInstruction.opcode != RETURNOP) {
-        TBASIC type = function->type->info.function.target->type;
-        SYMBOL_INFO* symbol = createConstantSymbol(type, 0);
-        emitReturn3AC(scope, symbol);
+        emitReturn3AC(scope, 0);
 
-        fprintf(stderr, "\nWARNING: function %s doesn't end with a return statement!\n", function->name);
+        fprintf(stderr, "\nWARNING: function %s doesn't end with a return statement.\n", function->name);
+        fprintf(stderr, "\nWARNING: the return value will be garbage!\n");
     }
 }

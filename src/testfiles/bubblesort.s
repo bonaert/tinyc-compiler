@@ -4,7 +4,7 @@
 printArray:
 	pushq %rbp           # Save the base pointer Use base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	movl $0, -4(%rbp)     # a = $0
+	movl $0, -4(%rbp)     # a = 0
 printArray_1:
 	movl -4(%rbp), %r10d
 	movq 24(%rbp), %r11
@@ -35,12 +35,14 @@ printArray_7:
 	imull %r10d
 	movl %eax, -8(%rbp)
 	# Multiplication - End: anon__1 = a x $4
+	# Array access START for array n (n[anon__1])
 	movq 32(%rbp), %r10
 	movl -8(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -12(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
+	# Array access END for array n (n[anon__1])
 	mov %rbp, %rsp
 	sub $84, %rsp
 	movq $0, %rdi
@@ -61,8 +63,7 @@ printArray_7:
 	movl %r10d, -4(%rbp)     # a = anon__3
 	jmp printArray_1
 printArray_14:
-	movq $0, %rax        # return - set all 64 bits to 0 
-	movl $0, %eax   # return - move 32 bit value to return register
+	movq $0, %rax
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
@@ -85,7 +86,7 @@ bubblesort_2:
 	jge bubblesort_4
 	jmp bubblesort_31
 bubblesort_4:
-	movl $0, -12(%rbp)     # j = $0
+	movl $0, -12(%rbp)     # j = 0
 bubblesort_5:
 	movl -12(%rbp), %r10d
 	movl -8(%rbp), %r11d
@@ -99,12 +100,14 @@ bubblesort_7:
 	imull %r10d
 	movl %eax, -16(%rbp)
 	# Multiplication - End: anon__5 = j x $4
+	# Array access START for array numbers (numbers[anon__5])
 	movq 24(%rbp), %r10
 	movl -16(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -20(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
+	# Array access END for array numbers (numbers[anon__5])
 	# Math operation - Start: anon__7 = j addl $1
 	movl -12(%rbp), %r10d
 	movl $1, %r11d
@@ -117,12 +120,14 @@ bubblesort_7:
 	imull %r10d
 	movl %eax, -28(%rbp)
 	# Multiplication - End: anon__8 = anon__7 x $4
+	# Array access START for array numbers (numbers[anon__8])
 	movq 24(%rbp), %r10
 	movl -28(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -32(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
+	# Array access END for array numbers (numbers[anon__8])
 	movl -20(%rbp), %r10d
 	movl -32(%rbp), %r11d
 	cmpl %r11d, %r10d
@@ -135,12 +140,14 @@ bubblesort_14:
 	imull %r10d
 	movl %eax, -36(%rbp)
 	# Multiplication - End: anon__10 = j x $4
+	# Array access START for array numbers (numbers[anon__10])
 	movq 24(%rbp), %r10
 	movl -36(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -40(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
+	# Array access END for array numbers (numbers[anon__10])
 	movl -40(%rbp), %r10d
 	movl %r10d, -44(%rbp)     # temp = anon__11
 	# Multiplication - Start: anon__12 = j x $4
@@ -161,12 +168,14 @@ bubblesort_14:
 	imull %r10d
 	movl %eax, -56(%rbp)
 	# Multiplication - End: anon__14 = anon__13 x $4
+	# Array access START for array numbers (numbers[anon__14])
 	movq 24(%rbp), %r10
 	movl -56(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -60(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
+	# Array access END for array numbers (numbers[anon__14])
 	movq 24(%rbp), %r10
 	movl -48(%rbp), %r11d
 	mov  $0, %r12
@@ -212,8 +221,7 @@ bubblesort_28:
 	movl %r10d, -8(%rbp)     # i = anon__19
 	jmp bubblesort_2
 bubblesort_31:
-	movq $0, %rax        # return - set all 64 bits to 0 
-	movl $0, %eax   # return - move 32 bit value to return register
+	movq $0, %rax
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
@@ -222,7 +230,7 @@ bubblesort_31:
 main:
 	pushq %rbp           # Save the base pointer Use base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	movl $0, -4(%rbp)     # i = $0
+	movl $0, -4(%rbp)     # i = 0
 main_1:
 	movl -4(%rbp), %r10d
 	movl $5, %r11d
@@ -284,8 +292,7 @@ main_10:
 	pushq $1
 	call printArray
 	movl %eax, -96(%rbp)
-	movq $0, %rax        # return - set all 64 bits to 0 
-	movl $0, %eax   # return - move 32 bit value to return register
+	movq $0, %rax
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller

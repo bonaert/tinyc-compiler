@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "assembly.h"
@@ -63,7 +64,6 @@ static char* registerNames64[] = {
 };
 
 static int DEFAULT_REGISTER = R10;
-static int DEFAULT_REGISTER_EXTENDED = R10;
 static int OTHER_REGISTER = R11;
 
 
@@ -90,8 +90,6 @@ void outputWithRegister(char* string, char* registerUsed) {
     fputs("\n", stdout);
 }
 
-int getAddress(SYMBOL_INFO* symbol) {}
-
 int getRelativeLocation(int instrNum, SYMBOL_INFO* symbol) {
     int parameterPos = getParameterIndex(symbol, CURRENT_FUNCTION);
     if (parameterPos >= 0) { // It's an argument
@@ -103,8 +101,8 @@ int getRelativeLocation(int instrNum, SYMBOL_INFO* symbol) {
             addSymbolToStack(symbol, stack);
             if (isArray(symbol)) {
                 int location = -getSymbolLocationOnStack(symbol, stack);
-                fprintf(stdout, "\tmovq %rbp, %d(%rbp)     # Setting up array address\n", location);
-                fprintf(stdout, "\taddq $%d, %d(%rbp)      # Setting up array address\n", location, location);
+                fprintf(stdout, "\tmovq %%rbp, %d(%%rbp)     # Setting up array address\n", location);
+                fprintf(stdout, "\taddq $%d, %d(%%rbp)      # Setting up array address\n", location, location);
             }
         }
         int location = getSymbolLocationOnStack(symbol, stack);
@@ -122,7 +120,6 @@ char* getLocation(int instrNum, SYMBOL_INFO* symbol, char* res){
     return res; 
 };
 
-char* getMemoryValue(int instrNum, SYMBOL_INFO* value){};
 
 
 
@@ -198,7 +195,7 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
     fprintf(stdout, "\tcmpl %s, %s\n", rightLocation, leftLocation);
 
     // Jump to the correct place
-    fprintf(stdout, "\t%s %s\n", instructionName, getLabel(function, (int)instruction->result));
+    fprintf(stdout, "\t%s %s\n", instructionName, getLabel(function, (int) (intptr_t) instruction->result));
 };
 
 
@@ -209,9 +206,9 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
 int numParamsUsed = 0;
 
 void adjustRegistersForCall() {
-    fprintf(stdout, "\tmov %rbp, %rsp\n");
+    fprintf(stdout, "\tmov %%rbp, %%rsp\n");
     SYMBOL_LIST* allSymbols = CURRENT_FUNCTION->details.function.scope->symbolList;
-    fprintf(stdout, "\tsub $%d, %rsp\n", getStackSize(allSymbols));
+    fprintf(stdout, "\tsub $%d, %%rsp\n", getStackSize(allSymbols));
 }
 
 void pushParam(int instrNum, SYMBOL_INFO* symbol) {
@@ -268,7 +265,7 @@ void call(int instrNum, SYMBOL_INFO* function) {
     // TODO: do some register need to be restored after the function call?
 }
 
-static int parametersRegisters[] = {RDI, RSI, RDX, RCX, R8, R9};
+//static int parametersRegisters[] = {RDI, RSI, RDX, RCX, R8, R9};
 int numParameterRegisterUsed = 0;
 void addParameter(int instrNum, SYMBOL_INFO* parameter) {
     // TODO: do some register need to be saved before the first add parameter?
@@ -304,6 +301,12 @@ void getReturnValue(int instrNum, SYMBOL_INFO* target) {
     }
 }
 
+void addFunctionReturn() {
+    outputLine("movq %rbp, %rsp      # Reset stack to previous base pointer");
+    outputLine("popq %rbp            # Recover previous base pointer");
+    outputLine("ret                  # return to the caller");
+}
+
 void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
     // If the function has a return value, it will be stored in %rax after the function call.
     
@@ -312,8 +315,12 @@ void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
     } else if (isAddress(symbol)) { // Array address - non parameter array address (precomputed)
         fprintf(stdout, "\tmovq %s, %%rax   # return - move 64 bit address of non-parameter array in return register\n", getLocation(instrNum, symbol, op1)); 
     } else {
-        fprintf(stdout, "\tmovq $0, %%rax        # return - set all 64 bits to 0 \n");
-        fprintf(stdout, "\tmovl %s, %%eax   # return - move 32 bit value to return register\n", getLocation(instrNum, symbol, op1));
+        if (isConstantSymbol(symbol)) {
+            fprintf(stdout, "\tmovq %s, %%rax\n", getConstantValue(symbol, op1));
+        } else {
+            fprintf(stdout, "\tmovq $0, %%rax   # return - set all 64 bits to 0 \n");
+            fprintf(stdout, "\tmovl %s, %%eax   # return - move 32 bit value to return register\n", getLocation(instrNum, symbol, op1));
+        } 
     }
 
     addFunctionReturn();
@@ -334,7 +341,7 @@ void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target) {
     char * location; 
     if (isConstantSymbol(source)) {
         location = getConstantValue(source, op1);
-        extraInfo1 = getConstantValue(source, extraInfo1);
+        extraInfo1 = getHumanConstantValue(source, extraInfo1);
     } else {
         // IMPORTANt: we can't do op1 = moveToDefaultRegister(instrNum, source, op1);
         //            because op1 should never be modifier!
@@ -369,6 +376,7 @@ void moveConstant(int instrNum, int value, SYMBOL_INFO* target) {
 }
 
 void moveFromIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* dest){
+    fprintf(stdout, "## Array access START - %s = %s[%s]\n", dest->name, base->name, getNameOrValue(offset, op1));
     if (isParameter(base, CURRENT_FUNCTION)) {
         // We have the address
         moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
@@ -377,28 +385,29 @@ void moveFromIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBO
     }
     
 
-
-    fprintf("\tmov $0, %s      # We clear all the bits to 0 (the upper 32 bits need to be 0)\n", registerNames64[OTHER_REGISTER]);
+    fprintf(stdout, "\tmov $0, %s      # We clear all the bits to 0 (the upper 32 bits need to be 0)\n", registerNames64[OTHER_REGISTER]);
     moveToRegister(instrNum, offset, op2, OTHER_REGISTER);
     getLocation(instrNum, dest, extraInfo1);
     
     if (dest->type->type == char_t) {
-        fprintf(stdout, "\tmov  $0, %r12\n");
-        fprintf(stdout, "\tmovb 8(%s, %s, 1), %r12b        # array access \n", 
+        fprintf(stdout, "\tmov  $0, %%r12\n");
+        fprintf(stdout, "\tmovb 8(%s, %s, 1), %%r12b        # array access \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
-        fprintf(stdout, "\tmovb %r12b, %s \n", extraInfo1);
+        fprintf(stdout, "\tmovb %%r12b, %s \n", extraInfo1);
     } else if (dest->type->type == int_t) {
-        fprintf(stdout, "\tmov  $0, %r12\n");
-        fprintf(stdout, "\tmovl 8(%s, %s, 1), %r12d        # array access \n", 
+        fprintf(stdout, "\tmov  $0, %%r12\n");
+        fprintf(stdout, "\tmovl 8(%s, %s, 1), %%r12d        # array access \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
-        fprintf(stdout, "\tmovl %r12d, %s \n", extraInfo1);
+        fprintf(stdout, "\tmovl %%r12d, %s \n", extraInfo1);
     } 
 
     fprintf(stdout, "\tmov $0, %s      # Reset register that was used in 64 bit mode\n", registerNames64[DEFAULT_REGISTER]);
+    fprintf(stdout, "## Array access START - %s = %s[%s]\n", dest->name, base->name, getNameOrValue(offset, op1));
 };
 
 
 void moveToIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_INFO* source){
+    fprintf(stdout, "## Array modification START - %s[%s] = %s\n", base->name, getNameOrValue(offset, op1), getNameOrValue(source, op2));
     if (isParameter(base, CURRENT_FUNCTION)) {
         // We have the address
         moveToRegister64(instrNum, base, op1, DEFAULT_REGISTER);
@@ -407,25 +416,26 @@ void moveToIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_
     }
 
 
-    fprintf("\tmov $0, %s      # We clear all the bits to 0 (the upper 32 bits need to be 0)\n", registerNames64[OTHER_REGISTER]);
+    fprintf(stdout, "\tmov $0, %s      # We clear all the bits to 0 (the upper 32 bits need to be 0)\n", registerNames64[OTHER_REGISTER]);
     moveToRegister(instrNum, offset, op2, OTHER_REGISTER);
     getLocation(instrNum, source, extraInfo1);
     
     if (source->type->type == char_t) {
-        fprintf(stdout, "\tmov  $0, %r12\n");
-        fprintf(stdout, "\tmovb %s, %r12b \n", extraInfo1);
-        fprintf(stdout, "\tmovb %r12b, 8(%s, %s, 1)        # array modification \n", 
+        fprintf(stdout, "\tmov  $0, %%r12\n");
+        fprintf(stdout, "\tmovb %s, %%r12b \n", extraInfo1);
+        fprintf(stdout, "\tmovb %%r12b, 8(%s, %s, 1)        # array modification \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
         
     } else if (source->type->type == int_t) {
-        fprintf(stdout, "\tmov  $0, %r12\n");
-        fprintf(stdout, "\tmovl %s, %r12d \n", extraInfo1);
-        fprintf(stdout, "\tmovl %r12d, 8(%s, %s, 1)        # array modification \n", 
+        fprintf(stdout, "\tmov  $0, %%r12\n");
+        fprintf(stdout, "\tmovl %s, %%r12d \n", extraInfo1);
+        fprintf(stdout, "\tmovl %%r12d, 8(%s, %s, 1)        # array modification \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
         
     } 
 
     fprintf(stdout, "\tmov $0, %s      # Reset register that was used in 64 bit mode\n", registerNames64[DEFAULT_REGISTER]);
+    fprintf(stdout, "## Array modification END - %s[%s] = %s\n", base->name, getNameOrValue(offset, op1), getNameOrValue(source, op2));
 };
 
 void moveAddress(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target) {
@@ -536,7 +546,7 @@ void read(int instrNum, SYMBOL_INFO* symbol) {
 void write(int instrNum, SYMBOL_INFO* symbol) {
     adjustRegistersForCall();
     // Uses outside-world convention, so I have to put the parameter in %edi instead of putting it in the stack
-    fprintf(stdout, "\tmovq $0, %rdi\n");
+    fprintf(stdout, "\tmovq $0, %%rdi\n");
     moveToRegister(instrNum, symbol, op1, RDI); 
     if (symbol->type->type == char_t) {
         outputLine("call printChar");
@@ -588,7 +598,7 @@ void translateInstruction(SYMBOL_INFO* function, int instrNum, INSTRUCTION* inst
             division(instrNum, instruction->args[0], instruction->args[1], instruction->result);
             break;
         case A1MINUS:  // b = -a
-            unsupported(instrNum);
+            unsupported(instruction);
             //moveConstant(instrNum, 0, instruction->result);
             //sub(instrNum, instruction->args[0], instruction->result);
             break;
@@ -603,7 +613,7 @@ void translateInstruction(SYMBOL_INFO* function, int instrNum, INSTRUCTION* inst
             move(instrNum, instruction->args[0], instruction->result);
             break;
         case GOTO:  // goto
-            jump(function, instrNum, (int)instruction->args[0]);
+            jump(function, instrNum, (int) (intptr_t) instruction->args[0]);
             break;
         case IFEQ:  // if equal (jump)
             conditionalJump("je", function, instrNum, instruction);
@@ -662,8 +672,12 @@ void translateInstruction(SYMBOL_INFO* function, int instrNum, INSTRUCTION* inst
             length(instrNum, instruction->args[0], instruction->result);
             break;
         case RETURNOP:  // return A - returns the value A (put result on stack and change special registers to saved values)
-            // TODO: handle the case where a function doesn't have a return at the end of the end of it
-            returnFromFunction(instrNum, instruction->args[0]);
+            // When a function has no return statement at the end, we add a fake RETURNOP instruction
+            // to make parsing work and intermediate code generation work correctly. However, we don't emit
+            // any x86 64 assembly in this situation.
+            if (instruction->args[0] != 0) {  
+                returnFromFunction(instrNum, instruction->args[0]);
+            }
             break;
         case GETRETURNVALUE:  // return A - returns the value A (put result on stack and change special registers to saved values)
             getReturnValue(instrNum, instruction->result);
@@ -683,10 +697,10 @@ void saveInstructionsThatNeedLabels(INSTRUCTION* instructions, int numInstructio
     for (int i = 0; i < numInstructions; i++) {
         OPCODE o = instructions[i].opcode;
         if (o == IFEQ || o == IFNEQ || o == IFG || o == IFS || o == IFSE || o == IFGE) {
-            int destination = (int)instructions[i].result;
+            int destination = (int) (intptr_t) instructions[i].result;
             needsLabel[destination] = 1;
         } else if (o == GOTO) {
-            int destination = (int)instructions[i].args[0];
+            int destination = (int) (intptr_t) instructions[i].args[0];
             needsLabel[destination] = 1;
         }
     }
@@ -741,11 +755,7 @@ void functionSetup(SYMBOL_INFO* function) {
     //             sub rsp, 12
 }
 
-void addFunctionReturn() {
-    outputLine("movq %rbp, %rsp      # Reset stack to previous base pointer");
-    outputLine("popq %rbp            # Recover previous base pointer");
-    outputLine("ret                  # return to the caller");
-}
+
 
 void functionTeardown(SYMBOL_INFO* function) {
     // The return value must be value in eax

@@ -45,18 +45,7 @@ typedef enum {
 	
 } OPCODE;
 
-static char * opcodeNames[] = {
-	"PLUS", "MINUS", "TIMES", "DIVIDE", "MINUS_SELF", 
-	"FLOAT_TO_INTEGER", "INTEGER_TO_FLOAT", 
-	"ASSIGN", 
-	"GOTO", 
-	"IF_EQUAL", "IF_NOT_EQUAL", "IF_GREATER_OR_EQUAL", 
-	"IF_SMALLER_OR_EQUAL", "IF_GREATER", "IF_SMALLER", 
-	"PARAM", "CALL", "RETURN", "GETRETURN",
-	"ARRAY ACCESS", "ARRAY MODIFICATION",
-	"GET_ADDRESS", "GET_AT_ADDRESS", "SAVE_AT_ADDRESS",
-	"WRITE", "READ", "LENGTH"
-};
+extern char* opcodeNames[];
 
 typedef struct instruction {
 	OPCODE opcode;

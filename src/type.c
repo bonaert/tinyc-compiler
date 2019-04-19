@@ -84,7 +84,6 @@ TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList) {
     growTypeListIfNeeded(typeList);
     typeList->types[typeList->size] = newType;
     typeList->size++;
-    // TODO: store location of the instruction 
     return typeList;
 }
 

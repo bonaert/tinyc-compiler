@@ -7,8 +7,6 @@ int arrayDimSize(SYMBOL_INFO* array, int dimension) {
     return array->type->info.array.dimensions->dimensions[dimension - 1];
 } 
 
-/* return constant C associated with array */
-//int arrayBase(SYMBOL_INFO* array) {}
 
 /* return size of element of array */
 int arrayElementSize(SYMBOL_INFO* array) {
@@ -34,6 +32,12 @@ DIMENSIONS* initDimensions() {
 void addDimension(DIMENSIONS* dimensions, int dimension){
     if (dimensions->numDimensions == 20) {
         fprintf(stderr, "An array can't have more than 20 dimensions");
+        exit(1);
+    }
+
+    if (dimension <= 0) {
+        int dimensionNum = dimensions->numDimensions + 1;
+        fprintf(stderr, "Dimensions must be positive but dimension %d of the array is %d", dimensionNum, dimension);
         exit(1);
     }
     
