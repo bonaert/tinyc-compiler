@@ -463,21 +463,19 @@ lvalue: var  {
 	$$.typeKind = getBaseType($1->type)->type;
 };
 
-elist: var LBRACK number {
+elist: var LBRACK exp {
 	// TODO: checkArrayAccess($1, $3); $$ = $1;
 	$$.place = $3;
 	$$.array = $1;
 	$$.ndim = 0;
-	fprintf(stderr, "value: %d   ", $3);
+	
 };
 
-elist: elist RBRACK LBRACK number {
+elist: elist RBRACK LBRACK exp {
 	int limit = arrayDimSize($1.array, $1.ndim + 1);
 	$$.place = newAnonVar(scope, int_t); // TODO: check if this type is right
 
 	/* offset(next) = offset(prev)*limit(prev) + index(next) */
-	fprintf(stderr, "limit: %d   ", limit);
-	fprintf(stderr, "ndim: %d   ", $1.ndim+1);
 	emit(scope, gen3AC(A2TIMES, $1.place, createConstantSymbol(int_t, limit), $$.place));  /* offset(prev)*limit(prev) */
 	emit(scope, gen3AC(A2PLUS, $$.place, $4, $$.place)); /* + index(next) */
 
@@ -547,7 +545,11 @@ exp: number { $$ = $1; }
 exp: functionCall {	$$ = $1; };
 
 exp: QCHAR  { // A single character inside single quotes
-	$$ = createConstantSymbol(char_t, (int) $1);
+	int val = ((int) $1);
+	if (val == 42) { // * is replaced by newline
+		val = 10;
+	}
+	$$ = createConstantSymbol(char_t, val);
 };
 
 exp: LENGTH lhs { // LENGTH of an array
@@ -620,7 +622,6 @@ dimensionsList: dimensionsList LBRACK NUMBER RBRACK {
 	// TODO: check type (what should I allow in the brackets?)
 	//checkIsNumber($3); 
 	addDimension($1, $3); 
-	fprintf(stderr, "dimension: %d   ", $3);
 	$$ = $1; 
 };
 dimensionsList: %empty { $$ = initDimensions(); };

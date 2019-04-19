@@ -168,6 +168,7 @@ int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actual
             printType(stderr, argumentTypes->types[i]);
             fprintf(stderr, " but actually got ");
             printType(stderr, actualArguments->symbols[i]->type);
+            fprintf(stderr, "\n");
             return 0;
         }
     }

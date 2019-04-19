@@ -44,6 +44,9 @@
 - [x] AAC: array access
 - [x] AAS: array modification
 - [x] ADDR: get address
-- [ ] DEREF, DEREFA: move from/to memory
 
+
+### Example programs
+
+- [x] Bubble sort
 

@@ -23,8 +23,9 @@ int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
         case char_t:
             return 1;  // In the case of INT and CHAR, if the kinds are equal then the types are equal
         case array_t:
-            return areTypesEqual(t1->info.array.base, t2->info.array.base) &&
-                   areDimensionsEqual(t1->info.array.dimensions, t2->info.array.dimensions);  // the types of the contents of the arrays must be equal
+            return areTypesEqual(t1->info.array.base, t2->info.array.base); // the types of the contents of the arrays must be equal
+            // We don't check the dimension size, otherwise usefully passing arrays as parameters would be impossible
+            // && areDimensionsEqual(t1->info.array.dimensions, t2->info.array.dimensions); 
         case function_t:
             return areTypesEqual(t1->info.function.target, t2->info.function.target) &&          // same types for return values
                    areTypeListsEqual(t1->info.function.arguments, t2->info.function.arguments);  // same types for arguments
@@ -219,9 +220,14 @@ void printType(FILE* output, TYPE_INFO* type) {
     } else if (type->type == address_t) {
         fprintf(output, "address");
     } else if (type->type == array_t) {
-        fprintf(output, "array[");
         printType(output, type->info.array.base);
-        fprintf(output, "]");
+        DIMENSIONS* dimensions = type->info.array.dimensions;
+        for(int i = 0; i < dimensions->numDimensions; i++){
+            fprintf(output, "[%d]", dimensions->dimensions[i]);
+        }
+        
+
+        
     } else if (type->type == function_t) {
         fprintf(output, "function(");
         printTypeList(output, type->info.function.arguments, ',');

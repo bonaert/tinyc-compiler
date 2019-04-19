@@ -183,12 +183,6 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
     SYMBOL_INFO* left = instruction->args[0];
     SYMBOL_INFO* right = instruction->args[1];
     
-    // AT&T syntax requires the constant to be on the left
-    if (isConstantSymbol(right)) { 
-        left = instruction->args[1];
-        right = instruction->args[0];
-    }
-
     char* leftLocation;
     char* rightLocation;
 
@@ -196,12 +190,12 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
         leftLocation = getLocation(instrNum, left, op1);
         rightLocation = getLocation(instrNum, right, op2);
     } else {
-        leftLocation = getLocation(instrNum, left, op1);
-        rightLocation = moveToDefaultRegister(instrNum, right, op2);
+        leftLocation = moveToDefaultRegister(instrNum, left, op1);
+        rightLocation = moveToRegister(instrNum, right, op2, OTHER_REGISTER);
     }
 
     // Compare the two numbers and set flags so that the jump will work correctly
-    fprintf(stdout, "\tcmpl %s, %s\n", leftLocation, rightLocation);
+    fprintf(stdout, "\tcmpl %s, %s\n", rightLocation, leftLocation);
 
     // Jump to the correct place
     fprintf(stdout, "\t%s %s\n", instructionName, getLabel(function, (int)instruction->result));
@@ -216,7 +210,8 @@ int numParamsUsed = 0;
 
 void adjustRegistersForCall() {
     fprintf(stdout, "\tmov %rbp, %rsp\n");
-    fprintf(stdout, "\tsub $%d, %rsp\n", getStackSize(stack));
+    SYMBOL_LIST* allSymbols = CURRENT_FUNCTION->details.function.scope->symbolList;
+    fprintf(stdout, "\tsub $%d, %rsp\n", getStackSize(allSymbols));
 }
 
 void pushParam(int instrNum, SYMBOL_INFO* symbol) {
