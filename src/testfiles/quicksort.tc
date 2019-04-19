@@ -1,0 +1,81 @@
+
+
+int split(int[10] a, int start, int end) {
+    int p = a[start];
+    int i = start;
+    int j = end;
+    int temp;
+
+    while(i < j) {
+        while(a[i] <= p) {
+            i = i + 1;
+        }
+
+        while(a[j] > p) {
+            j = j - 1;
+        }
+
+        if (i < j) {
+            temp = a[i];
+            a[i] = a[j];
+            a[j] = temp;
+        }
+    }
+
+    a[start] = a[j];
+    a[j] = p;
+    return j;
+}
+
+int qsort(int[10] a, int start, int end) {
+    if(start >= end) {
+        return 0;
+    }
+    int s = split(a, start, end);
+    qsort(a, start, s - 1);
+    qsort(a, s + 1, end);
+    return 0;
+}
+
+
+
+
+int printArray(int[10] n, int count, int withIndex) {
+    int a = 0;
+    while (a < count) {
+        if (withIndex != 0) {
+            write a;
+            write ':';
+        }  
+        write n[a];
+        write '*';
+        a = a + 1;
+    }
+
+    // TODO: deal with the situation where there's no return value
+    return 0;
+}
+
+
+int main(){
+    int i;
+    int j;
+    int[5] numbers;
+
+    int receive;
+    i = 0;
+    while (i < 5) {
+        read j;
+        numbers[i] = j;
+        i = i + 1;
+    };
+
+    qsort(numbers, 0, 4);
+
+    write '*';
+    printArray(numbers, 5, 1);
+
+   
+
+    return 0;
+}

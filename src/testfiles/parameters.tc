@@ -1,0 +1,33 @@
+char[5] modifyCharArray(char[5] a) {
+    a[2] = 'b';
+    return a;
+}
+
+int[5] modifyIntArray(int[5] a) {
+    a[2] = 123;
+    return a;
+}
+
+int main() {
+    int[5] ints;
+    char[5] chars;
+
+    ints[2] = 999;
+    
+    write '*';
+    write ints[2];
+    ints = modifyIntArray(ints);
+    write '*';
+    write ints[2];
+    
+    chars[2] = 'z';
+    write '*';
+    write chars[2];
+    chars = modifyCharArray(chars);
+    write '*';
+    write chars[2];
+    
+    
+
+    return 1;
+}

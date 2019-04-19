@@ -50,3 +50,6 @@
 
 - [x] Bubble sort
 
+### Bugs
+
+- [ ] Methods with no return statements have a bug when using ifs and whiles

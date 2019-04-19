@@ -315,6 +315,8 @@ void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
         fprintf(stdout, "\tmovq $0, %%rax        # return - set all 64 bits to 0 \n");
         fprintf(stdout, "\tmovl %s, %%eax   # return - move 32 bit value to return register\n", getLocation(instrNum, symbol, op1));
     }
+
+    addFunctionReturn();
 }
 
 
@@ -739,6 +741,12 @@ void functionSetup(SYMBOL_INFO* function) {
     //             sub rsp, 12
 }
 
+void addFunctionReturn() {
+    outputLine("movq %rbp, %rsp      # Reset stack to previous base pointer");
+    outputLine("popq %rbp            # Recover previous base pointer");
+    outputLine("ret                  # return to the caller");
+}
+
 void functionTeardown(SYMBOL_INFO* function) {
     // The return value must be value in eax
     // Normally the RETURNOP should take care of this -> no need to do anything
@@ -782,8 +790,8 @@ void functionTeardown(SYMBOL_INFO* function) {
         outputLine("popq %rbp            # Recover previous base pointer");
     //}
 
-    // 0) Return to the caller using the 'ret' instruction
-    outputLine("ret                  # return to the caller");
+
+    addFunctionReturn();
 }
 
 
