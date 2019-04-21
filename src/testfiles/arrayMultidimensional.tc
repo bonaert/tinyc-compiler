@@ -11,7 +11,14 @@ int main() {
     a[2][3] = 7;
     a[5][7] = 10;
     int b = a[2][3] + a[5][7];
-    write b;    
+    write b;   
+
+    a[2][0] = 10;
+    write '*';
+    write a[2][0]; 
+    a[2][0] = 50;
+    write '*';
+    write a[2][0]; 
     
     return 1;
 }

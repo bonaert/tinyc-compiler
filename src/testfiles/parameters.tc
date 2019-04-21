@@ -8,9 +8,16 @@ int[5] modifyIntArray(int[5] a) {
     return a;
 }
 
+int[5][5] modifyMultidimensionalIntArray(int[10][10] b, int n) {
+    b[1][n] = 123;
+    return b;
+}
+
+
 int main() {
     int[5] ints;
     char[5] chars;
+    int[10][10] xxx;
 
     ints[2] = 999;
     
@@ -26,6 +33,14 @@ int main() {
     chars = modifyCharArray(chars);
     write '*';
     write chars[2];
+
+
+    xxx[1][1] = 456;
+    write '*';
+    write xxx[1][1];
+    xxx = modifyMultidimensionalIntArray(xxx, 1);
+    write '*';
+    write xxx[1][1];
     
     
 
