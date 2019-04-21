@@ -206,15 +206,12 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
 int numParamsUsed = 0;
 
 void adjustRegistersForCall() {
-    fprintf(stdout, "\tmov %%rbp, %%rsp\n");
+    fprintf(stdout, "\tmov %%rbp, %%rsp       # Adjust %%rsp to the end of the stack with all the local variables\n");
     SYMBOL_LIST* allSymbols = CURRENT_FUNCTION->details.function.scope->symbolList;
-    fprintf(stdout, "\tsub $%d, %%rsp\n", getStackSize(allSymbols));
+    fprintf(stdout, "\tsub $%d, %%rsp       # Adjust %%rsp to the end of the stack with all the local variables\n", getStackSize(allSymbols));
 }
 
 void pushParam(int instrNum, SYMBOL_INFO* symbol) {
-    if (numParamsUsed == 0) { // Adjust top of stack pointer
-        adjustRegistersForCall();    
-    }
     numParamsUsed++;
 
     if (isConstantSymbol(symbol)) {
@@ -402,7 +399,7 @@ void moveFromIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBO
     } 
 
     fprintf(stdout, "\tmov $0, %s      # Reset register that was used in 64 bit mode\n", registerNames64[DEFAULT_REGISTER]);
-    fprintf(stdout, "## Array access START - %s = %s[%s]\n", dest->name, base->name, getNameOrValue(offset, op1));
+    fprintf(stdout, "## Array access END - %s = %s[%s]\n", dest->name, base->name, getNameOrValue(offset, op1));
 };
 
 
@@ -421,14 +418,22 @@ void moveToIndexed(int instrNum, SYMBOL_INFO* base, SYMBOL_INFO* offset, SYMBOL_
     getLocation(instrNum, source, extraInfo1);
     
     if (source->type->type == char_t) {
-        fprintf(stdout, "\tmov  $0, %%r12\n");
-        fprintf(stdout, "\tmovb %s, %%r12b \n", extraInfo1);
+        if (isConstantSymbol(source)) {
+            fprintf(stdout, "\tmovq  $%d, %%r12\n", getConstantRawValue(source));
+        } else {
+            fprintf(stdout, "\tmov  $0, %%r12\n");
+            fprintf(stdout, "\tmovb %s, %%r12b \n", extraInfo1);
+        }
         fprintf(stdout, "\tmovb %%r12b, 8(%s, %s, 1)        # array modification \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
         
     } else if (source->type->type == int_t) {
-        fprintf(stdout, "\tmov  $0, %%r12\n");
-        fprintf(stdout, "\tmovl %s, %%r12d \n", extraInfo1);
+        if (isConstantSymbol(source)) {
+            fprintf(stdout, "\tmovq  $%d, %%r12\n", getConstantRawValue(source));
+        } else {
+            fprintf(stdout, "\tmov  $0, %%r12\n");
+            fprintf(stdout, "\tmovl %s, %%r12d \n", extraInfo1);
+        }
         fprintf(stdout, "\tmovl %%r12d, 8(%s, %s, 1)        # array modification \n", 
             registerNames64[DEFAULT_REGISTER], registerNames64[OTHER_REGISTER]);
         
@@ -580,7 +585,7 @@ void division(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* 
 
 // Syscalls
 void read(int instrNum, SYMBOL_INFO* symbol) {
-    adjustRegistersForCall();
+    //adjustRegistersForCall();
     if (symbol->type->type == char_t) {
         outputLine("call readChar");
         fprintf(stdout, "\tmovb %%al, %s\n", getLocation(instrNum, symbol, op1));
@@ -598,7 +603,6 @@ void read(int instrNum, SYMBOL_INFO* symbol) {
 }
 
 void write(int instrNum, SYMBOL_INFO* symbol) {
-    adjustRegistersForCall();
     // Uses outside-world convention, so I have to put the parameter in %edi instead of putting it in the stack
     fprintf(stdout, "\tmovq $0, %%rdi\n");
     moveToRegister(instrNum, symbol, op1, RDI); 
@@ -638,6 +642,8 @@ void length(int instrNum, SYMBOL_INFO* array, SYMBOL_INFO* target) {
 
 
 void translateInstruction(SYMBOL_INFO* function, int instrNum, INSTRUCTION* instruction) {
+    fprintf(stdout, "#### %s %d:  ", function->name, instrNum);
+    print3AC(stdout, *instruction);
     switch (instruction->opcode) {
         case A2PLUS:  // c = a + b
             outputSimpleMathOperation("addl", instrNum, instruction->args[0], instruction->args[1], instruction->result);
@@ -786,7 +792,7 @@ void functionSetup(SYMBOL_INFO* function) {
     // Since %rbp is a callee-save register, it needs to be saved before we change it.
     // TODO: understand why we need to readjust the base pointer register
     // if (needDynamicStack(function)) {
-        outputLine("pushq %rbp           # Save the base pointer Use base pointer");
+        outputLine("pushq %rbp           # Save the base pointer");
         outputLine("movq %rsp, %rbp      # Set new base pointer");
     //}
 
@@ -809,6 +815,9 @@ void functionSetup(SYMBOL_INFO* function) {
     // 2) Allocate local variables by using registers or making space on the stack
     //    Example: if there the local variables that up 12 bytes do
     //             sub rsp, 12
+
+
+    adjustRegistersForCall();
 }
 
 
@@ -917,6 +926,12 @@ void buildAssembly(SYMBOL_TABLE* scope) {
 
         stack = initSymbolList();
         int isMain = isMainFunction(functions->symbols[i]);
+        fprintf(stdout, "\n#####################################################\n");
+        fprintf(stdout, "# ");
+        printSymbol(stdout, functions->symbols[i]);
+        fprintf(stdout, "\n#####################################################\n");
+        
+
         if (isMain) {
             markFunctionGlobal(functions->symbols[i]);
         }

@@ -252,7 +252,13 @@ void printSymbol(FILE* output, SYMBOL_INFO* symbolInfo) {
             if (symbolInfo->type->type == int_t) {
                 fprintf(output, " (= %d)", symbolInfo->details.constant.value.intValue);
             } else {
-                fprintf(output, " (= '%c')", symbolInfo->details.constant.value.charValue);
+                char c = symbolInfo->details.constant.value.charValue;
+                if (c == 10) { // Newline
+                    fprintf(output, " (= 'newline')");
+                } else {       // Normal character
+                    fprintf(output, " (= '%c')", c);
+                }
+               
             }
         }
     }

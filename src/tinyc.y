@@ -486,6 +486,7 @@ elist: elist RBRACK LBRACK exp {
 };
 
 lvalue: elist RBRACK {
+	checkArrayAccessHasAllDimensions($1.array, $1.ndim + 1);
 	
 	$$.offset = newAnonVar(scope, int_t);  
 	$$.typeKind = getBaseType(($1.array)->type)->type;

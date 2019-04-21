@@ -1,4 +1,5 @@
 #include "check.h"
+#include "array.h"
 
 #include <stdio.h>  /* for fprintf() and friends */
 #include <stdlib.h> /* for exit() and fmalloc() */
@@ -118,6 +119,19 @@ TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index) {
         error1("index should be an integer but is ", index->type);
     }
     return array->type->info.array.base;
+}
+
+void checkArrayAccessHasAllDimensions(SYMBOL_INFO* array, int numDimensionUsed) {
+    int arrayNumDimensions = array->type->info.array.dimensions->numDimensions;
+    if (numDimensionUsed < arrayNumDimensions) {
+        fprintf(stderr, "Error - not enough dimensions: provided only %d dimension(s) when accessing array '%s' of %d dimensions\n", 
+                numDimensionUsed, array->name, arrayNumDimensions);
+        exit(1);
+    } else if (numDimensionUsed > arrayNumDimensions) {
+        fprintf(stderr, "Error - too many dimensions: provided %d dimensions when accessing array '%s' that has only %d dimensions\n", 
+                numDimensionUsed, array->name, arrayNumDimensions);
+        exit(1);
+    }
 }
 
 void checkComparisonOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){

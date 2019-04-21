@@ -16,6 +16,7 @@ TYPE_INFO* checkIsArray(SYMBOL_INFO* array);
 TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* array);
 
 TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index);
+void checkArrayAccessHasAllDimensions(SYMBOL_INFO* array, int numDimensionUsed);
 TYPE_INFO* checkArithOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2);
 TYPE_INFO* checkEqualityOp(SYMBOL_INFO* left, SYMBOL_INFO* right);
 TYPE_INFO* checkFunctionCall(SYMBOL_INFO* symbol, char* functionName, SYMBOL_LIST* arguments);
