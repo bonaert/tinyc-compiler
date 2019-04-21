@@ -195,7 +195,7 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
     fprintf(stdout, "\tcmpl %s, %s\n", rightLocation, leftLocation);
 
     // Jump to the correct place
-    fprintf(stdout, "\t%s %s\n", instructionName, getLabel(function, (int) (intptr_t) instruction->result));
+    fprintf(stdout, "\t%s %s\n", instructionName, getLabel(function, getJumpDestination(*instruction)));
 };
 
 
@@ -673,7 +673,7 @@ void translateInstruction(SYMBOL_INFO* function, int instrNum, INSTRUCTION* inst
             move(instrNum, instruction->args[0], instruction->result);
             break;
         case GOTO:  // goto
-            jump(function, instrNum, (int) (intptr_t) instruction->args[0]);
+            jump(function, instrNum, getJumpDestination(*instruction));
             break;
         case IFEQ:  // if equal (jump)
             conditionalJump("je", function, instrNum, instruction);
@@ -757,12 +757,8 @@ void saveInstructionsThatNeedLabels(INSTRUCTION* instructions, int numInstructio
 
     // Set all jump destinations to 1
     for (int i = 0; i < numInstructions; i++) {
-        OPCODE o = instructions[i].opcode;
-        if (o == IFEQ || o == IFNEQ || o == IFG || o == IFS || o == IFSE || o == IFGE) {
-            int destination = (int) (intptr_t) instructions[i].result;
-            needsLabel[destination] = 1;
-        } else if (o == GOTO) {
-            int destination = (int) (intptr_t) instructions[i].args[0];
+        if (isAnyJump(instructions[i])){
+            int destination = getJumpDestination(instructions[i]);
             needsLabel[destination] = 1;
         }
     }

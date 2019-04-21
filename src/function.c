@@ -42,6 +42,44 @@ void ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope) {
         emitReturn3AC(scope, 0);
 
         fprintf(stderr, "\nWARNING: function %s doesn't end with a return statement.\n", function->name);
-        fprintf(stderr, "\nWARNING: the return value will be garbage!\n");
+        fprintf(stderr, "WARNING: the return value will be garbage!\n");
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+void deleteInstruction(SYMBOL_INFO* function, int n) {
+    INSTRUCTION* instructions = function->details.function.instructions;
+    int numInstructions = function->details.function.numInstructions; 
+    
+    // Adjust all the jumps
+    for(int i = 0; i < numInstructions; i++) {
+        if (isAnyJump(instructions[i])) {
+            int destination = getJumpDestination(instructions[i]);
+            if (destination > n) {  
+                // Since the destination instruction will move backwards by one, we must
+                // decrement the destination address by 1 to account for this
+                setJumpDestination(&instructions[i], destination - 1);
+            } else if (destination == n) {
+                fprintf(stderr, "ERROR: Trying to delete an instruction which still has jumps to it!\n");
+                exit(1);
+            } // when destination < n, we don't have to change anything (the destination instruction doesn't move)
+        }
+    }
+    
+    // Move backwards by 1 all instructions after it, in order
+    for(int i = n + 1; i < numInstructions; i++) {
+        instructions[i - 1] = instructions[i];
+    }
+    
+    // Decrement the number of instructions
+    function->details.function.numInstructions--;
 }

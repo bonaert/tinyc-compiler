@@ -81,8 +81,8 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 		switch (instructions[location].opcode)
 		{
 			case GOTO:
-				// GOTO location 0 0
-				instructions[location].args[0] = (SYMBOL_INFO*) (intptr_t) realLocation;
+				// GOTO 0 0 location
+				setJumpDestination(&instructions[location], realLocation);
 				break;
 			
 			case IFEQ:
@@ -92,7 +92,7 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 			case IFGE:
 			case IFSE:
 				// EX: IFEQ a.location b.location location
-				instructions[location].result = (SYMBOL_INFO*) (intptr_t) realLocation;
+				setJumpDestination(&instructions[location], realLocation);
 				break;
 		
 			default:
@@ -132,7 +132,8 @@ void emitEmptyGoto(SYMBOL_TABLE* scope) {
 }
 
 void emitGoto(SYMBOL_TABLE* scope, int arg) {
-	emit(scope, gen3AC(GOTO, (SYMBOL_INFO*) (intptr_t) arg, 0, 0));
+	// Only exception where I don't use setJumpDestination (this is shorter)
+	emit(scope, gen3AC(GOTO, 0, 0, (SYMBOL_INFO*) (intptr_t) arg));
 }
 
 void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg) {
@@ -238,7 +239,7 @@ void print3AC(FILE* output, INSTRUCTION instruction) {
 	switch (instruction.opcode)
 	{
 		case GOTO:
-			fprintf(output, "GOTO %d\n", (int) (intptr_t) instruction.args[0]);
+			fprintf(output, "GOTO %d\n", getJumpDestination(instruction));
 			break;
 		case IFEQ:
 		case IFNEQ:
@@ -250,7 +251,7 @@ void print3AC(FILE* output, INSTRUCTION instruction) {
 			if (instruction.args[0]) printSymbol(output, instruction.args[0]);
 			fprintf(output, " ");
 			if (instruction.args[1]) printSymbol(output, instruction.args[1]);
-			fprintf(output, " %d\n", (int) (intptr_t) instruction.result);
+			fprintf(output, " %d\n", getJumpDestination(instruction));
 			break;
 		default:
 			fprintf(output, "%s ", opcodeNames[instruction.opcode]);
@@ -271,4 +272,42 @@ void printAllInstructions(SYMBOL_TABLE* scope) {
 		fprintf(stderr, "%d:  ", i);
 		print3AC(stderr, instructions[i]);
 	}
+}
+
+
+int isConditionalJump(INSTRUCTION instruction) {
+	OPCODE opcode = instruction.opcode;
+	return opcode == IFEQ || opcode == IFNEQ || 
+		   opcode == IFG  || opcode == IFGE  || 
+		   opcode == IFS  || opcode == IFSE;
+}
+
+int isDirectJump(INSTRUCTION instruction) {
+	return instruction.opcode == GOTO;
+}
+
+int isAnyJump(INSTRUCTION instruction) {
+	return isDirectJump(instruction) || isConditionalJump(instruction);
+}
+
+OPCODE getOppositeJumpOpcode(OPCODE opcode) {
+	switch (opcode) {
+		case IFEQ:  return IFNEQ;    //   ==    ->    !=
+		case IFNEQ: return IFEQ;     //   !=    ->    ==
+		case IFS:   return IFGE;     //   <     ->    >=
+		case IFSE:  return IFG;      //   <=    ->    >
+		case IFG:   return IFSE;     //   >     ->    <=
+		case IFGE:  return IFS;      //   >=    ->    <
+		default:
+			fprintf(stderr, "Finding opposite jump code of an opcode that isn't a JUMP!");
+			exit(1);
+	}
+}
+
+int getJumpDestination(INSTRUCTION instruction) {
+	return (int) (intptr_t) instruction.result;
+}
+
+void setJumpDestination(INSTRUCTION* instruction, int destination) {
+	instruction->result = (SYMBOL_INFO*) (intptr_t) destination;
 }
