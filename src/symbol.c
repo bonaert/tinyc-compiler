@@ -334,27 +334,24 @@ int getSymbolSize(SYMBOL_INFO* symbol) {
 }
 
 
-char* getConstantValue(SYMBOL_INFO* constant, char* res) {
+int getConstantRawValue(SYMBOL_INFO* constant) {
     if (constant->type->type == char_t) {
-        sprintf(res, "$%d", constant->details.constant.value.charValue);
+        return constant->details.constant.value.charValue;
     } else if (constant->type->type == int_t) {
-        sprintf(res, "$%d", constant->details.constant.value.intValue);
+        return constant->details.constant.value.intValue;
     } else {
-        fprintf(stderr, "Error, array or function is considered a constant!");
+        fprintf(stderr, "Error, array or function is considered a constant (and it shouldn't)!");
         exit(1);
     }
+}
+
+char* getConstantValue(SYMBOL_INFO* constant, char* res) {
+    sprintf(res, "$%d", getConstantRawValue(constant));
     return res;
 }
 
 char* getHumanConstantValue(SYMBOL_INFO* constant, char* res) {
-    if (constant->type->type == char_t) {
-        sprintf(res, "%d", constant->details.constant.value.charValue);
-    } else if (constant->type->type == int_t) {
-        sprintf(res, "%d", constant->details.constant.value.intValue);
-    } else {
-        fprintf(stderr, "Error, array or function is considered a constant!");
-        exit(1);
-    }
+    sprintf(res, "%d", getConstantRawValue(constant));
     return res;
 }
 

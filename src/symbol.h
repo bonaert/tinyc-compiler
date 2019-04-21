@@ -110,6 +110,7 @@ int getSymbolSize(SYMBOL_INFO* symbol);
 char* getNameOrValue(SYMBOL_INFO* symbol, char* res);
 char* getConstantValue(SYMBOL_INFO* constant, char* res);
 char* getHumanConstantValue(SYMBOL_INFO* constant, char* res);
+int getConstantRawValue(SYMBOL_INFO* constant);
 
 int isArray(SYMBOL_INFO* symbol);
 int isAddress(SYMBOL_INFO* symbol);

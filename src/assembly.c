@@ -474,11 +474,65 @@ void moveRegToMem(int instrNum, char* regName, SYMBOL_INFO* dest) {
 
 
 
+int doOp(char * operation, int left, int right) {
+    if (strcmp(operation, "addl") == 0) {
+        return left + right;
+    } else if (strcmp(operation, "subl") == 0) {
+        return left + right;
+    } else {
+        fprintf(stderr, "Invalid operation");
+        exit(1);
+    }
+}
 
 
 
 // Maths
 void outputSimpleMathOperation(char* operation, int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* target) {
+    // If the left symbol is constant, switch places with the right symbol
+    // This ensures that if there's a constant among the left and right symbols
+    // then after this the right symbol will be a constant
+    //
+    // constant, constant -> constant, constant (shouldn't happen after optimization)
+    // constant, var -> var, constant
+    // var, constant -> var, constant
+    // var, var -> var, var
+    /*if (isConstantSymbol(left)) {
+        SYMBOL_INFO* temp = right;
+        right = left;
+        left = temp;
+    }
+
+    if (isConstantSymbol(right)) {
+        int value = getConstantRawValue(right);
+        
+        if (value == 1 || value == -1) {
+            char * opName;
+            if (value == 1 && isInt(target)) {
+                opName = "incl";
+            } else if (value == -1 && isInt(target)) {
+                opName = "decl";
+            } else if (value == 1 && isChar(target)) {
+                opName = "incb";
+            } else if (value == -1 && isChar(target)) {
+                opName = "decb";
+            }
+
+            if (left == target) {   // x = x + 1
+                fprintf(stdout, "\t%s %s\n", opName, getLocation(instrNum, target, op1));
+            } else {                // x = y + 1
+                moveToRegister(instrNum, left, op1, DEFAULT_REGISTER);
+                fprintf(stdout, "\t%s %s\n", opName, registerNames32[DEFAULT_REGISTER]);
+                moveRegToMem(instrNum, registerNames32[DEFAULT_REGISTER], target);
+            } 
+            return;
+        }
+
+
+        
+    }
+    */
+    
     fprintf(stdout, "\t# Math operation - Start: %s = %s %s %s\n", getNameOrValue(target, extraInfo1), getNameOrValue(left, op1), operation, getNameOrValue(right, op2));
     moveToRegister(instrNum, left, op1, DEFAULT_REGISTER);
     moveToRegister(instrNum, right, op1, OTHER_REGISTER);
@@ -673,10 +727,12 @@ void translateInstruction(SYMBOL_INFO* function, int instrNum, INSTRUCTION* inst
             break;
         case RETURNOP:  // return A - returns the value A (put result on stack and change special registers to saved values)
             // When a function has no return statement at the end, we add a fake RETURNOP instruction
-            // to make parsing work and intermediate code generation work correctly. However, we don't emit
-            // any x86 64 assembly in this situation.
+            // to make parsing work and intermediate code generation work correctly. In that case, we only
+            // adjust %rbp and %rsp then use ret, without putting a return value in %rax.
             if (instruction->args[0] != 0) {  
                 returnFromFunction(instrNum, instruction->args[0]);
+            } else {
+                addFunctionReturn();
             }
             break;
         case GETRETURNVALUE:  // return A - returns the value A (put result on stack and change special registers to saved values)

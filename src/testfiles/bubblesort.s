@@ -35,14 +35,15 @@ printArray_7:
 	imull %r10d
 	movl %eax, -8(%rbp)
 	# Multiplication - End: anon__1 = a x $4
-	# Array access START for array n (n[anon__1])
+## Array access START - anon__2 = n[anon__1]
 	movq 32(%rbp), %r10
+	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
 	movl -8(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -12(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
-	# Array access END for array n (n[anon__1])
+## Array access START - anon__2 = n[anon__1]
 	mov %rbp, %rsp
 	sub $84, %rsp
 	movq $0, %rdi
@@ -63,10 +64,6 @@ printArray_7:
 	movl %r10d, -4(%rbp)     # a = anon__3
 	jmp printArray_1
 printArray_14:
-	movq $0, %rax
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	ret                  # return to the caller
 .type bubblesort, @function
 bubblesort:
 	pushq %rbp           # Save the base pointer Use base pointer
@@ -100,14 +97,15 @@ bubblesort_7:
 	imull %r10d
 	movl %eax, -16(%rbp)
 	# Multiplication - End: anon__5 = j x $4
-	# Array access START for array numbers (numbers[anon__5])
+## Array access START - anon__6 = numbers[anon__5]
 	movq 24(%rbp), %r10
+	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
 	movl -16(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -20(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
-	# Array access END for array numbers (numbers[anon__5])
+## Array access START - anon__6 = numbers[anon__5]
 	# Math operation - Start: anon__7 = j addl $1
 	movl -12(%rbp), %r10d
 	movl $1, %r11d
@@ -120,14 +118,15 @@ bubblesort_7:
 	imull %r10d
 	movl %eax, -28(%rbp)
 	# Multiplication - End: anon__8 = anon__7 x $4
-	# Array access START for array numbers (numbers[anon__8])
+## Array access START - anon__9 = numbers[anon__8]
 	movq 24(%rbp), %r10
+	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
 	movl -28(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -32(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
-	# Array access END for array numbers (numbers[anon__8])
+## Array access START - anon__9 = numbers[anon__8]
 	movl -20(%rbp), %r10d
 	movl -32(%rbp), %r11d
 	cmpl %r11d, %r10d
@@ -140,14 +139,15 @@ bubblesort_14:
 	imull %r10d
 	movl %eax, -36(%rbp)
 	# Multiplication - End: anon__10 = j x $4
-	# Array access START for array numbers (numbers[anon__10])
+## Array access START - anon__11 = numbers[anon__10]
 	movq 24(%rbp), %r10
+	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
 	movl -36(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -40(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
-	# Array access END for array numbers (numbers[anon__10])
+## Array access START - anon__11 = numbers[anon__10]
 	movl -40(%rbp), %r10d
 	movl %r10d, -44(%rbp)     # temp = anon__11
 	# Multiplication - Start: anon__12 = j x $4
@@ -168,20 +168,24 @@ bubblesort_14:
 	imull %r10d
 	movl %eax, -56(%rbp)
 	# Multiplication - End: anon__14 = anon__13 x $4
-	# Array access START for array numbers (numbers[anon__14])
+## Array access START - anon__15 = numbers[anon__14]
 	movq 24(%rbp), %r10
+	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
 	movl -56(%rbp), %r11d
 	mov  $0, %r12
 	movl 8(%r10, %r11, 1), %r12d        # array access 
 	movl %r12d, -60(%rbp) 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
-	# Array access END for array numbers (numbers[anon__14])
+## Array access START - anon__15 = numbers[anon__14]
+## Array modification START - numbers[anon__12] = anon__15
 	movq 24(%rbp), %r10
+	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
 	movl -48(%rbp), %r11d
 	mov  $0, %r12
 	movl -60(%rbp), %r12d 
 	movl %r12d, 8(%r10, %r11, 1)        # array modification 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
+## Array modification END - numbers[anon__12] = anon__15
 	# Math operation - Start: anon__16 = j addl $1
 	movl -12(%rbp), %r10d
 	movl $1, %r11d
@@ -194,12 +198,15 @@ bubblesort_14:
 	imull %r10d
 	movl %eax, -68(%rbp)
 	# Multiplication - End: anon__17 = anon__16 x $4
+## Array modification START - numbers[anon__17] = temp
 	movq 24(%rbp), %r10
+	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
 	movl -68(%rbp), %r11d
 	mov  $0, %r12
 	movl -44(%rbp), %r12d 
 	movl %r12d, 8(%r10, %r11, 1)        # array modification 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
+## Array modification END - numbers[anon__17] = temp
 bubblesort_25:
 	# Math operation - Start: anon__18 = j addl $1
 	movl -12(%rbp), %r10d
@@ -221,10 +228,6 @@ bubblesort_28:
 	movl %r10d, -8(%rbp)     # i = anon__19
 	jmp bubblesort_2
 bubblesort_31:
-	movq $0, %rax
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	ret                  # return to the caller
 	.globl main
 .type main, @function
 main:
@@ -252,12 +255,15 @@ main_3:
 	imull %r10d
 	movl %eax, -68(%rbp)
 	# Multiplication - End: anon__20 = i x $4
+## Array modification START - anon__21[anon__20] = j
 	movq -64(%rbp), %r10
+	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
 	movl -68(%rbp), %r11d
 	mov  $0, %r12
 	movl -8(%rbp), %r12d 
 	movl %r12d, 8(%r10, %r11, 1)        # array modification 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
+## Array modification END - anon__21[anon__20] = j
 	# Math operation - Start: anon__22 = i addl $1
 	movl -4(%rbp), %r10d
 	movl $1, %r11d
@@ -292,7 +298,3 @@ main_10:
 	pushq $1
 	call printArray
 	movl %eax, -96(%rbp)
-	movq $0, %rax
-	movq %rbp, %rsp      # Reset stack to previous base pointer
-	popq %rbp            # Recover previous base pointer
-	ret                  # return to the caller
