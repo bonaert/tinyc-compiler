@@ -41,6 +41,10 @@ int isConstantSymbol(SYMBOL_INFO* symbol) {
     return symbol->symbolKind == constant_s;
 }
 
+int isConstantSymbolWithValue(SYMBOL_INFO* symbol, int value) {
+    return symbol->symbolKind == constant_s && getConstantRawValue(symbol) == value;
+}
+
 SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo) {
     SYMBOL_INFO* symbolInfo = createBaseSymbol(name, typeInfo, variable_s);
     // TODO: add location

@@ -71,6 +71,16 @@ void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg);
 void emitEmptyGoto(SYMBOL_TABLE* scope);
 void emitGoto(SYMBOL_TABLE* scope, int arg);
 
+/* Used for array access computations, see elist in tinyc.y */
+SYMBOL_INFO* emitAdditionIfNeededAtResult(SYMBOL_TABLE* scope, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* result);
+SYMBOL_INFO* emitMultiplicationIfNeededAtResult(SYMBOL_TABLE* scope, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* result);
+
+
+SYMBOL_INFO* emitAdditionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right);
+SYMBOL_INFO* emitSubtractionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right);
+SYMBOL_INFO* emitMultiplicationIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right);
+SYMBOL_INFO* emitDivisionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right);
+
 
 void print3AC(FILE* output, INSTRUCTION instruction);
 void printAllInstructions(SYMBOL_TABLE* scope);

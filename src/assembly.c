@@ -315,8 +315,8 @@ void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
         if (isConstantSymbol(symbol)) {
             fprintf(stdout, "\tmovq %s, %%rax\n", getConstantValue(symbol, op1));
         } else {
-            fprintf(stdout, "\tmovq $0, %%rax   # return - set all 64 bits to 0 \n");
-            fprintf(stdout, "\tmovl %s, %%eax   # return - move 32 bit value to return register\n", getLocation(instrNum, symbol, op1));
+            fprintf(stdout, "\tmovq $0, %%rax        # return - set all 64 bits to 0 \n");
+            fprintf(stdout, "\tmovl %s, %%eax  # return - move 32 bit value to return register\n", getLocation(instrNum, symbol, op1));
         } 
     }
 

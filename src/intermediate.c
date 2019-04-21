@@ -139,6 +139,100 @@ void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg) {
 	emit(scope, gen3AC(RETURNOP, arg, 0, 0));
 }
 
+SYMBOL_INFO* emitAdditionIfNeededAtResult(SYMBOL_TABLE* scope, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* result) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 + 3   -> x = 5
+		return createConstantSymbol(int_t, getConstantRawValue(left) + getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 + y   -> y
+		return right;
+	} else if (isConstantSymbolWithValue(right, 0)) {         // x = y + 0   -> y
+		return left;
+	} else {                                                  // x = y + z
+		emitBinary3AC(scope, A2PLUS, left, right, result);
+		return result;
+	}	
+}
+
+SYMBOL_INFO* emitAdditionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 + 3   -> x = 5
+		return createConstantSymbol(type->type, getConstantRawValue(left) + getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 + y   -> y
+		return right;
+	} else if (isConstantSymbolWithValue(right, 0)) {         // x = y + 0   -> y
+		return left;
+	} else {                                                  // x = y + z
+		SYMBOL_INFO* result = newAnonVar(scope, type->type); 
+		emitBinary3AC(scope, A2PLUS, left, right, result);
+		return result;
+	}	
+}
+
+
+SYMBOL_INFO* emitSubtractionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 - 3   -> x = -1
+		return createConstantSymbol(type->type, getConstantRawValue(left) - getConstantRawValue(right));
+	} /*else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 - y   -> x = -y
+		TODO
+		return UMINUS right;
+	} */
+	else if (isConstantSymbolWithValue(right, 0)) {         // x = y - 0   -> y
+		return left;
+	} else {                                                  // x = y - z
+		SYMBOL_INFO* result = newAnonVar(scope, type->type); 
+		emitBinary3AC(scope, A2MINUS, left, right, result);
+		return result;
+	}	
+}
+
+SYMBOL_INFO* emitMultiplicationIfNeededAtResult(SYMBOL_TABLE* scope, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* result) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 * 3   -> x = 6
+		return createConstantSymbol(int_t, getConstantRawValue(left) * getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(left, 1)) {          // x = 1 * y   -> y
+		return right;
+	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y * 1   -> y
+		return left;
+	} else {                                                  // x = y * z
+		emitBinary3AC(scope, A2TIMES, left, right, result);
+		return result;
+	}
+}
+
+
+SYMBOL_INFO* emitMultiplicationIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 * 3   -> x = 6
+		fprintf(stderr, "%d x %d = %d",  getConstantRawValue(left), getConstantRawValue(right),  getConstantRawValue(left) * getConstantRawValue(right));
+		return createConstantSymbol(type->type, getConstantRawValue(left) * getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(left, 1)) {          // x = 1 * y   -> y
+		return right;
+	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y * 1   -> y
+		return left;
+	} else {                                                  // x = y * z
+		SYMBOL_INFO* result = newAnonVar(scope, type->type);
+		emitBinary3AC(scope, A2TIMES, left, right, result);
+		return result;
+	}
+}
+
+SYMBOL_INFO* emitDivisionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 / 3   -> x = 6
+		if (getConstantRawValue(right) == 0) {
+			fprintf(stderr, "ERROR: doing division by 0!\n");
+			exit(1);
+		}
+		return createConstantSymbol(type->type, getConstantRawValue(left) / getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y / 1   -> y
+		return left;
+	} else {                                                  // x = y / z
+		SYMBOL_INFO* result = newAnonVar(scope, type->type);  
+		emitBinary3AC(scope, A2DIVIDE, left, right, result);
+		return result;
+	}	
+}
+
+
+
+
+
+
 
 void print3AC(FILE* output, INSTRUCTION instruction) {
 	switch (instruction.opcode)

@@ -34,6 +34,29 @@ int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
     }
 }
 
+int areTypesStrictlyEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
+    if (t1 == t2) {
+        return 1;  // If both pointers point to the same type, the types are equal
+    } else if (t1->type != t2->type) {
+        return 0;  // If the type's kind are different (ex: INT and ARRAY), the types are different
+    }
+
+    switch (t1->type) {
+        case int_t:
+        case address_t:
+        case char_t:
+            return 1;  // In the case of INT and CHAR, if the kinds are equal then the types are equal
+        case array_t:
+            return areTypesStrictlyEqual(t1->info.array.base, t2->info.array.base) // the types of the contents of the arrays must be equal
+                && areDimensionsEqual(t1->info.array.dimensions, t2->info.array.dimensions); 
+        case function_t:
+            return areTypesStrictlyEqual(t1->info.function.target, t2->info.function.target) &&          // same types for return values
+                   areTypeListsEqual(t1->info.function.arguments, t2->info.function.arguments);  // same types for arguments
+        default:
+            assert(0);  // Should never happend, must lead to a crash.
+    }
+}
+
 /**
  * Tries to find if the type was already created. If it already exists, it returns a pointer to
  * the already created (heap-allocated) type. Otherwise, returns 0.
@@ -45,7 +68,7 @@ TYPE_INFO* findType(TYPE_INFO* type) {
         currentTypeList = initTypeList();
     }
     for(int i = 0; i < currentTypeList->size; i++) {
-        if (areTypesEqual(currentTypeList->types[i], type)) {
+        if (areTypesStrictlyEqual(currentTypeList->types[i], type)) {
             return currentTypeList->types[i];
         }
     }

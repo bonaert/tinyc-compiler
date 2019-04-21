@@ -247,6 +247,7 @@ functionParameter: type NAME {
 	// Important: this lines makes it so that the parameters are the first symbols in the symbol table!
 	// This convention is used in the getParameterIndex() function in functions.c
 	$$ = insertVariableInSymbolTable(scope, $2, $1);
+	printType(stderr, $1);
 };
 
 
@@ -470,16 +471,26 @@ elist: var LBRACK exp {
 	$$.place = $3;
 	$$.array = $1;
 	$$.ndim = 0;
-	
 };
 
 elist: elist RBRACK LBRACK exp {
 	int limit = arrayDimSize($1.array, $1.ndim + 1);
-	$$.place = newAnonVar(scope, int_t); // TODO: check if this type is right
+
+	// TODO
+	/*SYMBOL_INFO* constantSymbol = createConstantSymbol(int_t, limit);
+	printSymbol(stderr, $1.place);
+	$$.place = emitMultiplicationIfNeeded(scope, constantSymbol->type, $1.place, constantSymbol);
+	$$.place = emitAdditionIfNeededAtResult(scope, $$.place, $4, $$.place);*/
+	
+
+
 
 	/* offset(next) = offset(prev)*limit(prev) + index(next) */
-	emit(scope, gen3AC(A2TIMES, $1.place, createConstantSymbol(int_t, limit), $$.place));  /* offset(prev)*limit(prev) */
-	emit(scope, gen3AC(A2PLUS, $$.place, $4, $$.place)); /* + index(next) */
+ 	
+	$$.place = newAnonVar(scope, int_t); // TODO: check if this type is right
+	emit(scope, gen3AC(A2TIMES, $1.place, createConstantSymbol(int_t, limit), $$.place));  // offset(prev)*limit(prev)
+	emit(scope, gen3AC(A2PLUS, $$.place, $4, $$.place)); // + index(next) 
+	
 
 	$$.array = $1.array;
 	$$.ndim = $1.ndim + 1;
@@ -532,13 +543,13 @@ lhs: lvalue {
 exp: lhs { $$ = $1; };
 
 
-exp:  exp PLUS exp           { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, type->type); emitBinary3AC(scope, A2PLUS, $1, $3, $$); }
-    | exp MINUS exp          { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, type->type); emitBinary3AC(scope, A2MINUS, $1, $3, $$); }
-	| exp TIMES exp          { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, type->type); emitBinary3AC(scope, A2TIMES, $1, $3, $$); }
-	| exp DIVIDE exp         { TYPE_INFO* type = checkArithOp($1, $3); $$ = newAnonVar(scope, type->type); emitBinary3AC(scope, A2DIVIDE, $1, $3, $$); }
+exp:  exp PLUS exp           { TYPE_INFO* type = checkArithOp($1, $3); $$ = emitAdditionIfNeeded(scope, type, $1, $3); }
+    | exp MINUS exp          { TYPE_INFO* type = checkArithOp($1, $3); $$ = emitSubtractionIfNeeded(scope, type, $1, $3); }
+	| exp TIMES exp          { TYPE_INFO* type = checkArithOp($1, $3); $$ = emitMultiplicationIfNeeded(scope, type, $1, $3); }
+	| exp DIVIDE exp         { TYPE_INFO* type = checkArithOp($1, $3); $$ = emitDivisionIfNeeded(scope, type, $1, $3); }
 	;
 
-exp: MINUS exp %prec UMINUS { checkIsNumber($2); $$ = newAnonVar(scope, int_t); emitUnary3AC(scope, A1MINUS, $2, $$); }
+exp: MINUS exp %prec UMINUS { checkIsNumber($2); /* TODO: use correct type */ $$ = newAnonVar(scope, int_t); emitUnary3AC(scope, A1MINUS, $2, $$); }
    ;
 
 exp: LPAR exp RPAR         { $$ = $2;  /* (a) */ };

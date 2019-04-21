@@ -61,6 +61,7 @@ TYPE_LIST* initTypeList();
 TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList);
 
 int areTypesEqual(TYPE_INFO* type1, TYPE_INFO* type2);
+int areTypesStrictlyEqual(TYPE_INFO* type1, TYPE_INFO* type2);
 int areTypeListsEqual(TYPE_LIST* typeList1, TYPE_LIST* argumentTypes);
 
 void printType(FILE * output, TYPE_INFO* type);

@@ -97,7 +97,7 @@ void checkAssignmentInDeclaration(TYPE_INFO* left, SYMBOL_INFO* right) {
 }
 
 void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right) {
-    if (left->type != right->type) {
+    if (!areTypesEqual(left->type, right->type)) {
         error2("cannot assign ", right->type, " to ", getBaseType(left->type));
     }
 }
@@ -107,7 +107,7 @@ void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right) {
 
 void checkReturnType(SYMBOL_TABLE* scope, SYMBOL_INFO* returnVal) {
     TYPE_INFO* functionReturnType = scope->function->type->info.function.target;
-    if (functionReturnType != returnVal->type) {
+    if (!areTypesEqual(functionReturnType, returnVal->type)) {
         error2("the function must return ", functionReturnType, " but is actually returning ", returnVal->type);
     }
 }
@@ -128,7 +128,7 @@ void checkArrayAccessHasAllDimensions(SYMBOL_INFO* array, int numDimensionUsed) 
                 numDimensionUsed, array->name, arrayNumDimensions);
         exit(1);
     } else if (numDimensionUsed > arrayNumDimensions) {
-        fprintf(stderr, "Error - too many dimensions: provided %d dimensions when accessing array '%s' that has only %d dimensions\n", 
+        fprintf(stderr, "Error - too many dimensions: provided %d dimensions when accessing array '%s' that has only %d dimension(s)\n", 
                 numDimensionUsed, array->name, arrayNumDimensions);
         exit(1);
     }
@@ -175,13 +175,32 @@ int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actual
     }
 
     for(int i = 0; i < argumentTypes->size; i++){
-        if (!areTypesEqual(argumentTypes->types[i], actualArguments->symbols[i]->type)) {
+        TYPE_INFO* givenArgument = argumentTypes->types[i];
+        TYPE_INFO* wantedParameter = actualArguments->symbols[i]->type;
+
+        if (!areTypesEqual(givenArgument, wantedParameter)) {
             fprintf(stderr, "Argument %d has an incorrect type. Wanted ", i);
-            printType(stderr, argumentTypes->types[i]);
+            printType(stderr, givenArgument);
             fprintf(stderr, " but actually got ");
-            printType(stderr, actualArguments->symbols[i]->type);
+            printType(stderr, wantedParameter);
             fprintf(stderr, "\n");
             return 0;
+        }
+
+        if (wantedParameter->type == array_t) {  // All dimensions must match except the last one
+            DIMENSIONS* parameterDimensions = wantedParameter->info.array.dimensions;
+            DIMENSIONS* givenDimensions = givenArgument->info.array.dimensions;
+            for(int j = 0; j < parameterDimensions->numDimensions - 1; j++) {
+                if (parameterDimensions->dimensions[j] != givenDimensions->dimensions[j]) {
+                    fprintf(stderr, "ERROR: when passing an array as an argument, all dimensions except the last must match the dimensions of the declared parameter!\n");
+                    fprintf(stderr, "Parameter: ");
+                    printType(stderr, wantedParameter);
+                    fprintf(stderr, " \nArgument: ");
+                    printType(stderr, givenArgument);
+                    fprintf(stderr, "\nDimension %d does not match!\n", j);
+                    return 0;
+                }
+            }
         }
     }
     
