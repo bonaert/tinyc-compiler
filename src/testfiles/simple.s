@@ -28,8 +28,9 @@ main:
 	sub $12, %rsp       # Adjust %rsp to the end of the stack with all the local variables
 #### main 0:  ASSIGN int const__2 (= 5)  int i 
 	movl $5, -4(%rbp)     # i = 5
-#### main 1:  RETURN int const__3 (= 5)   
-	movq $5, %rax
+#### main 1:  RETURN int i   
+	movq $0, %rax        # return - set all 64 bits to 0 
+	movl -4(%rbp), %eax  # return - move 32 bit value to return register
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller

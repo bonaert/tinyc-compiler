@@ -274,16 +274,22 @@ void printAllInstructions(SYMBOL_TABLE* scope) {
 	}
 }
 
-
-int isConditionalJump(INSTRUCTION instruction) {
-	OPCODE opcode = instruction.opcode;
+int isConditionalJumpOpcode(OPCODE opcode) {
 	return opcode == IFEQ || opcode == IFNEQ || 
 		   opcode == IFG  || opcode == IFGE  || 
 		   opcode == IFS  || opcode == IFSE;
 }
 
+int isConditionalJump(INSTRUCTION instruction) {
+	return isConditionalJumpOpcode(instruction.opcode);
+}
+
 int isDirectJump(INSTRUCTION instruction) {
 	return instruction.opcode == GOTO;
+}
+
+int isAnyJumpOpcode(OPCODE opcode) {
+	return opcode == GOTO || isConditionalJumpOpcode(opcode);
 }
 
 int isAnyJump(INSTRUCTION instruction) {

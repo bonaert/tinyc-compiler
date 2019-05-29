@@ -13,6 +13,7 @@
 #include "array.h"
 #include "assembly.h"
 #include "function.h"
+#include "analysis.h"
 
 #define YYDEBUG 1
 
@@ -226,6 +227,8 @@ funDeclaration: type NAME {
 		} block {
 			ensureFunctionHasReturn(scope->function, scope);
 
+			
+
 			// After parsing function, leave the function's scope and go back to original scope
 			//printSymbolTableAndParents(stderr, scope);
 			//fprintf(stderr, "\n%s - instructions:\n", $2);
@@ -233,8 +236,28 @@ funDeclaration: type NAME {
 			fprintf(stderr, "Type:  ");
 			printType(stderr, scope->function->type);
 			fprintf(stderr, "\n");
+
+			fprintf(stderr, "\n########################################################\n");
+			fprintf(stderr, "Before intra-basic-block optimization\n");
+			fprintf(stderr, "--------------------------------------------------------\n");
 			printAllInstructions(scope);
+
+
+			SYMBOL_INFO* optimizedFunction = optimizeFunction(scope->function);
+			fprintf(stderr, "\n\n########################################################\n");
+			fprintf(stderr, "After intra-basic-block optimization\n");
+			fprintf(stderr, "--------------------------------------------------------\n");
+			printAllInstructions(optimizedFunction->details.function.scope);
+			fprintf(stderr, "\n\n\n\n");
+
+			
+			
+			// replace symbol in the parent scope
+			replaceSymbol(scope->parent, scope->function, optimizedFunction);
+			scope->function = optimizedFunction;
+
 			scope = scope->parent;
+			
 		};
 
 /* Example: int a, int b ; */
@@ -603,7 +626,7 @@ functionCall: NAME LPAR arguments RPAR {	// function call
 	emit(scope, gen3AC(GETRETURNVALUE, 0, 0, $$));
 };
 
-arguments: %empty                     { $$ = 0; }  // No arguments
+arguments: %empty                     { $$ = initSymbolList(); }  // No arguments
          | non_empty_argument_list    { $$ = $1; } // 1 or more arguments
          ;
 

@@ -80,9 +80,11 @@ SYMBOL_INFO* createConstantSymbol(TBASIC type, int value);
 int isConstantSymbol(SYMBOL_INFO* symbol);
 SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo);
 void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO* returnType, SYMBOL_LIST* arguments);
+void initInstructions(SYMBOL_INFO* function);
 
 SYMBOL_LIST* initSymbolList();
 SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symbolInfo);
+SYMBOL_LIST* makeSymbolListCopy(SYMBOL_LIST* symbolList);
 
 SYMBOL_INFO* insertFunctionInSymbolTable(SYMBOL_TABLE* symbolTable, char*name, TYPE_INFO* symbolInfo);
 SYMBOL_INFO* insertVariableInSymbolTable(SYMBOL_TABLE* symbolTable, char* name, TYPE_INFO* typeInfo);
@@ -93,6 +95,7 @@ SYMBOL_TABLE* createScope(SYMBOL_TABLE* parentTable);
 
 SYMBOL_INFO* findSymbolInSymbolList(SYMBOL_LIST* symbolList, char* name);
 SYMBOL_INFO* findSymbolInSymbolTableAndParents(SYMBOL_TABLE* symbolTable, char* name);
+void replaceSymbol(SYMBOL_TABLE* scope, SYMBOL_INFO* oldSymbol, SYMBOL_INFO* newSymbol);
 
 
 void printSymbol(FILE* output, SYMBOL_INFO* symbolInfo);
@@ -103,6 +106,7 @@ char* newSymbolName();
 char* newConstantSymbolName();
 
 SYMBOL_INFO* newAnonVar(SYMBOL_TABLE* scope, TBASIC typeKind);
+int isAnonymousVariable(SYMBOL_INFO* symbol);
 SYMBOL_INFO* newAnonVarWithType(SYMBOL_TABLE* scope, TYPE_INFO* typeInfo);
 
 
@@ -112,11 +116,17 @@ char* getConstantValue(SYMBOL_INFO* constant, char* res);
 char* getHumanConstantValue(SYMBOL_INFO* constant, char* res);
 int getConstantRawValue(SYMBOL_INFO* constant);
 int isConstantSymbolWithValue(SYMBOL_INFO* symbol, int value);
+int areConstantsEqual(SYMBOL_INFO* constant1, SYMBOL_INFO* constant2);
 
 int isArray(SYMBOL_INFO* symbol);
 int isAddress(SYMBOL_INFO* symbol);
 int isChar(SYMBOL_INFO* symbol);
 int isInt(SYMBOL_INFO* symbol);
 int isFunction(SYMBOL_INFO* symbol);
+
+INSTRUCTION* getInstrutions(SYMBOL_INFO* function);
+
+
+
 
 #endif

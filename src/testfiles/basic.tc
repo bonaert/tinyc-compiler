@@ -1,12 +1,22 @@
-int main() {
+int lol(){
     int i = 5;
+    int b = 7;
     if (i == 5) {
         i = i + i;
     }
-    i = 5 + (7 + i) * 3 + 12 / 3;
-
-    write i;
+    int c = 5;
+    i = 5 + (7 + c) * 3 + 12 / 3;
+    int d = 5;
+    b = 5 + (7 + d) * 3 + 12 / 3;
 
     return i;
+}
+
+int main() {
+    int k = lol();
+
+    write k;
+
+    return 0;
 }
 

@@ -85,9 +85,10 @@ SYMBOL_INFO* emitDivisionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_I
 void print3AC(FILE* output, INSTRUCTION instruction);
 void printAllInstructions(SYMBOL_TABLE* scope);
 
-
+int isConditionalJumpOpcode(OPCODE opcode);
 int isConditionalJump(INSTRUCTION instruction);
 int isDirectJump(INSTRUCTION instruction);
+int isAnyJumpOpcode(OPCODE opcode);
 int isAnyJump(INSTRUCTION instruction);
 OPCODE getOppositeJumpOpcode(OPCODE opcode);
 

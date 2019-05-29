@@ -16,7 +16,7 @@ int main() {
     char[5][7][8] array;
 	array[0][1][2] = 'b';
 
-    write array[0][1][2];
+    //write array[0][1][2];
 
     return c;
 }

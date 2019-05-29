@@ -58,9 +58,13 @@ void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO*
     symbolInfo->symbolKind = function_s;
     
     symbolInfo->details.function.scope = scope;
-    symbolInfo->details.function.numInstructions = 0;
-    symbolInfo->details.function.capacity = 10;
-    symbolInfo->details.function.instructions = malloc(sizeof(INSTRUCTION) * 10);
+    initInstructions(symbolInfo);
+}
+
+void initInstructions(SYMBOL_INFO* function) {
+    function->details.function.numInstructions = 0;
+    function->details.function.capacity = 10;
+    function->details.function.instructions = malloc(sizeof(INSTRUCTION) * 10);
 }
 
 
@@ -102,8 +106,16 @@ SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symb
     growSymbolListIfNeeded(symbolList);
     symbolList->symbols[symbolList->size] = symbolInfo;
     symbolList->size++;
-    // TODO: store location of the instruction 
     return symbolList;
+}
+
+
+SYMBOL_LIST* makeSymbolListCopy(SYMBOL_LIST* symbolList) {
+    SYMBOL_LIST* result = initSymbolList();
+    for (int i = 0; i < symbolList->size; i++) {
+        insertSymbolInSymbolList(result, symbolList->symbols[i]);
+    }
+    return result;
 }
 
 /**
@@ -229,6 +241,14 @@ SYMBOL_INFO* findSymbolInSymbolTableAndParents(SYMBOL_TABLE* symbolTable, char* 
     return 0;
 }
 
+void replaceSymbol(SYMBOL_TABLE* scope, SYMBOL_INFO* oldSymbol, SYMBOL_INFO* newSymbol) {
+    SYMBOL_LIST* symbolList = scope->symbolList;
+    for(int i = 0; i < symbolList->size; i++) {
+        if (strcmp(symbolList->symbols[i]->name, oldSymbol->name) == 0) {
+            symbolList->symbols[i] = newSymbol;
+        }
+    }
+}
 
 
 
@@ -319,6 +339,10 @@ char* newSymbolName() {
     return result;
 }
 
+int isAnonymousVariable(SYMBOL_INFO* symbol) {
+    return strncmp("anon__", symbol->name, 6) == 0;
+} 
+
 static int constantSymbolNumber = 0;
 char* newConstantSymbolName() {
     constantSymbolNumber++;
@@ -374,6 +398,9 @@ char* getNameOrValue(SYMBOL_INFO* symbol, char* res) {
     }
 }
 
+int areConstantsEqual(SYMBOL_INFO* constant1, SYMBOL_INFO* constant2) {
+    return getConstantRawValue(constant1) == getConstantRawValue(constant2);
+}
 
 
 
@@ -399,3 +426,9 @@ int isInt(SYMBOL_INFO* symbol){
 int isFunction(SYMBOL_INFO* symbol) {
     return symbol->type->type == function_t;
 }
+
+
+INSTRUCTION* getInstrutions(SYMBOL_INFO* function) {
+    return function->details.function.instructions;
+}
+

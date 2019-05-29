@@ -1,5 +1,6 @@
 #include "function.h"
 #include "intermediate.h"
+#include <stdlib.h>
 
 int getLocalVariablesSize(SYMBOL_INFO* function) {
     SYMBOL_TABLE* scope = function->details.function.scope;

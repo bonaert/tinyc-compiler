@@ -1,0 +1,626 @@
+split: 
+Type:  function(int[10],int,int) -> int
+
+########################################################
+Before intra-basic-block optimization
+--------------------------------------------------------
+0:  TIMES int start int const__1 (= 4) int anon__1 
+1:  ARRAY ACCESS int[10] a int anon__1 int anon__2 
+2:  ASSIGN int anon__2  int p 
+3:  ASSIGN int start  int i 
+4:  ASSIGN int end  int j 
+5:  IF_SMALLER int i int j 7
+6:  GOTO 33
+7:  TIMES int i int const__2 (= 4) int anon__3 
+8:  ARRAY ACCESS int[10] a int anon__3 int anon__4 
+9:  IF_SMALLER_OR_EQUAL int anon__4 int p 11
+10:  GOTO 14
+11:  PLUS int i int const__3 (= 1) int anon__5 
+12:  ASSIGN int anon__5  int i 
+13:  GOTO 7
+14:  TIMES int j int const__4 (= 4) int anon__6 
+15:  ARRAY ACCESS int[10] a int anon__6 int anon__7 
+16:  IF_GREATER int anon__7 int p 18
+17:  GOTO 21
+18:  MINUS int j int const__5 (= 1) int anon__8 
+19:  ASSIGN int anon__8  int j 
+20:  GOTO 14
+21:  IF_SMALLER int i int j 23
+22:  GOTO 5
+23:  TIMES int i int const__6 (= 4) int anon__9 
+24:  ARRAY ACCESS int[10] a int anon__9 int anon__10 
+25:  ASSIGN int anon__10  int temp 
+26:  TIMES int i int const__7 (= 4) int anon__11 
+27:  TIMES int j int const__8 (= 4) int anon__12 
+28:  ARRAY ACCESS int[10] a int anon__12 int anon__13 
+29:  ARRAY MODIFICATION int[10] a int anon__11 int anon__13 
+30:  TIMES int j int const__9 (= 4) int anon__14 
+31:  ARRAY MODIFICATION int[10] a int anon__14 int temp 
+32:  GOTO 5
+33:  TIMES int start int const__10 (= 4) int anon__15 
+34:  TIMES int j int const__11 (= 4) int anon__16 
+35:  ARRAY ACCESS int[10] a int anon__16 int anon__17 
+36:  ARRAY MODIFICATION int[10] a int anon__15 int anon__17 
+37:  TIMES int j int const__12 (= 4) int anon__18 
+38:  ARRAY MODIFICATION int[10] a int anon__18 int p 
+39:  RETURN int j   
+
+
+optimizing basic block 0 - 4
+TIMES int start int const__1 (= 4) int anon__1 
+ARRAY ACCESS int[10] a int anon__1 int anon__2 
+ASSIGN int anon__2  int p 
+ASSIGN int start  int i 
+ASSIGN int end  int j 
+TIMES int start int const__1 (= 4) int anon__1 
+ARRAY ACCESS int[10] a int anon__1 int anon__2 
+ASSIGN int anon__2  int p 
+ASSIGN int start  int i 
+ASSIGN int end  int j 
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ start i ]   Leaves: [ start i ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__1 ]   Leaves: [ const__1 ]
+in generateCode for Node 0x61c1e0 (Opcode = TIMES) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ anon__1 ]   Leaves: [ anon__1 ]
+in generateCode for Node 0x61c210 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c240 (Opcode = ARRAY ACCESS) Left = 0x61c210 Right = 0x61c1e0  (jmp dest = -1) Symbols: [ anon__2 p ]   Leaves: [ anon__2 p ]
+in generateCode for Node 0x61c270 (Opcode = -1) (jmp dest = -1) Symbols: [ end j ]   Leaves: [ end j ]
+
+
+optimizing basic block 5 - 5
+IF_SMALLER int i int j 7
+IF_SMALLER int i int j 7
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ i ]   Leaves: [ i ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ j ]   Leaves: [ j ]
+in generateCode for Node 0x61c1e0 (Opcode = IF_SMALLER) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = 7) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 6 - 6
+GOTO 33
+GOTO 33
+in generateCode for Node 0x61c180 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 33) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 7 - 9
+TIMES int i int const__2 (= 4) int anon__3 
+ARRAY ACCESS int[10] a int anon__3 int anon__4 
+IF_SMALLER_OR_EQUAL int anon__4 int p 11
+TIMES int i int const__2 (= 4) int anon__3 
+ARRAY ACCESS int[10] a int anon__3 int anon__4 
+IF_SMALLER_OR_EQUAL int anon__4 int p 11
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ i ]   Leaves: [ i ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__2 ]   Leaves: [ const__2 ]
+in generateCode for Node 0x61c1e0 (Opcode = TIMES) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ anon__3 ]   Leaves: [ anon__3 ]
+in generateCode for Node 0x61c210 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c240 (Opcode = ARRAY ACCESS) Left = 0x61c210 Right = 0x61c1e0  (jmp dest = -1) Symbols: [ anon__4 ]   Leaves: [ anon__4 ]
+in generateCode for Node 0x61c270 (Opcode = -1) (jmp dest = -1) Symbols: [ p ]   Leaves: [ p ]
+in generateCode for Node 0x61c2a0 (Opcode = IF_SMALLER_OR_EQUAL) Left = 0x61c240 Right = 0x61c270  (jmp dest = 11) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 10 - 10
+GOTO 14
+GOTO 14
+in generateCode for Node 0x61c180 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 14) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 11 - 13
+PLUS int i int const__3 (= 1) int anon__5 
+ASSIGN int anon__5  int i 
+GOTO 7
+PLUS int i int const__3 (= 1) int anon__5 
+ASSIGN int anon__5  int i 
+GOTO 7
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ ]   Leaves: [ i ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__3 ]   Leaves: [ const__3 ]
+in generateCode for Node 0x61c1e0 (Opcode = PLUS) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ i anon__5 ]   Leaves: [ anon__5 ]
+in generateCode for Node 0x61c210 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 7) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 14 - 16
+TIMES int j int const__4 (= 4) int anon__6 
+ARRAY ACCESS int[10] a int anon__6 int anon__7 
+IF_GREATER int anon__7 int p 18
+TIMES int j int const__4 (= 4) int anon__6 
+ARRAY ACCESS int[10] a int anon__6 int anon__7 
+IF_GREATER int anon__7 int p 18
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ j ]   Leaves: [ j ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__4 ]   Leaves: [ const__4 ]
+in generateCode for Node 0x61c1e0 (Opcode = TIMES) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ anon__6 ]   Leaves: [ anon__6 ]
+in generateCode for Node 0x61c210 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c240 (Opcode = ARRAY ACCESS) Left = 0x61c210 Right = 0x61c1e0  (jmp dest = -1) Symbols: [ anon__7 ]   Leaves: [ anon__7 ]
+in generateCode for Node 0x61c270 (Opcode = -1) (jmp dest = -1) Symbols: [ p ]   Leaves: [ p ]
+in generateCode for Node 0x61c2a0 (Opcode = IF_GREATER) Left = 0x61c240 Right = 0x61c270  (jmp dest = 18) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 17 - 17
+GOTO 21
+GOTO 21
+in generateCode for Node 0x61c180 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 21) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 18 - 20
+MINUS int j int const__5 (= 1) int anon__8 
+ASSIGN int anon__8  int j 
+GOTO 14
+MINUS int j int const__5 (= 1) int anon__8 
+ASSIGN int anon__8  int j 
+GOTO 14
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ ]   Leaves: [ j ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__5 ]   Leaves: [ const__5 ]
+in generateCode for Node 0x61c1e0 (Opcode = MINUS) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ j anon__8 ]   Leaves: [ anon__8 ]
+in generateCode for Node 0x61c210 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 14) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 21 - 21
+IF_SMALLER int i int j 23
+IF_SMALLER int i int j 23
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ i ]   Leaves: [ i ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ j ]   Leaves: [ j ]
+in generateCode for Node 0x61c1e0 (Opcode = IF_SMALLER) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = 23) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 22 - 22
+GOTO 5
+GOTO 5
+in generateCode for Node 0x61c180 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 5) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 23 - 32
+TIMES int i int const__6 (= 4) int anon__9 
+ARRAY ACCESS int[10] a int anon__9 int anon__10 
+ASSIGN int anon__10  int temp 
+TIMES int i int const__7 (= 4) int anon__11 
+TIMES int j int const__8 (= 4) int anon__12 
+ARRAY ACCESS int[10] a int anon__12 int anon__13 
+ARRAY MODIFICATION int[10] a int anon__11 int anon__13 
+TIMES int j int const__9 (= 4) int anon__14 
+ARRAY MODIFICATION int[10] a int anon__14 int temp 
+GOTO 5
+TIMES int i int const__6 (= 4) int anon__9 
+ARRAY ACCESS int[10] a int anon__9 int anon__10 
+ASSIGN int anon__10  int temp 
+TIMES int i int const__7 (= 4) int anon__11 
+TIMES int j int const__8 (= 4) int anon__12 
+ARRAY ACCESS int[10] a int anon__12 int anon__13 
+ARRAY MODIFICATION int[10] a int anon__11 int anon__13 
+DEALING WITH AASNode 0x61c300 (Opcode = ARRAY MODIFICATION) Left = 0x61c210 Right = 0x61c1e0  (jmp dest = -1) Symbols: [ anon__13 ]   Leaves: [ ]TIMES int j int const__9 (= 4) int anon__14 
+ARRAY MODIFICATION int[10] a int anon__14 int temp 
+DEALING WITH AASNode 0x61c330 (Opcode = ARRAY MODIFICATION) Left = 0x61c210 Right = 0x61c2a0  (jmp dest = -1) Symbols: [ temp ]   Leaves: [ ]GOTO 5
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ i ]   Leaves: [ i ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__6 ]   Leaves: [ const__6 ]
+in generateCode for Node 0x61c1e0 (Opcode = TIMES) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ anon__9 anon__11 ]   Leaves: [ anon__9 anon__11 ]
+in generateCode for Node 0x61c210 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c240 (Opcode = ARRAY ACCESS) Left = 0x61c210 Right = 0x61c1e0  (jmp dest = -1) Symbols: [ anon__10 ]   Leaves: [ anon__10 temp ]
+in generateCode for Node 0x61c270 (Opcode = -1) (jmp dest = -1) Symbols: [ j ]   Leaves: [ j ]
+in generateCode for Node 0x61c2a0 (Opcode = TIMES) Left = 0x61c270 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ anon__12 anon__14 ]   Leaves: [ anon__12 anon__14 ]
+in generateCode for Node 0x61c2d0 (Opcode = ARRAY ACCESS) Left = 0x61c210 Right = 0x61c2a0  (jmp dest = -1) Symbols: [ ]   Leaves: [ anon__13 ]
+in generateCode for Node 0x61c300 (Opcode = ARRAY MODIFICATION) Left = 0x61c210 Right = 0x61c1e0  (jmp dest = -1) Symbols: [ anon__13 ]   Leaves: [ ]
+in generateCode for Node 0x61c330 (Opcode = ARRAY MODIFICATION) Left = 0x61c210 Right = 0x61c2a0  (jmp dest = -1) Symbols: [ temp ]   Leaves: [ ]
+in generateCode for Node 0x61c360 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 5) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 33 - 39
+TIMES int start int const__10 (= 4) int anon__15 
+TIMES int j int const__11 (= 4) int anon__16 
+ARRAY ACCESS int[10] a int anon__16 int anon__17 
+ARRAY MODIFICATION int[10] a int anon__15 int anon__17 
+TIMES int j int const__12 (= 4) int anon__18 
+ARRAY MODIFICATION int[10] a int anon__18 int p 
+RETURN int j   
+TIMES int start int const__10 (= 4) int anon__15 
+TIMES int j int const__11 (= 4) int anon__16 
+ARRAY ACCESS int[10] a int anon__16 int anon__17 
+ARRAY MODIFICATION int[10] a int anon__15 int anon__17 
+DEALING WITH AASNode 0x61c2d0 (Opcode = ARRAY MODIFICATION) Left = 0x61c270 Right = 0x61c1e0  (jmp dest = -1) Symbols: [ anon__17 ]   Leaves: [ ]TIMES int j int const__12 (= 4) int anon__18 
+ARRAY MODIFICATION int[10] a int anon__18 int p 
+DEALING WITH AASNode 0x61c300 (Opcode = ARRAY MODIFICATION) Left = 0x61c270 Right = 0x61c240  (jmp dest = -1) Symbols: [ p ]   Leaves: [ p ]RETURN int j   
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ start ]   Leaves: [ start ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__10 ]   Leaves: [ const__10 ]
+in generateCode for Node 0x61c1e0 (Opcode = TIMES) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ anon__15 ]   Leaves: [ anon__15 ]
+in generateCode for Node 0x61c210 (Opcode = -1) (jmp dest = -1) Symbols: [ j ]   Leaves: [ j ]
+in generateCode for Node 0x61c240 (Opcode = TIMES) Left = 0x61c210 Right = 0x61c1b0  (jmp dest = -1) Symbols: [ anon__16 anon__18 ]   Leaves: [ anon__16 anon__18 ]
+in generateCode for Node 0x61c270 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c2a0 (Opcode = ARRAY ACCESS) Left = 0x61c270 Right = 0x61c240  (jmp dest = -1) Symbols: [ ]   Leaves: [ anon__17 ]
+in generateCode for Node 0x61c2d0 (Opcode = ARRAY MODIFICATION) Left = 0x61c270 Right = 0x61c1e0  (jmp dest = -1) Symbols: [ anon__17 ]   Leaves: [ ]
+in generateCode for Node 0x61c300 (Opcode = ARRAY MODIFICATION) Left = 0x61c270 Right = 0x61c240  (jmp dest = -1) Symbols: [ p ]   Leaves: [ p ]
+in generateCode for Node 0x61c330 (Opcode = RETURN) Left = 0x61c210 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+
+
+########################################################
+After intra-basic-block optimization
+--------------------------------------------------------
+0:  ASSIGN int start  int i 
+1:  TIMES int start int const__1 (= 4) int anon__1 
+2:  ARRAY ACCESS int[10] a int anon__1 int p 
+3:  ASSIGN int end  int j 
+4:  IF_SMALLER int i int j 6
+5:  GOTO 27
+6:  TIMES int i int const__2 (= 4) int anon__3 
+7:  ARRAY ACCESS int[10] a int anon__3 int anon__4 
+8:  IF_SMALLER_OR_EQUAL int anon__4 int p 10
+9:  GOTO 12
+10:  PLUS int i int const__3 (= 1) int i 
+11:  GOTO 6
+12:  TIMES int j int const__4 (= 4) int anon__6 
+13:  ARRAY ACCESS int[10] a int anon__6 int anon__7 
+14:  IF_GREATER int anon__7 int p 16
+15:  GOTO 18
+16:  MINUS int j int const__5 (= 1) int j 
+17:  GOTO 12
+18:  IF_SMALLER int i int j 20
+19:  GOTO 4
+20:  TIMES int i int const__6 (= 4) int anon__11 
+21:  ARRAY ACCESS int[10] a int anon__11 int temp 
+22:  TIMES int j int const__6 (= 4) int anon__14 
+23:  ARRAY ACCESS int[10] a int anon__14 int anon__13 
+24:  ARRAY MODIFICATION int[10] a int anon__11 int anon__13 
+25:  ARRAY MODIFICATION int[10] a int anon__14 int temp 
+26:  GOTO 4
+27:  TIMES int start int const__10 (= 4) int anon__15 
+28:  TIMES int j int const__10 (= 4) int anon__18 
+29:  ARRAY ACCESS int[10] a int anon__18 int anon__17 
+30:  ARRAY MODIFICATION int[10] a int anon__15 int anon__17 
+31:  ARRAY MODIFICATION int[10] a int anon__18 int p 
+32:  RETURN int j   
+
+
+
+
+
+WARNING: function qsort doesn't end with a return statement.
+WARNING: the return value will be garbage!
+qsort: 
+Type:  function(int[10],int,int) -> int
+
+########################################################
+Before intra-basic-block optimization
+--------------------------------------------------------
+0:  IF_GREATER_OR_EQUAL int start int end 2
+1:  GOTO 3
+2:  RETURN int const__13 (= 0)   
+3:  GET_ADDRESS int[10] a  address anon__20 
+4:  PARAM address anon__20   
+5:  PARAM int start   
+6:  PARAM int end   
+7:  CALL split: function(int[10],int,int) -> int   
+8:  GETRETURN   int anon__19 
+9:  ASSIGN int anon__19  int s 
+10:  MINUS int s int const__14 (= 1) int anon__21 
+11:  GET_ADDRESS int[10] a  address anon__23 
+12:  PARAM address anon__23   
+13:  PARAM int start   
+14:  PARAM int anon__21   
+15:  CALL qsort: function(int[10],int,int) -> int   
+16:  GETRETURN   int anon__22 
+17:  PLUS int s int const__15 (= 1) int anon__24 
+18:  GET_ADDRESS int[10] a  address anon__26 
+19:  PARAM address anon__26   
+20:  PARAM int anon__24   
+21:  PARAM int end   
+22:  CALL qsort: function(int[10],int,int) -> int   
+23:  GETRETURN   int anon__25 
+24:  RETURN    
+
+
+optimizing basic block 0 - 0
+IF_GREATER_OR_EQUAL int start int end 2
+IF_GREATER_OR_EQUAL int start int end 2
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ start ]   Leaves: [ start ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ end ]   Leaves: [ end ]
+in generateCode for Node 0x61c1e0 (Opcode = IF_GREATER_OR_EQUAL) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = 2) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 1 - 1
+GOTO 3
+GOTO 3
+in generateCode for Node 0x61c180 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 3) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 2 - 2
+RETURN int const__13 (= 0)   
+RETURN int const__13 (= 0)   
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ const__13 ]   Leaves: [ const__13 ]
+in generateCode for Node 0x61c1b0 (Opcode = RETURN) Left = 0x61c180 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 3 - 24
+GET_ADDRESS int[10] a  address anon__20 
+PARAM address anon__20   
+PARAM int start   
+PARAM int end   
+CALL split: function(int[10],int,int) -> int   
+GETRETURN   int anon__19 
+ASSIGN int anon__19  int s 
+MINUS int s int const__14 (= 1) int anon__21 
+GET_ADDRESS int[10] a  address anon__23 
+PARAM address anon__23   
+PARAM int start   
+PARAM int anon__21   
+CALL qsort: function(int[10],int,int) -> int   
+GETRETURN   int anon__22 
+PLUS int s int const__15 (= 1) int anon__24 
+GET_ADDRESS int[10] a  address anon__26 
+PARAM address anon__26   
+PARAM int anon__24   
+PARAM int end   
+CALL qsort: function(int[10],int,int) -> int   
+GETRETURN   int anon__25 
+RETURN    
+GET_ADDRESS int[10] a  address anon__20 
+PARAM address anon__20   
+PARAM int start   
+PARAM int end   
+CALL split: function(int[10],int,int) -> int   
+GETRETURN   int anon__19 
+ASSIGN int anon__19  int s 
+MINUS int s int const__14 (= 1) int anon__21 
+GET_ADDRESS int[10] a  address anon__23 
+PARAM address anon__23   
+PARAM int start   
+PARAM int anon__21   
+CALL qsort: function(int[10],int,int) -> int   
+GETRETURN   int anon__22 
+PLUS int s int const__15 (= 1) int anon__24 
+GET_ADDRESS int[10] a  address anon__26 
+PARAM address anon__26   
+PARAM int anon__24   
+PARAM int end   
+CALL qsort: function(int[10],int,int) -> int   
+GETRETURN   int anon__25 
+RETURN    
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c1b0 (Opcode = GET_ADDRESS) Left = 0x61c180 Right = (nil)  (jmp dest = -1) Symbols: [ anon__20 ]   Leaves: [ anon__20 ]
+in generateCode for Node 0x61c1e0 (Opcode = PARAM) Left = 0x61c1b0 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c210 (Opcode = -1) (jmp dest = -1) Symbols: [ start ]   Leaves: [ start ]
+in generateCode for Node 0x61c240 (Opcode = PARAM) Left = 0x61c210 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c270 (Opcode = -1) (jmp dest = -1) Symbols: [ end ]   Leaves: [ end ]
+in generateCode for Node 0x61c2a0 (Opcode = PARAM) Left = 0x61c270 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c2d0 (Opcode = -1) (jmp dest = -1) Symbols: [ split ]   Leaves: [ split ]
+in generateCode for Node 0x61c300 (Opcode = CALL) Left = 0x61c2d0 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c330 (Opcode = GETRETURN) Left = (nil) Right = (nil)  (jmp dest = -1) Symbols: [ anon__19 s anon__22 anon__25 ]   Leaves: [ anon__19 s anon__22 anon__25 ]
+in generateCode for Node 0x61c360 (Opcode = -1) (jmp dest = -1) Symbols: [ const__14 ]   Leaves: [ const__14 ]
+in generateCode for Node 0x61c390 (Opcode = MINUS) Left = 0x61c330 Right = 0x61c360  (jmp dest = -1) Symbols: [ anon__21 ]   Leaves: [ anon__21 ]
+in generateCode for Node 0x61c3c0 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c3f0 (Opcode = GET_ADDRESS) Left = 0x61c3c0 Right = (nil)  (jmp dest = -1) Symbols: [ anon__23 ]   Leaves: [ anon__23 ]
+in generateCode for Node 0x61c420 (Opcode = PARAM) Left = 0x61c3f0 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c450 (Opcode = -1) (jmp dest = -1) Symbols: [ start ]   Leaves: [ start ]
+in generateCode for Node 0x61c480 (Opcode = PARAM) Left = 0x61c450 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c4b0 (Opcode = PARAM) Left = 0x61c390 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c4e0 (Opcode = -1) (jmp dest = -1) Symbols: [ qsort ]   Leaves: [ qsort ]
+in generateCode for Node 0x61c510 (Opcode = CALL) Left = 0x61c4e0 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c540 (Opcode = -1) (jmp dest = -1) Symbols: [ s ]   Leaves: [ s ]
+in generateCode for Node 0x61c570 (Opcode = -1) (jmp dest = -1) Symbols: [ const__15 ]   Leaves: [ const__15 ]
+in generateCode for Node 0x61c5a0 (Opcode = PLUS) Left = 0x61c540 Right = 0x61c570  (jmp dest = -1) Symbols: [ anon__24 ]   Leaves: [ anon__24 ]
+in generateCode for Node 0x61c5d0 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c600 (Opcode = GET_ADDRESS) Left = 0x61c5d0 Right = (nil)  (jmp dest = -1) Symbols: [ anon__26 ]   Leaves: [ anon__26 ]
+in generateCode for Node 0x61c630 (Opcode = PARAM) Left = 0x61c600 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c660 (Opcode = PARAM) Left = 0x61c5a0 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c690 (Opcode = -1) (jmp dest = -1) Symbols: [ end ]   Leaves: [ end ]
+in generateCode for Node 0x61c6c0 (Opcode = PARAM) Left = 0x61c690 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c6f0 (Opcode = -1) (jmp dest = -1) Symbols: [ qsort ]   Leaves: [ qsort ]
+in generateCode for Node 0x61c720 (Opcode = CALL) Left = 0x61c6f0 Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+in generateCode for Node 0x61c750 (Opcode = RETURN) Left = (nil) Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+
+
+########################################################
+After intra-basic-block optimization
+--------------------------------------------------------
+0:  IF_GREATER_OR_EQUAL int start int end 2
+1:  GOTO 3
+2:  RETURN int const__13 (= 0)   
+3:  GET_ADDRESS int[10] a  address anon__20 
+4:  PARAM address anon__20   
+5:  PARAM int start   
+6:  PARAM int end   
+7:  CALL split: function(int[10],int,int) -> int   
+8:  GETRETURN   int s 
+9:  MINUS int s int const__14 (= 1) int anon__21 
+10:  GET_ADDRESS int[10] a  address anon__23 
+11:  PARAM address anon__23   
+12:  PARAM int start   
+13:  PARAM int anon__21   
+14:  CALL qsort: function(int[10],int,int) -> int   
+15:  PLUS int s int const__15 (= 1) int anon__24 
+16:  GET_ADDRESS int[10] a  address anon__26 
+17:  PARAM address anon__26   
+18:  PARAM int anon__24   
+19:  PARAM int end   
+20:  CALL qsort: function(int[10],int,int) -> int   
+21:  RETURN    
+
+
+
+
+
+WARNING: function printArray doesn't end with a return statement.
+WARNING: the return value will be garbage!
+printArray: 
+Type:  function(int[10],int,int) -> int
+
+########################################################
+Before intra-basic-block optimization
+--------------------------------------------------------
+0:  ASSIGN int const__16 (= 0)  int a 
+1:  IF_SMALLER int a int count 3
+2:  GOTO 14
+3:  IF_NOT_EQUAL int withIndex int const__17 (= 0) 5
+4:  GOTO 7
+5:  WRITE int a   
+6:  WRITE char const__18 (= ':')   
+7:  TIMES int a int const__19 (= 4) int anon__27 
+8:  ARRAY ACCESS int[10] n int anon__27 int anon__28 
+9:  WRITE int anon__28   
+10:  WRITE char const__20 (= 'newline')   
+11:  PLUS int a int const__21 (= 1) int anon__29 
+12:  ASSIGN int anon__29  int a 
+13:  GOTO 1
+14:  RETURN    
+
+
+optimizing basic block 0 - 0
+ASSIGN int const__16 (= 0)  int a 
+ASSIGN int const__16 (= 0)  int a 
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ const__16 a ]   Leaves: [ const__16 a ]
+
+
+optimizing basic block 1 - 1
+IF_SMALLER int a int count 3
+IF_SMALLER int a int count 3
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ a ]   Leaves: [ a ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ count ]   Leaves: [ count ]
+in generateCode for Node 0x61c1e0 (Opcode = IF_SMALLER) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = 3) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 2 - 2
+GOTO 14
+GOTO 14
+in generateCode for Node 0x61c180 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 14) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 3 - 3
+IF_NOT_EQUAL int withIndex int const__17 (= 0) 5
+IF_NOT_EQUAL int withIndex int const__17 (= 0) 5
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ withIndex ]   Leaves: [ withIndex ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__17 ]   Leaves: [ const__17 ]
+in generateCode for Node 0x61c1e0 (Opcode = IF_NOT_EQUAL) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = 5) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 4 - 4
+GOTO 7
+GOTO 7
+in generateCode for Node 0x61c180 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 7) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 14 - 14
+RETURN    
+RETURN    
+in generateCode for Node 0x61c180 (Opcode = RETURN) Left = (nil) Right = (nil)  (jmp dest = -1) Symbols: [ ]   Leaves: [ ]
+
+
+########################################################
+After intra-basic-block optimization
+--------------------------------------------------------
+0:  ASSIGN int const__16 (= 0)  int a 
+1:  IF_SMALLER int a int count 3
+2:  GOTO 14
+3:  IF_NOT_EQUAL int withIndex int const__17 (= 0) 5
+4:  GOTO 7
+5:  WRITE int a   
+6:  WRITE char const__18 (= ':')   
+7:  TIMES int a int const__19 (= 4) int anon__27 
+8:  ARRAY ACCESS int[10] n int anon__27 int anon__28 
+9:  WRITE int anon__28   
+10:  WRITE char const__20 (= 'newline')   
+11:  PLUS int a int const__21 (= 1) int anon__29 
+12:  ASSIGN int anon__29  int a 
+13:  GOTO 1
+14:  RETURN    
+
+
+
+
+
+WARNING: function main doesn't end with a return statement.
+WARNING: the return value will be garbage!
+main: 
+Type:  function() -> int
+
+########################################################
+Before intra-basic-block optimization
+--------------------------------------------------------
+0:  ASSIGN int const__22 (= 0)  int i 
+1:  IF_SMALLER int i int const__23 (= 5) 3
+2:  GOTO 10
+3:  READ int j   
+4:  GET_ADDRESS int[5] numbers  address anon__31 
+5:  TIMES int i int const__24 (= 4) int anon__30 
+6:  ARRAY MODIFICATION address anon__31 int anon__30 int j 
+7:  PLUS int i int const__25 (= 1) int anon__32 
+8:  ASSIGN int anon__32  int i 
+9:  GOTO 1
+10:  GET_ADDRESS int[5] numbers  address anon__34 
+11:  PARAM address anon__34   
+12:  PARAM int const__26 (= 0)   
+13:  PARAM int const__27 (= 4)   
+14:  CALL qsort: function(int[10],int,int) -> int   
+15:  GETRETURN   int anon__33 
+16:  WRITE char const__28 (= 'newline')   
+17:  GET_ADDRESS int[5] numbers  address anon__36 
+18:  PARAM address anon__36   
+19:  PARAM int const__29 (= 5)   
+20:  PARAM int const__30 (= 1)   
+21:  CALL printArray: function(int[10],int,int) -> int   
+22:  GETRETURN   int anon__35 
+23:  RETURN    
+
+
+optimizing basic block 0 - 0
+ASSIGN int const__22 (= 0)  int i 
+ASSIGN int const__22 (= 0)  int i 
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ const__22 i ]   Leaves: [ const__22 i ]
+
+
+optimizing basic block 1 - 1
+IF_SMALLER int i int const__23 (= 5) 3
+IF_SMALLER int i int const__23 (= 5) 3
+in generateCode for Node 0x61c180 (Opcode = -1) (jmp dest = -1) Symbols: [ i ]   Leaves: [ i ]
+in generateCode for Node 0x61c1b0 (Opcode = -1) (jmp dest = -1) Symbols: [ const__23 ]   Leaves: [ const__23 ]
+in generateCode for Node 0x61c1e0 (Opcode = IF_SMALLER) Left = 0x61c180 Right = 0x61c1b0  (jmp dest = 3) Symbols: [ ]   Leaves: [ ]
+
+
+optimizing basic block 2 - 2
+GOTO 10
+GOTO 10
+in generateCode for Node 0x61c180 (Opcode = GOTO) Left = (nil) Right = (nil)  (jmp dest = 10) Symbols: [ ]   Leaves: [ ]
+
+
+########################################################
+After intra-basic-block optimization
+--------------------------------------------------------
+0:  ASSIGN int const__22 (= 0)  int i 
+1:  IF_SMALLER int i int const__23 (= 5) 3
+2:  GOTO 10
+3:  READ int j   
+4:  GET_ADDRESS int[5] numbers  address anon__31 
+5:  TIMES int i int const__24 (= 4) int anon__30 
+6:  ARRAY MODIFICATION address anon__31 int anon__30 int j 
+7:  PLUS int i int const__25 (= 1) int anon__32 
+8:  ASSIGN int anon__32  int i 
+9:  GOTO 1
+10:  GET_ADDRESS int[5] numbers  address anon__34 
+11:  PARAM address anon__34   
+12:  PARAM int const__26 (= 0)   
+13:  PARAM int const__27 (= 4)   
+14:  CALL qsort: function(int[10],int,int) -> int   
+15:  GETRETURN   int anon__33 
+16:  WRITE char const__28 (= 'newline')   
+17:  GET_ADDRESS int[5] numbers  address anon__36 
+18:  PARAM address anon__36   
+19:  PARAM int const__29 (= 5)   
+20:  PARAM int const__30 (= 1)   
+21:  CALL printArray: function(int[10],int,int) -> int   
+22:  GETRETURN   int anon__35 
+23:  RETURN    
+
+
+
+
+
+
+
+#####################################################
+#               OPTIMISATION PHASE                  #
+#####################################################
+
+Peephole optimization for function split: round 0 improved the instructions
+Peephole optimization for function split: round 1 didn't change the instructions
+Peephole optimization for function qsort: round 0 improved the instructions
+Peephole optimization for function qsort: round 1 didn't change the instructions
+Peephole optimization for function printArray: round 0 improved the instructions
+Peephole optimization for function printArray: round 1 didn't change the instructions
+Peephole optimization for function main: round 0 improved the instructions
+Peephole optimization for function main: round 1 didn't change the instructions
+
+
+#####################################################
+#            END OF OPTIMISATION PHASE              #
+#####################################################
+
