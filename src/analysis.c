@@ -455,11 +455,11 @@ NODE* matchOrCreate(OPCODE opcode, NODE* a, NODE* b) {
 
 
 void createDAGFromBasicBlock(INSTRUCTION* instructions, BASIC_BLOCK basicBlock) {
-    fprintf(stderr, "\n\noptimizing basic block %d - %d\n", basicBlock.start, basicBlock.end);
+    /*fprintf(stderr, "\n\noptimizing basic block %d - %d\n", basicBlock.start, basicBlock.end);
     for (int i = basicBlock.start; i <= basicBlock.end; i++) {
         print3AC(stderr, instructions[i]);
     }
-    fputs("", stderr);
+    fputs("", stderr);*/
     
 
     NODE* nb;
@@ -481,8 +481,8 @@ void createDAGFromBasicBlock(INSTRUCTION* instructions, BASIC_BLOCK basicBlock) 
     // DEREF,    A = *B   - get the value pointed by B (dereferencing)
     // DEREFA:   *A = B   - CURRENT_GENERATION++;       
     for (int i = basicBlock.start; i <= basicBlock.end; i++) { /* for each instruction in the basic block */
-        print3AC(stderr, instructions[i]);
-        fputs("", stderr);
+        /*print3AC(stderr, instructions[i]);
+        fputs("", stderr);*/
 
         switch (instructions[i].opcode) {
             case A2PLUS:
@@ -525,9 +525,7 @@ void createDAGFromBasicBlock(INSTRUCTION* instructions, BASIC_BLOCK basicBlock) 
                         }
                     }
                 } else if (instructions[i].opcode == AAS) {
-                    fputs("DEALING WITH AAS", stderr);
-                    printNode(n);
-
+                    
                     // need to add the extra edges from this node to the old references
                     // the extra edges from new references to this node are added later
                     // since they haven't yet been processed; they are created when dealing
@@ -760,9 +758,9 @@ SYMBOL_INFO* getNodeConstantSymbol(NODE* node) {
 }
 
 void generateCode(SYMBOL_TABLE* scope, NODE* node) {
-    fputs("in generateCode for ", stderr);
+    /*fputs("in generateCode for ", stderr);
     printNode(node);
-    fputs("\n", stderr);
+    fputs("\n", stderr);*/
     //fputs("", stderr);
     //fputs("", stderr);
 

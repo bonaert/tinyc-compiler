@@ -76,3 +76,5 @@ asmTests/
 tests/
 
 .idea/
+
+*.log
