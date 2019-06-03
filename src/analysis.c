@@ -377,9 +377,20 @@ void printNodes() {
 
 NODE* match(OPCODE opcode, NODE* node1, NODE* node2) {
     for (int i = 0; i < nodeListSize; i++) {
-        if ((NODE_LIST[i].opcode == opcode) && (NODE_LIST[i].child1 == node1) && (NODE_LIST[i].child2 == node2)) {
-            return &NODE_LIST[i];
+        if (opcode == A2PLUS || opcode == A2TIMES) { // Commutative operations
+            if ((NODE_LIST[i].opcode == opcode) && (
+                 ((NODE_LIST[i].child1 == node1) && (NODE_LIST[i].child2 == node2)) ||
+                 ((NODE_LIST[i].child1 == node2) && (NODE_LIST[i].child2 == node1)))
+            ){
+                return &NODE_LIST[i];
+            }
+        } else {
+            if ((NODE_LIST[i].opcode == opcode) && (NODE_LIST[i].child1 == node1) && (NODE_LIST[i].child2 == node2)) {
+                return &NODE_LIST[i];
+            }
         }
+
+        
     }
     return NULL;
 }
