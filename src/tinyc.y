@@ -691,7 +691,7 @@ int main(int argc, char* argv[]) {
 			optimiseCode(scope);
 		}
 		
-		buildAssembly(scope);
+		generateAssemblyCode(scope);
 	}
 }
 

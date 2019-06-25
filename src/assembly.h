@@ -4,6 +4,6 @@
 #include "symbol.h"
 #include "intermediate.h"
 
-void buildAssembly(SYMBOL_TABLE* scope);
+void generateAssemblyCode(SYMBOL_TABLE* scope);
 
 #endif
