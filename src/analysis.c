@@ -548,13 +548,17 @@ void createDAGFromBasicBlock(INSTRUCTION* instructions, BASIC_BLOCK basicBlock) 
 
 
 
+/* -------------------------------------------------------------------------- */
+/*               Helper methods for intermediate code generation              */
+/* -------------------------------------------------------------------------- */
 
 
 
-
-
-
-
+/** Let L be the leaf associated to the symbol.
+ * Returns true if there exists a node N whose intermediate code wasn't generated yet
+ * which is connected to the leaf L through children edges or extra edges. This is used to check
+ * that all the parent of the leaf have been processed, and so it's safe to overwrite the value of the symbol.
+ */
 int valueNeeded(SYMBOL_INFO* symbol) {
     NODE* leaf = getLeaf(symbol);
     for (int i = 0; i < nodeListSize; i++){
@@ -584,9 +588,19 @@ int isLive(SYMBOL_INFO* symbol) {
 
 
 
-
+/**
+ * This function tries to find a symbol that's associated to the node. We look in the following order:
+ * 
+ * 1) Search through the NODE mapping and then the LEAF mapping for live variables which can be overwritten (if needed).
+ * 2) Search through the NODE mapping for variables which are not live.
+ * 3) If nothing is found, it means the node is a leaf. Due to ordering guarantees, we know it's still safe
+ *    to use the symbol that associated to the node in the LEAF mapping. That symbol is return.
+ * 4) If there's no such symbol, a new anonymous variable is created.
+ * 
+ * If the node is NULL or corresponds to a RETURNOP, we return NULL (there's no symbol associated to it)
+ */
 SYMBOL_INFO* findSymbolForNode(NODE* node) {
-    if (node == NULL) return NULL;  // TODO: be careful about this
+    if (node == NULL) return NULL; 
 
     if (node->opcode == RETURNOP) {
         return NULL;
@@ -608,12 +622,13 @@ SYMBOL_INFO* findSymbolForNode(NODE* node) {
 
         SYMBOL_INFO* symbol = LEAVES[i].symbol;
         
-
         if (isLive(symbol)) return symbol;
         //else result = symbol;
     }
 
-    if (result == NULL) {  // symbol(node) = {}
+    if (result != NULL) {
+        return result; // symbol(node) = variable that is not live
+    } else { // (result == NULL) which means that symbol(node) = {}
         // When can this happen? It can happen when this node N is the leaf of a symbol S,
         // but then that symbol is assigned a value later (S = B), 
         // so now node(symbol) points to another node K.
@@ -632,11 +647,8 @@ SYMBOL_INFO* findSymbolForNode(NODE* node) {
         if (leafSymbol != NULL) {
             return leafSymbol;
         } else {
-            fprintf(stderr, "Creating anonymous symbol\n");
             return newAnonVarWithType(CURRENT_SCOPE, node->typeInfo);
         }
-    } else {
-        return result; // symbol(node) = variable that is not live
     }
 }
 
@@ -646,7 +658,6 @@ void addExtraAssignmentForOtherLiveVariables(SYMBOL_TABLE* scope, SYMBOL_INFO* r
 
         SYMBOL_INFO* symbol = NODE_SYMBOL_LIST[i].symbol;
         
-        
         if (isLive(symbol) && // We must assign to a live variable 
                 (getLeaf(symbol) == node ||   // if we're processing the leaf of the symbol, it's okay to assign
                 !valueNeeded(symbol))         // if we're not, then we must be sure that all parents of the leaf 
@@ -654,7 +665,6 @@ void addExtraAssignmentForOtherLiveVariables(SYMBOL_TABLE* scope, SYMBOL_INFO* r
             && symbol != resultSymbol) // and of course, the symbol we assign to must be different
         {
             emitAssignement3AC(scope, symbol, resultSymbol);
-            //fprintf(stderr, "Adding extra assignment %s = %s\n", symbol->name, resultSymbol->name);
         }
     }
 }
