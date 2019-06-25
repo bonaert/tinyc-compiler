@@ -8,8 +8,7 @@
 factorial:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $32, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $32, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### factorial 0:  ASSIGN int const__1 (= 1)  int res 
 	movl $1, -4(%rbp)     # res = 1
 #### factorial 1:  ASSIGN int n  int factor 
@@ -53,8 +52,7 @@ factorial_6:
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $12, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $12, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### main 0:  PARAM int const__4 (= 10)   
 	pushq $10
 #### main 1:  CALL factorial: function(int) -> int   

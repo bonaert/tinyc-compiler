@@ -8,8 +8,7 @@
 lol:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $112, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $112, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### lol 0:  ASSIGN int const__1 (= 5)  int i 
 	movl $5, -4(%rbp)     # i = 5
 #### lol 1:  ASSIGN int const__2 (= 7)  int b 
@@ -80,8 +79,7 @@ lol_4:
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $12, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $12, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### main 0:  CALL lol: function() -> int   
 	call lol
 #### main 1:  GETRETURN   int anon__10 

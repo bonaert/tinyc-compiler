@@ -9,8 +9,7 @@
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $24, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $24, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### main 0:  ASSIGN int const__9 (= 28)  int l 
 	movl $28, -4(%rbp)     # l = 28
 #### main 1:  RETURN int l   

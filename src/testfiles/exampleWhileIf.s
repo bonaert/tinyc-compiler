@@ -9,8 +9,7 @@
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $32, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $32, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 main_0:
 #### main 0:  IF_GREATER_OR_EQUAL int a int b 4
 	movl -4(%rbp), %r10d

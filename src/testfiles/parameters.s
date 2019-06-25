@@ -8,8 +8,7 @@
 modifyCharArray:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $21, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $21, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### modifyCharArray 0:  TIMES int const__1 (= 2) int const__2 (= 1) int anon__1 
 	# Multiplication - Start: anon__1 = $2 x $1
 	movl $2, %eax
@@ -39,8 +38,7 @@ modifyCharArray:
 modifyIntArray:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $40, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $40, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### modifyIntArray 0:  TIMES int const__4 (= 2) int const__5 (= 4) int anon__2 
 	# Multiplication - Start: anon__2 = $2 x $4
 	movl $2, %eax
@@ -70,8 +68,7 @@ modifyIntArray:
 modifyMultidimensionalIntArray:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $428, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $428, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### modifyMultidimensionalIntArray 0:  TIMES int const__7 (= 1) int const__8 (= 10) int anon__3 
 	# Multiplication - Start: anon__3 = $1 x $10
 	movl $1, %eax
@@ -116,8 +113,7 @@ modifyMultidimensionalIntArray:
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $824, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $824, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### main 0:  GET_ADDRESS int[5] ints  address anon__6 
 	movq %rbp, -28(%rbp)     # Setting up array address
 	addq $-28, -28(%rbp)      # Setting up array address

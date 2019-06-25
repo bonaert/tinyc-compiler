@@ -8,8 +8,7 @@
 sum:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $20, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $20, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### sum 0:  PLUS int a int b int anon__1 
 	# Math operation - Start: anon__1 = a addl b
 	movq 32(%rbp), %r10
@@ -39,8 +38,7 @@ sum:
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $48, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $48, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### main 0:  ASSIGN int const__1 (= 10)  int i 
 	movl $10, -4(%rbp)     # i = 10
 #### main 1:  ASSIGN int const__2 (= 0)  int j 
