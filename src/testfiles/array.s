@@ -20,8 +20,9 @@ main:
 #### main 2:  ASSIGN char const__1 (= ' ')  char space 
 	movb $32, -5(%rbp)     # space = 32
 #### main 3:  WRITE char space   
-	movq $0, %rdi
-	movl -5(%rbp), %edi
+	movq $0, %r10   # Empty register 
+	movb -5(%rbp), %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 4:  GET_ADDRESS int[7] a  address anon__3 
 	movq %rbp, -41(%rbp)     # Setting up array address

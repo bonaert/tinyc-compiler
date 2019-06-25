@@ -42,8 +42,6 @@ void checkIsFunction(SYMBOL_INFO* symbol){
     }
 }
 
-
-
 TYPE_INFO* checkIsNumeric(SYMBOL_INFO* symbol){
     if (!isInt(symbol) && !isChar(symbol)) {
         error2(symbol->name, 0, " should be integer or char but is ", symbol->type);
@@ -91,12 +89,20 @@ void checkNameNotTaken(SYMBOL_TABLE* symbolTable, char* name) {
 
 
 void checkAssignmentInDeclaration(TYPE_INFO* left, SYMBOL_INFO* right) {
+    if (isCharOrInt(left) && isCharOrInt(right->type)) {
+        return;
+    }
+
     if (getBaseType(left) != right->type) {
         error2("cannot assign ", right->type, " to ", getBaseType(left));
     }
 }
 
 void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right) {
+    if (isCharOrInt(left->type) && isCharOrInt(right->type)) {
+        return;
+    }
+
     if (!areTypesEqual(left->type, right->type)) {
         error2("cannot assign ", right->type, " to ", getBaseType(left->type));
     }

@@ -1,0 +1,22 @@
+int main() {
+    int c = 65; // Letter 'A'
+    write c;
+    write ' ';
+    char d = c;
+    write d;
+    write ' ';
+    
+    int e = d;
+    write e;
+    write ' ';
+
+    int x = 65 + 256;
+    write x;
+    write ' ';
+    char y = x;
+    write y;
+    write ' ';
+    int z = y;
+    write z;
+    write ' ';
+}

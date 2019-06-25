@@ -427,6 +427,10 @@ int isFunction(SYMBOL_INFO* symbol) {
     return symbol->type->type == function_t;
 }
 
+int isNumeric(SYMBOL_INFO* symbol) {
+    return isInt(symbol) || isChar(symbol);
+}
+
 
 INSTRUCTION* getInstrutions(SYMBOL_INFO* function) {
     return function->details.function.instructions;

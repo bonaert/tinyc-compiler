@@ -140,8 +140,9 @@ main:
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 ## Array modification END - anon__6[anon__5] = $999
 #### main 3:  WRITE char const__14 (= 'newline')   
-	movq $0, %rdi
-	movl $10, %edi
+	movq $0, %r10   # Empty register 
+	movb $10, %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 4:  GET_ADDRESS int[5] ints  address anon__8 
 	movq -28(%rbp), %r10
@@ -183,8 +184,9 @@ main:
 	movq -92(%rbp), %r10
 	movq %r10, -28(%rbp)     # ints = anon__10
 #### main 13:  WRITE char const__17 (= 'newline')   
-	movq $0, %rdi
-	movl $10, %edi
+	movq $0, %r10   # Empty register 
+	movb $10, %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 14:  GET_ADDRESS int[5] ints  address anon__13 
 	movq -28(%rbp), %r10
@@ -232,8 +234,9 @@ main:
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 ## Array modification END - anon__16[anon__15] = $122
 #### main 21:  WRITE char const__23 (= 'newline')   
-	movq $0, %rdi
-	movl $10, %edi
+	movq $0, %r10   # Empty register 
+	movb $10, %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 22:  GET_ADDRESS char[5] chars  address anon__18 
 	movq -121(%rbp), %r10
@@ -256,8 +259,9 @@ main:
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 ## Array access END - anon__19 = anon__18[anon__17]
 #### main 25:  WRITE char anon__19   
-	movq $0, %rdi
-	movl -146(%rbp), %edi
+	movq $0, %r10   # Empty register 
+	movb -146(%rbp), %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 26:  GET_ADDRESS char[5] chars  address anon__21 
 	movq -121(%rbp), %r10
@@ -275,8 +279,9 @@ main:
 	movq -167(%rbp), %r10
 	movq %r10, -121(%rbp)     # chars = anon__20
 #### main 31:  WRITE char const__26 (= 'newline')   
-	movq $0, %rdi
-	movl $10, %edi
+	movq $0, %r10   # Empty register 
+	movb $10, %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 32:  GET_ADDRESS char[5] chars  address anon__23 
 	movq -121(%rbp), %r10
@@ -299,8 +304,9 @@ main:
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 ## Array access END - anon__24 = anon__23[anon__22]
 #### main 35:  WRITE char anon__24   
-	movq $0, %rdi
-	movl -180(%rbp), %edi
+	movq $0, %r10   # Empty register 
+	movb -180(%rbp), %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 36:  TIMES int const__29 (= 1) int const__31 (= 10) int anon__25 
 	# Multiplication - Start: anon__25 = $1 x $10
@@ -338,8 +344,9 @@ main:
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 ## Array modification END - anon__27[anon__26] = $456
 #### main 41:  WRITE char const__34 (= 'newline')   
-	movq $0, %rdi
-	movl $10, %edi
+	movq $0, %r10   # Empty register 
+	movb $10, %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 42:  TIMES int const__35 (= 1) int const__37 (= 10) int anon__28 
 	# Multiplication - Start: anon__28 = $1 x $10
@@ -397,8 +404,9 @@ main:
 	movq -740(%rbp), %r10
 	movq %r10, -592(%rbp)     # xxx = anon__32
 #### main 54:  WRITE char const__40 (= 'newline')   
-	movq $0, %rdi
-	movl $10, %edi
+	movq $0, %r10   # Empty register 
+	movb $10, %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 55:  TIMES int const__41 (= 1) int const__43 (= 10) int anon__34 
 	# Multiplication - Start: anon__34 = $1 x $10

@@ -28,8 +28,9 @@ printArray_1:
 	movl -4(%rbp), %edi
 	call printInteger
 #### printArray 4:  WRITE char const__3 (= ':')   
-	movq $0, %rdi
-	movl $58, %edi
+	movq $0, %r10   # Empty register 
+	movb $58, %r10b
+	movq %r10, %rdi
 	call printChar
 printArray_5:
 #### printArray 5:  TIMES int a int const__4 (= 4) int anon__1 
@@ -54,8 +55,9 @@ printArray_5:
 	movl -12(%rbp), %edi
 	call printInteger
 #### printArray 8:  WRITE char const__5 (= 'newline')   
-	movq $0, %rdi
-	movl $10, %edi
+	movq $0, %r10   # Empty register 
+	movb $10, %r10b
+	movq %r10, %rdi
 	call printChar
 #### printArray 9:  PLUS int a int const__6 (= 1) int anon__3 
 	# Math operation - Start: anon__3 = a addl $1
@@ -307,8 +309,9 @@ main_9:
 #### main 13:  GETRETURN   int anon__23 
 	movl %eax, -64(%rbp)
 #### main 14:  WRITE char const__26 (= 'newline')   
-	movq $0, %rdi
-	movl $10, %edi
+	movq $0, %r10   # Empty register 
+	movb $10, %r10b
+	movq %r10, %rdi
 	call printChar
 #### main 15:  GET_ADDRESS int[5] numbers  address anon__26 
 	movq -36(%rbp), %r10

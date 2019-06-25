@@ -63,6 +63,13 @@ static char* registerNames64[] = {
     "%rbp", "%rsp"  // For the special register, we always use the 64 bit version
 };
 
+static char* registerNames8[] = { // When doing conversions, sometimes we need to access only the 8 lower bits of a register
+    "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b", 
+    "%al", "%bl", "%cl", "%dl",
+    "%ERROR", "%ERROR", // these last 4 registers shouldn't be accessed in this way
+    "%ERROR", "%ERROR"  
+};
+
 static int DEFAULT_REGISTER = R10;
 static int OTHER_REGISTER = R11;
 
@@ -127,14 +134,22 @@ char* getLocation(int instrNum, SYMBOL_INFO* symbol, char* res){
 char* moveToRegister(int instrNum, SYMBOL_INFO* value, char* op, int targetReg){
     char *reg = getLocation(instrNum, value, op);
     if (getParameterIndex(value, CURRENT_FUNCTION) >= 0) {
-        // TODO: very hacky, very shitty, immediately clean this up
         // I need a better system to handle 32-64 bit register and pushes
         fprintf(stdout, "\tmovq %s, %s\n", reg, registerNames64[targetReg]); // Get extended version for correctness
         return registerNames32[targetReg];  // we always use 32 bits registers in practice
+    } else if (isChar(value)) {
+        fprintf(stdout, "\tmovb %s, %s\n", reg, registerNames8[targetReg]);
+        return registerNames8[targetReg]; 
     } else {
         fprintf(stdout, "\tmovl %s, %s\n", reg, registerNames32[targetReg]);
         return registerNames32[targetReg]; 
     }
+};
+
+char* moveToRegister8(int instrNum, SYMBOL_INFO* value, char* op, int targetReg){
+    char *reg = getLocation(instrNum, value, op);
+    fprintf(stdout, "\tmovb %s, %s\n", reg, registerNames8[targetReg]);
+    return registerNames8[targetReg]; 
 };
 
 char* moveToRegister64(int instrNum, SYMBOL_INFO* value, char* op, int targetReg){
@@ -171,6 +186,25 @@ char* getLabel(SYMBOL_INFO* function, int destination) {
     return label;
 }
 
+int conditionIsRespected(int left, int right, INSTRUCTION* instruction) {
+    if (instruction->opcode == IFEQ) {
+        return left == right;
+    } else if (instruction->opcode == IFNEQ) { 
+        return left != right;
+    } else if (instruction->opcode == IFG) { 
+        return left > right;
+    } else if (instruction->opcode == IFGE) { 
+        return left >= right;
+    } else if (instruction->opcode == IFS) { 
+        return left < right;
+    } else if (instruction->opcode == IFSE) { 
+        return left <= right;
+    }
+    fprintf(stderr, "should never reach end of conditionIsRespected!");
+    exit(0);
+    return 0;
+}
+
 
 void jump(SYMBOL_INFO* function, int instrNum, int destination) {
     fprintf(stdout, "\tjmp %s\n", getLabel(function, destination));  // Check
@@ -183,19 +217,30 @@ void conditionalJump(char* instructionName, SYMBOL_INFO* function, int instrNum,
     char* leftLocation;
     char* rightLocation;
 
+    
     if (isConstantSymbol(left) && isConstantSymbol(right)) { 
-        leftLocation = getLocation(instrNum, left, op1);
-        rightLocation = getLocation(instrNum, right, op2);
+        // Can check at compile time is condition is respected or not.
+        // If it is: do an  unconditional jump to destination!
+        int leftValue = getConstantRawValue(left);
+        int rightValue = getConstantRawValue(right);
+
+        if (conditionIsRespected(leftValue, rightValue, instruction)) {
+            jump(function, instrNum, getJumpDestination(*instruction));
+        }
     } else {
+
+        // Compare the two numbers and set flags so that the jump will work correctly
         leftLocation = moveToDefaultRegister(instrNum, left, op1);
         rightLocation = moveToRegister(instrNum, right, op2, OTHER_REGISTER);
+        fprintf(stdout, "\tcmpl %s, %s\n", rightLocation, leftLocation);
+
+        // Jump to the correct place (depending on the flags)
+        fprintf(stdout, "\t%s %s\n", instructionName, getLabel(function, getJumpDestination(*instruction)));
     }
 
-    // Compare the two numbers and set flags so that the jump will work correctly
-    fprintf(stdout, "\tcmpl %s, %s\n", rightLocation, leftLocation);
+    
 
-    // Jump to the correct place
-    fprintf(stdout, "\t%s %s\n", instructionName, getLabel(function, getJumpDestination(*instruction)));
+    
 };
 
 
@@ -335,13 +380,47 @@ void returnFromFunction(int instrNum, SYMBOL_INFO* symbol) {
 
 // Moves
 void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target) {
+    char * moveType = "movl";
+    if (isChar(target)) {
+        moveType = "movb";
+    } else if (isArray(target)) {
+        moveType = "movq";
+    }
+
+
+    int shouldDoConversion = isNumeric(source) && isNumeric(target) && !areTypesEqual(source->type, target->type);
     char * location; 
     if (isConstantSymbol(source)) {
-        location = getConstantValue(source, op1);
+        if (shouldDoConversion && isInt(source)) { // in the constant case, should only truncate in (char = int) case
+            sprintf(op1, "$%d", getConstantRawValue(source) % 256);
+            location = op1;
+        } else {
+            location = getConstantValue(source, op1);
+        }
+
         extraInfo1 = getHumanConstantValue(source, extraInfo1);
+    } else if (shouldDoConversion) { // Add conversion if needed:: (int = char) or (char = int)
+        
+        if (isInt(target)) { // int = char
+            fprintf(stderr, "converting! (int = char)\n");
+            fprintf(stdout, "\tmovq $0, %%r10     # Empty register\n");
+            
+            moveType = "movl"; // Need to sign extend
+            moveToDefaultRegister(instrNum, source, op1);
+            location = registerNames32[DEFAULT_REGISTER];
+            extraInfo1 = getNameOrValue(source, extraInfo1);
+            
+        } else { // char = int
+            fprintf(stderr, "converting! (char = int)\n");
+            // movb %x, %y  (where %y are the lower parts of the register)
+
+            location = moveToRegister8(instrNum, source, op1, DEFAULT_REGISTER);
+            extraInfo1 = getNameOrValue(source, extraInfo1);
+        }
+        //return;
     } else {
-        // IMPORTANt: we can't do op1 = moveToDefaultRegister(instrNum, source, op1);
-        //            because op1 should never be modifier!
+        // IMPORTANT: we can't do op1 = moveToDefaultRegister(instrNum, source, op1);
+        //            because op1 should never be modified!
         // TODO: improve structure so that this is never possible
         if (isArray(source)) {
             location = moveToRegister64(instrNum, source, op1, DEFAULT_REGISTER);
@@ -351,20 +430,16 @@ void move(int instrNum, SYMBOL_INFO* source, SYMBOL_INFO* target) {
         extraInfo1 = getNameOrValue(source, extraInfo1);
     }
 
-    char * moveType = "movl";
-    if (isChar(target)) {
-        moveType = "movb";
-    } else if (isArray(target)) {
-        moveType = "movq";
-    }
+    
 
+    // movl %eax, %ebc  # c = b
     fprintf(stdout, "\t%s %s, %s     # %s = %s\n",
         moveType, 
         location, 
         getLocation(instrNum, target, op2),
         target->name,
         extraInfo1
-    );  // Check
+    );
 
 };
 
@@ -586,10 +661,10 @@ void division(int instrNum, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* 
 // Syscalls
 void read(int instrNum, SYMBOL_INFO* symbol) {
     //adjustRegistersForCall();
-    if (symbol->type->type == char_t) {
+    if (isChar(symbol)) {
         outputLine("call readChar");
         fprintf(stdout, "\tmovb %%al, %s\n", getLocation(instrNum, symbol, op1));
-    } else { // int_t
+    } else { // int
         outputLine("call readInt");
         fprintf(stdout, "\tmovl %%eax, %s\n", getLocation(instrNum, symbol, op1));
     }
@@ -604,8 +679,16 @@ void read(int instrNum, SYMBOL_INFO* symbol) {
 
 void write(int instrNum, SYMBOL_INFO* symbol) {
     // Uses outside-world convention, so I have to put the parameter in %edi instead of putting it in the stack
-    fprintf(stdout, "\tmovq $0, %%rdi\n");
-    moveToRegister(instrNum, symbol, op1, RDI); 
+    if (isChar(symbol)) { // Can't move value directly to lower 8 bits of EDI, so I need to do a bit of gymnastics to put it there
+        fprintf(stdout, "\tmovq $0, %%r10   # Empty register \n");
+        moveToRegister(instrNum, symbol, op1, DEFAULT_REGISTER); 
+        fprintf(stdout, "\tmovq %%r10, %%rdi\n");
+    } else {
+        fprintf(stdout, "\tmovq $0, %%rdi\n");
+        moveToRegister(instrNum, symbol, op1, RDI); 
+    }
+
+    
     if (symbol->type->type == char_t) {
         outputLine("call printChar");
     } else {

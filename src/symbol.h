@@ -122,6 +122,7 @@ int isArray(SYMBOL_INFO* symbol);
 int isAddress(SYMBOL_INFO* symbol);
 int isChar(SYMBOL_INFO* symbol);
 int isInt(SYMBOL_INFO* symbol);
+int isNumeric(SYMBOL_INFO* symbol);
 int isFunction(SYMBOL_INFO* symbol);
 
 INSTRUCTION* getInstrutions(SYMBOL_INFO* function);

@@ -1,9 +1,13 @@
 
 int main() {
-    int j;
+    int j = 1;
     while (5 > 2) {
-        j = 5;
+        j = j + 1;
+
+        if (j / 100 * 100 == j) {
+            write j;
+            write ' ';
+        }
     }
     return 5;
 }
-

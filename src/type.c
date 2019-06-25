@@ -290,3 +290,8 @@ int getTypeSize(TYPE_INFO* type) {
         exit(1);
     }
 }
+
+
+int isCharOrInt(TYPE_INFO* type) {
+    return type->type == int_t || type->type == char_t;
+}

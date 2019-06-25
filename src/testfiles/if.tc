@@ -1,0 +1,45 @@
+int main() {
+    int zero = 0;
+    int nonzero = 1254;
+
+    if (0 == 10) {
+        write 'E';
+    } else {
+        write 'O';
+    }
+
+    if (0 != 10) {
+        write 'O';
+    } else {
+        write 'E';
+    }
+
+    
+    write '*';
+
+    if (0 > 10) {
+        write 'E';
+    } else {
+        write 'O';
+    }
+
+    if (0 >= 10) {
+        write 'E';
+    } else {
+        write 'O';
+    }
+
+    write '*';
+
+    if (0 < 10) {
+        write 'O';
+    } else {
+        write 'E';
+    }
+
+    if (0 <= 10) {
+        write 'O';
+    } else {
+        write 'E';
+    }
+}
