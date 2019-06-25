@@ -12,6 +12,8 @@
 extern int lineno; /* defined in minic.y */
 
 
+/* -------------- convient error functions to avoid boilerplate ------------- */
+
 static void error(char* s1, char* s2, TYPE_INFO* t1, char* s3, char* s4, TYPE_INFO* t2) {
     fprintf(stderr, "type error on line %d: ", lineno);
     if (s1) fprintf(stderr, "%s", s1);
@@ -34,7 +36,7 @@ static void error1(char* s1, TYPE_INFO* t1) {
 
 
 
-
+/* ------------------------------- check types ------------------------------ */
 
 void checkIsFunction(SYMBOL_INFO* symbol){
     if (!isFunction(symbol)) {
@@ -75,18 +77,7 @@ TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* symbol) {
 
 
 
-
-
-
-
-
-void checkNameNotTaken(SYMBOL_TABLE* symbolTable, char* name) {
-    if (findSymbolInSymbolList(symbolTable->symbolList, name)) {
-        error("variable ", name, 0, " already declared!", 0 , 0);
-    }
-}
-
-
+/* ---------------------------- assignment checks --------------------------- */
 
 void checkAssignmentInDeclaration(TYPE_INFO* left, SYMBOL_INFO* right) {
     if (isCharOrInt(left) && isCharOrInt(right->type)) {
@@ -108,15 +99,18 @@ void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right) {
     }
 }
 
+TYPE_INFO* checkEqualityOp(SYMBOL_INFO* left, SYMBOL_INFO* right){
+    if (left->type != right->type) {
+        error2("type ", left->type, " does not match ", right->type);
+    }
+    return left->type;
+}
+
+
 
     
 
-void checkReturnType(SYMBOL_TABLE* scope, SYMBOL_INFO* returnVal) {
-    TYPE_INFO* functionReturnType = scope->function->type->info.function.target;
-    if (!areTypesEqual(functionReturnType, returnVal->type)) {
-        error2("the function must return ", functionReturnType, " but is actually returning ", returnVal->type);
-    }
-}
+/* --------------------------- array access types --------------------------- */
 
 TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index) {
     if (!isArray(array)) {
@@ -140,18 +134,32 @@ void checkArrayAccessHasAllDimensions(SYMBOL_INFO* array, int numDimensionUsed) 
     }
 }
 
+
+
+
+/* -------------------- arithmetic and comparison checks -------------------- */
+
+/**
+ * Check that the arguments are numeric and have the same type.
+ * We forbid comparison between elements of different types (can't compare char with int)
+ * Explicit conversion is required first.
+ */
 void checkComparisonOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
     checkIsNumeric(op1);
-    checkIsNumeric(op1);
+    checkIsNumeric(op2);
     if (op1->type != op2->type) {
         fprintf(stderr, "Error: %s and %s don't have the same type\n", op1->name, op2->name);
         exit(1);
     }
 }
 
+/**
+ * Checks that the operands are numerics. Adds warning if arithmetic operation is between
+ * elements of different types (char/int and int/char)
+ */
 TYPE_INFO* checkArithOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
     checkIsNumeric(op1);
-    checkIsNumeric(op1);
+    checkIsNumeric(op2);
 
     if (op1->type == op2->type) {  // char + char or int + int
         return op1->type;
@@ -164,12 +172,10 @@ TYPE_INFO* checkArithOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
     }
 }
 
-TYPE_INFO* checkEqualityOp(SYMBOL_INFO* left, SYMBOL_INFO* right){
-    if (left->type != right->type) {
-        error2("type ", left->type, " does not match ", right->type);
-    }
-    return left->type;
-}
+
+
+
+/* -------------------------- function call checks -------------------------- */
 
 int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actualArguments) {
     if (argumentTypes->size > actualArguments->size) {
@@ -228,6 +234,21 @@ TYPE_INFO* checkFunctionCall(SYMBOL_INFO* symbol, char* functionName, SYMBOL_LIS
     return symbol->type->info.function.target;
 }
 
+
+void checkReturnType(SYMBOL_TABLE* scope, SYMBOL_INFO* returnVal) {
+    TYPE_INFO* functionReturnType = scope->function->type->info.function.target;
+    if (!areTypesEqual(functionReturnType, returnVal->type)) {
+        error2("the function must return ", functionReturnType, " but is actually returning ", returnVal->type);
+    }
+}
+
+
+
+
+
+
+/* ---------------------------- name usage checks --------------------------- */
+
 SYMBOL_INFO* checkSymbol(SYMBOL_TABLE* scope, char* name){
     SYMBOL_INFO* symbol = findSymbolInSymbolTableAndParents(scope, name);
     
@@ -236,6 +257,12 @@ SYMBOL_INFO* checkSymbol(SYMBOL_TABLE* scope, char* name){
     }
 
     return symbol;
+}
+
+void checkNameNotTaken(SYMBOL_TABLE* symbolTable, char* name) {
+    if (findSymbolInSymbolList(symbolTable->symbolList, name)) {
+        error("variable ", name, 0, " already declared!", 0 , 0);
+    }
 }
 
 

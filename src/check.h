@@ -4,6 +4,10 @@
 #include "symbol.h"
 #include "type.h"
 
+/* -------------------------------------------------------------------------- */
+/*        Parsing checks: type-checking, name usage checks, call checks       */
+/* -------------------------------------------------------------------------- */
+
 void checkComparisonOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2);
 void checkAssignment(SYMBOL_INFO* left, SYMBOL_INFO* right);
 void checkAssignmentInDeclaration(TYPE_INFO* left, SYMBOL_INFO* right);

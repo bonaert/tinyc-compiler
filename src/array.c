@@ -2,13 +2,8 @@
 #include "array.h"
 
 
-/* return size of dimension 'dimension' of array */
-int arrayDimSize(SYMBOL_INFO* array, int dimension) {
-    return array->type->info.array.dimensions->dimensions[dimension - 1];
-} 
 
-
-/* return size of element of array */
+/* Returns size of each element of the array (example: char[10][12] -> 1)*/
 int arrayElementSize(SYMBOL_INFO* array) {
     TBASIC baseType = array->type->info.array.base->type;
     if (baseType == char_t) {
@@ -20,6 +15,13 @@ int arrayElementSize(SYMBOL_INFO* array) {
         exit(1);
     }
 } 
+
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                               Dimensions list                              */
+/* -------------------------------------------------------------------------- */
 
 
 DIMENSIONS* initDimensions() {
@@ -55,6 +57,13 @@ int areDimensionsEqual(DIMENSIONS* dimensions1, DIMENSIONS* dimensions2) {
     return 1;
 }
 
+
+
+
+/* return size of dimension 'dimension' of array */
+int arrayDimSize(SYMBOL_INFO* array, int dimension) {
+    return array->type->info.array.dimensions->dimensions[dimension - 1];
+} 
 
 
 

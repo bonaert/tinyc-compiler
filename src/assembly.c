@@ -104,7 +104,7 @@ int getRelativeLocation(int instrNum, SYMBOL_INFO* symbol) {
         int offset = 16 + parameterPos * 8;
         return offset;
     } else { // It's a local variable
-        if (!symbolIsOnStack(symbol, stack)) {
+        if (!isSymbolOnStack(symbol, stack)) {
             addSymbolToStack(symbol, stack);
             if (isArray(symbol)) {
                 int location = -getSymbolLocationOnStack(symbol, stack);

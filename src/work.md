@@ -28,8 +28,14 @@
 # Code generation
 
 - [x] Create a function that converts each IR instruction into the appropriate assembler instructions 
-- [ ] Implement the algorithm to find out to which register each symbolic register should be associated
-- [ ] Implement the logic to put on the stack and pop back from the stack the symbolic register that couldn't be associated to a real register
+- [x] Implement the algorithm to find out to which register each symbolic register should be associated
+- [x] Implement the logic to put on the stack and pop back from the stack the symbolic register that couldn't be associated to a real register
+
+# Optimisation
+
+- [x] Peephole optimisations
+- [x] Constant folding
+- [x] Basic block optimisation using graphs
 
 ### Instructions
 
@@ -37,7 +43,7 @@
 - [x] Push / Pop
 - [x] Move
 - [x] Jump
-- [ ] Function calls: params, call, return DONE; need to save registers
+- [x] Function calls: params, call, return DONE
 - [x] Math: +, -, times, divide
 - [x] Syscalls: write, read 
 - [x] LENGTH: Length of an array

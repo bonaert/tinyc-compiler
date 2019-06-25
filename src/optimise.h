@@ -3,6 +3,7 @@
 
 #include "symbol.h"
 
+
 void optimiseCode(SYMBOL_TABLE* scope);
 
 

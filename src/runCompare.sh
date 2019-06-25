@@ -1,3 +1,5 @@
+#!/bin/bash
+
 compare() {
     #echo "Running unoptimised version of $1"
     outputOfNonOptimised=$(./runUnoptimised.sh "$1" | sed -n -e '/Running the executable file/,$p')

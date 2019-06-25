@@ -6,10 +6,17 @@
 
 static TYPE_LIST* currentTypeList = 0;
 
+/**
+ * If type represents an array, returns type of the elements of the array. 
+ * Otherwise, returns the given type.
+ */
 TYPE_INFO* getBaseType(TYPE_INFO* typeInfo){
     return (typeInfo->type == array_t) ? typeInfo->info.array.base : typeInfo;
 }
 
+/**
+ * Returns true if the types are equal. We don't check that the dimensions of the arrays match.
+ */
 int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
     if (t1 == t2) {
         return 1;  // If both pointers point to the same type, the types are equal
@@ -25,7 +32,6 @@ int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
         case array_t:
             return areTypesEqual(t1->info.array.base, t2->info.array.base); // the types of the contents of the arrays must be equal
             // We don't check the dimension size, otherwise usefully passing arrays as parameters would be impossible
-            // && areDimensionsEqual(t1->info.array.dimensions, t2->info.array.dimensions); 
         case function_t:
             return areTypesEqual(t1->info.function.target, t2->info.function.target) &&          // same types for return values
                    areTypeListsEqual(t1->info.function.arguments, t2->info.function.arguments);  // same types for arguments
@@ -34,6 +40,9 @@ int areTypesEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
     }
 }
 
+/**
+ * Returns true if the types are strictly equal. We check that the dimensions of the arrays match!
+ */
 int areTypesStrictlyEqual(TYPE_INFO* t1, TYPE_INFO* t2) {
     if (t1 == t2) {
         return 1;  // If both pointers point to the same type, the types are equal
@@ -76,6 +85,20 @@ TYPE_INFO* findType(TYPE_INFO* type) {
 }
 
 
+
+
+/* -------------------------------------------------------------------------- */
+/*                                  Type list                                 */
+/* -------------------------------------------------------------------------- */
+
+TYPE_LIST* initTypeList() {
+    TYPE_LIST* types = (TYPE_LIST*) malloc(sizeof(TYPE_LIST));
+    types->capacity = 0;
+    types->size = 0;
+    types->types = 0;
+    return types;
+}
+
 static int TYPES_INCREMENT_SIZE = 20;
 void growTypeListIfNeeded(TYPE_LIST* types) {
     int capacity = types->capacity;
@@ -94,21 +117,19 @@ void growTypeListIfNeeded(TYPE_LIST* types) {
 }
 
 
-TYPE_LIST* initTypeList() {
-    TYPE_LIST* types = (TYPE_LIST*) malloc(sizeof(TYPE_LIST));
-    types->capacity = 0;
-    types->size = 0;
-    types->types = 0;
-    return types;
-}
-
-
 TYPE_LIST* insertTypeInList(TYPE_INFO* newType, TYPE_LIST* typeList) {
     growTypeListIfNeeded(typeList);
     typeList->types[typeList->size] = newType;
     typeList->size++;
     return typeList;
 }
+
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                                Type creation                               */
+/* -------------------------------------------------------------------------- */
 
 
 /**
@@ -128,9 +149,6 @@ TYPE_INFO* createType(TBASIC typeKind) {
     insertTypeInList(type, currentTypeList);
     return type;
 }
-
-
-
 
 
 
@@ -276,7 +294,9 @@ void printTypeList(FILE* output, TYPE_LIST* types, char separator) {
 
 
 
-
+/**
+ * Return the size of the type in bytes.
+ */
 int getTypeSize(TYPE_INFO* type) {
     TBASIC typeKind = type->type;
     if       (typeKind == char_t) { return sizeof(char); }
@@ -286,7 +306,7 @@ int getTypeSize(TYPE_INFO* type) {
         //  address size + size of all elements
         return 8 + getArrayTotalSize(type) * getTypeSize(type->info.array.base);
     } else {
-        fprintf(stderr, "Trying to get the symbol");
+        fprintf(stderr, "Trying to get the size of  a function!");
         exit(1);
     }
 }

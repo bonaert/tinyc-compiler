@@ -20,6 +20,15 @@ char * opcodeNames[] = {
 };
 
 
+
+/* -------------------------------------------------------------------------- */
+/*   Base functions for creating and emitting intermediate code instructions   */
+/* -------------------------------------------------------------------------- */
+
+
+/**
+ * Creates a new instruction with the given opcode, arguments and result / target.
+ */
 INSTRUCTION gen3AC(OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result) {
 	if (opcode > LENGTHOP) {
 		fprintf(stderr, "wrong opcode %d", opcode);
@@ -59,6 +68,197 @@ void emit(SYMBOL_TABLE* scope, INSTRUCTION i) {
 	
 	scope->function->details.function.numInstructions++;
 }
+
+
+
+
+
+
+
+
+/* -------------------------------------------------------------------------- */
+/*     Functions to easily emit intermediate code to the instruction list     */
+/* -------------------------------------------------------------------------- */
+
+// returns number of next (free) location in code sequence
+int next3AC(SYMBOL_TABLE* symbolTable) {
+	int res = symbolTable->function->details.function.numInstructions;
+	return res;
+}
+
+void emitAssignement3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* lhs, SYMBOL_INFO* value) {
+	emit(scope, gen3AC(A0, value, 0, lhs));
+}
+
+void emitUnary3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* result) {
+	emit(scope, gen3AC(opcode, arg1, 0, result));
+}
+
+void emitBinary3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result) {
+	emit(scope, gen3AC(opcode, arg1, arg2, result));
+}
+
+void emitComparison3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result) {
+	emit(scope, gen3AC(opcode, arg1, arg2, result));
+}
+
+void emitEmptyGoto(SYMBOL_TABLE* scope) {
+	emit(scope, gen3AC(GOTO, 0, 0, 0));
+}
+
+void emitGoto(SYMBOL_TABLE* scope, int arg) {
+	// Only exception where I don't use setJumpDestination (this is shorter)
+	emit(scope, gen3AC(GOTO, 0, 0, (SYMBOL_INFO*) (intptr_t) arg));
+}
+
+void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg) {
+	emit(scope, gen3AC(RETURNOP, arg, 0, 0));
+}
+
+
+/* ------- In some cases, it's possible to optimise the generated code ------ */
+
+// Marker: optimisation
+
+/**
+ * Emit addition instruction which stores the value at the given result symbol.
+ * Does optimisations for efficiency:
+ * 	- Evaluates sums of constants directly (2 + 3 -> 5)
+ *  - Doesn't emit useless additions (0 + x -> x)
+ */
+SYMBOL_INFO* emitAdditionIfNeededAtResult(SYMBOL_TABLE* scope, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* result) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 + 3   -> x = 5
+		return createConstantSymbol(int_t, getConstantRawValue(left) + getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 + y   -> y
+		return right;
+	} else if (isConstantSymbolWithValue(right, 0)) {         // x = y + 0   -> y
+		return left;
+	} else {                                                  // x = y + z
+		emitBinary3AC(scope, A2PLUS, left, right, result);
+		return result;
+	}	
+}
+
+/**
+ * Emit addition instruction. Creates a new anonymous variable for storing the result if needed.
+ * Does optimisations for efficiency:
+ * 	- Evaluates sums of constants directly (2 + 3 -> 5)
+ *  - Doesn't emit useless additions (0 + x -> x)
+ */
+SYMBOL_INFO* emitAdditionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 + 3   -> x = 5
+		return createConstantSymbol(type->type, getConstantRawValue(left) + getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 + y   -> y
+		return right;
+	} else if (isConstantSymbolWithValue(right, 0)) {         // x = y + 0   -> y
+		return left;
+	} else {                                                  // x = y + z
+		SYMBOL_INFO* result = newAnonVar(scope, type->type); 
+		emitBinary3AC(scope, A2PLUS, left, right, result);
+		return result;
+	}	
+}
+
+
+/**
+ * Emit subtractions instruction. Creates a new anonymous variable for storing the result if needed.
+ * Does optimisations for efficiency:
+ * 	- Evaluates subtractions of constants directly (5 - 2 -> 3)
+ *  - Doesn't emit useless additions (y - 0 -> y)
+ */
+SYMBOL_INFO* emitSubtractionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 - 3   -> x = -1
+		return createConstantSymbol(type->type, getConstantRawValue(left) - getConstantRawValue(right));
+	} /*else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 - y   -> x = -y
+		TODO
+		return UMINUS right;
+	} */
+	else if (isConstantSymbolWithValue(right, 0)) {         // x = y - 0   -> y
+		return left;
+	} else {                                                  // x = y - z
+		SYMBOL_INFO* result = newAnonVar(scope, type->type); 
+		emitBinary3AC(scope, A2MINUS, left, right, result);
+		return result;
+	}	
+}
+
+
+/**
+ * Emit multiplication instruction which stores the value at the given result symbol.
+ * Does optimisations for efficiency:
+ * 	- Evaluates multiplication of constants directly (5 * 2 -> 10)
+ *  - Doesn't emit useless additions (y * 1 -> y)
+ */
+SYMBOL_INFO* emitMultiplicationIfNeededAtResult(SYMBOL_TABLE* scope, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* result) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 * 3   -> x = 6
+		return createConstantSymbol(int_t, getConstantRawValue(left) * getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(left, 1)) {          // x = 1 * y   -> y
+		return right;
+	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y * 1   -> y
+		return left;
+	} else {                                                  // x = y * z
+		emitBinary3AC(scope, A2TIMES, left, right, result);
+		return result;
+	}
+}
+
+/**
+ * Emit multiplication instruction. Creates a new anonymous variable for storing the result if needed.
+ * Does optimisations for efficiency:
+ * 	- Evaluates multiplication of constants directly (5 * 2 -> 10)
+ *  - Doesn't emit useless additions (y * 1 -> y)
+ */
+SYMBOL_INFO* emitMultiplicationIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 * 3   -> x = 6
+		fprintf(stderr, "%d x %d = %d",  getConstantRawValue(left), getConstantRawValue(right),  getConstantRawValue(left) * getConstantRawValue(right));
+		return createConstantSymbol(type->type, getConstantRawValue(left) * getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(left, 1)) {          // x = 1 * y   -> y
+		return right;
+	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y * 1   -> y
+		return left;
+	} else {                                                  // x = y * z
+		SYMBOL_INFO* result = newAnonVar(scope, type->type);
+		emitBinary3AC(scope, A2TIMES, left, right, result);
+		return result;
+	}
+}
+
+/**
+ * Emit division instruction. Creates a new anonymous variable for storing the result if needed.
+ * Does optimisations for efficiency:
+ * 	- Evaluates division of constants directly (7 / 2 -> 3)
+ *  - Doesn't emit useless additions (y / 1 -> y)
+ * Warning: if a zero division is done, it's detected and an error is thrown!
+ */
+SYMBOL_INFO* emitDivisionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
+	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 / 3   -> x = 6
+		if (getConstantRawValue(right) == 0) {
+			fprintf(stderr, "ERROR: doing division by 0!\n");
+			exit(1);
+		}
+		return createConstantSymbol(type->type, getConstantRawValue(left) / getConstantRawValue(right));
+	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y / 1   -> y
+		return left;
+	} else {                                                  // x = y / z
+		SYMBOL_INFO* result = newAnonVar(scope, type->type);  
+		emitBinary3AC(scope, A2DIVIDE, left, right, result);
+		return result;
+	}	
+}
+
+
+
+
+
+
+
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                                Backpatching                                */
+/* -------------------------------------------------------------------------- */
+
 
 void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) {
 	if (locations->size == 0) {
@@ -105,135 +305,21 @@ void backpatch(SYMBOL_TABLE* scope, LOCATIONS_SET* locations, int realLocation) 
 	if DEBUG printAllInstructions(scope);
 }
 
-// returns number of next (free) location in code sequence
-int next3AC(SYMBOL_TABLE* symbolTable) {
-	int res = symbolTable->function->details.function.numInstructions;
-	return res;
-}
-
-void emitAssignement3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* lhs, SYMBOL_INFO* value) {
-	emit(scope, gen3AC(A0, value, 0, lhs));
-}
-
-void emitUnary3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* result) {
-	emit(scope, gen3AC(opcode, arg1, 0, result));
-}
-
-void emitBinary3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result) {
-	emit(scope, gen3AC(opcode, arg1, arg2, result));
-}
-
-void emitComparison3AC(SYMBOL_TABLE* scope, OPCODE opcode, SYMBOL_INFO* arg1, SYMBOL_INFO* arg2, SYMBOL_INFO* result) {
-	emit(scope, gen3AC(opcode, arg1, arg2, result));
-}
-
-void emitEmptyGoto(SYMBOL_TABLE* scope) {
-	emit(scope, gen3AC(GOTO, 0, 0, 0));
-}
-
-void emitGoto(SYMBOL_TABLE* scope, int arg) {
-	// Only exception where I don't use setJumpDestination (this is shorter)
-	emit(scope, gen3AC(GOTO, 0, 0, (SYMBOL_INFO*) (intptr_t) arg));
-}
-
-void emitReturn3AC(SYMBOL_TABLE* scope, SYMBOL_INFO* arg) {
-	emit(scope, gen3AC(RETURNOP, arg, 0, 0));
-}
-
-SYMBOL_INFO* emitAdditionIfNeededAtResult(SYMBOL_TABLE* scope, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* result) {
-	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 + 3   -> x = 5
-		return createConstantSymbol(int_t, getConstantRawValue(left) + getConstantRawValue(right));
-	} else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 + y   -> y
-		return right;
-	} else if (isConstantSymbolWithValue(right, 0)) {         // x = y + 0   -> y
-		return left;
-	} else {                                                  // x = y + z
-		emitBinary3AC(scope, A2PLUS, left, right, result);
-		return result;
-	}	
-}
-
-SYMBOL_INFO* emitAdditionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
-	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 + 3   -> x = 5
-		return createConstantSymbol(type->type, getConstantRawValue(left) + getConstantRawValue(right));
-	} else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 + y   -> y
-		return right;
-	} else if (isConstantSymbolWithValue(right, 0)) {         // x = y + 0   -> y
-		return left;
-	} else {                                                  // x = y + z
-		SYMBOL_INFO* result = newAnonVar(scope, type->type); 
-		emitBinary3AC(scope, A2PLUS, left, right, result);
-		return result;
-	}	
-}
-
-
-SYMBOL_INFO* emitSubtractionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
-	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 - 3   -> x = -1
-		return createConstantSymbol(type->type, getConstantRawValue(left) - getConstantRawValue(right));
-	} /*else if (isConstantSymbolWithValue(left, 0)) {          // x = 0 - y   -> x = -y
-		TODO
-		return UMINUS right;
-	} */
-	else if (isConstantSymbolWithValue(right, 0)) {         // x = y - 0   -> y
-		return left;
-	} else {                                                  // x = y - z
-		SYMBOL_INFO* result = newAnonVar(scope, type->type); 
-		emitBinary3AC(scope, A2MINUS, left, right, result);
-		return result;
-	}	
-}
-
-SYMBOL_INFO* emitMultiplicationIfNeededAtResult(SYMBOL_TABLE* scope, SYMBOL_INFO* left, SYMBOL_INFO* right, SYMBOL_INFO* result) {
-	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 * 3   -> x = 6
-		return createConstantSymbol(int_t, getConstantRawValue(left) * getConstantRawValue(right));
-	} else if (isConstantSymbolWithValue(left, 1)) {          // x = 1 * y   -> y
-		return right;
-	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y * 1   -> y
-		return left;
-	} else {                                                  // x = y * z
-		emitBinary3AC(scope, A2TIMES, left, right, result);
-		return result;
-	}
-}
-
-
-SYMBOL_INFO* emitMultiplicationIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
-	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 * 3   -> x = 6
-		fprintf(stderr, "%d x %d = %d",  getConstantRawValue(left), getConstantRawValue(right),  getConstantRawValue(left) * getConstantRawValue(right));
-		return createConstantSymbol(type->type, getConstantRawValue(left) * getConstantRawValue(right));
-	} else if (isConstantSymbolWithValue(left, 1)) {          // x = 1 * y   -> y
-		return right;
-	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y * 1   -> y
-		return left;
-	} else {                                                  // x = y * z
-		SYMBOL_INFO* result = newAnonVar(scope, type->type);
-		emitBinary3AC(scope, A2TIMES, left, right, result);
-		return result;
-	}
-}
-
-SYMBOL_INFO* emitDivisionIfNeeded(SYMBOL_TABLE* scope, TYPE_INFO* type, SYMBOL_INFO* left, SYMBOL_INFO* right) {
-	if (isConstantSymbol(left) && isConstantSymbol(right)) {  // x = 2 / 3   -> x = 6
-		if (getConstantRawValue(right) == 0) {
-			fprintf(stderr, "ERROR: doing division by 0!\n");
-			exit(1);
-		}
-		return createConstantSymbol(type->type, getConstantRawValue(left) / getConstantRawValue(right));
-	} else if (isConstantSymbolWithValue(right, 1)) {         // x = y / 1   -> y
-		return left;
-	} else {                                                  // x = y / z
-		SYMBOL_INFO* result = newAnonVar(scope, type->type);  
-		emitBinary3AC(scope, A2DIVIDE, left, right, result);
-		return result;
-	}	
-}
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+/* ----- Printing ---- */
 
 void print3AC(FILE* output, INSTRUCTION instruction) {
 	switch (instruction.opcode)
@@ -273,6 +359,10 @@ void printAllInstructions(SYMBOL_TABLE* scope) {
 		print3AC(stderr, instructions[i]);
 	}
 }
+
+
+
+/* ----- Helpers for dealing with jump and conditional jump instructions ---- */
 
 int isConditionalJumpOpcode(OPCODE opcode) {
 	return opcode == IFEQ || opcode == IFNEQ || 

@@ -19,6 +19,7 @@ void growEdgeListIfNeeded(GRAPH* graph) {
     }
 }
 
+
 GRAPH* initGraph() {
     GRAPH* graph = (GRAPH*) malloc(sizeof(GRAPH));
     graph->capacity = 0;

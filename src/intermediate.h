@@ -4,6 +4,7 @@
 #include "symbol.h"
 #include "location.h"
 
+/** Enum of all possible opcodes (some such as 'float to integer' are not currently supported) */
 typedef enum {
 	A2PLUS,  // a + b
 	A2MINUS, // a - b
@@ -40,13 +41,17 @@ typedef enum {
 	WRITEOP,  // Write A     - writes the value of A
 	READOP,   // Read to A   - read a value to A
 	LENGTHOP, // Length of A - get the length of A
-
-	
 	
 } OPCODE;
 
 extern char* opcodeNames[];
 
+/**
+ * An instruction is composed of:
+ * 	- An opcode (required)
+ *  - 2 argument symbols (may be null for some instructions)
+ *  - 1 target / result symbol (may be null for some instructions)
+ */
 typedef struct instruction {
 	OPCODE opcode;
 	SYMBOL_INFO* args[2];

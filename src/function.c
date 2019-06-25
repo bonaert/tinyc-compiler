@@ -2,23 +2,10 @@
 #include "intermediate.h"
 #include <stdlib.h>
 
-int getLocalVariablesSize(SYMBOL_INFO* function) {
-    SYMBOL_TABLE* scope = function->details.function.scope;
-    SYMBOL_LIST* symbols = scope->symbolList;
-    int size = 0;
-    for(int i = 0; i < symbols->size; i++) {
-        // All symbols in the function scope takes space, except functions
-        //
-        // TODO: this is not really true, some of symbols may be stored in registers
-        // TODO: handle that
 
-        if (symbols->symbols[i]->type->type != function_t) { 
-            size = size + getSymbolSize(symbols->symbols[i]);
-        }
-    }
-    return size;
-};
-
+/** Returns the index of the symbol in the parameters (0 indexed)
+ * If the symbol isn't part of the parameters, return -1
+ */
 int getParameterIndex(SYMBOL_INFO* symbol, SYMBOL_INFO* function) {
     // The first symbols in the symbol table are the parameters!
     // They're pushed in reverse order, so the indexes are reversed
@@ -36,6 +23,9 @@ int isParameter(SYMBOL_INFO* symbol, SYMBOL_INFO* function) {
     return getParameterIndex(symbol, function) != -1;
 }
 
+/** This function checks that the function ends in a return statement.
+ * If it's not the case, a warning is emitted to the user.
+ */
 void ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope) {
     int numInstructions = function->details.function.numInstructions;
     INSTRUCTION lastInstruction = function->details.function.instructions[numInstructions - 1];
@@ -56,7 +46,10 @@ void ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope) {
 
 
 
-
+/**
+ * Deletes the nth intermediate-code instruction of the function.
+ * It also adjust all jump destinations to make sure they're still corect.
+ */
 void deleteInstruction(SYMBOL_INFO* function, int n) {
     INSTRUCTION* instructions = function->details.function.instructions;
     int numInstructions = function->details.function.numInstructions; 

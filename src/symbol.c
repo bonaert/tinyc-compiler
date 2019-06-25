@@ -8,13 +8,8 @@
 
 
 
-TYPE_LIST* makeTypeList(SYMBOL_LIST* symbolList) {
-    TYPE_LIST* typeList = initTypeList();
-    for(int i = 0; i < symbolList->size; i++){
-        insertTypeInList(symbolList->symbols[i]->type, typeList);
-    }
-    return typeList;
-}
+
+/* ------------------------ Variable and base symbols ----------------------- */
 
 SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo, SYMBOL_KIND symbolKind) {
     SYMBOL_INFO* symbolInfo = malloc(sizeof(SYMBOL_INFO));
@@ -23,6 +18,16 @@ SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo, SYMBOL_KIND symbo
     symbolInfo->symbolKind = symbolKind;
     return symbolInfo;
 }
+
+
+SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo) {
+    SYMBOL_INFO* symbolInfo = createBaseSymbol(name, typeInfo, variable_s);
+    // TODO: add location
+    symbolInfo->details.var.location = 0;
+    return symbolInfo;
+}
+
+/* ---------------------------- Constant symbols ---------------------------- */
 
 SYMBOL_INFO* createConstantSymbol(TBASIC type, int value) {
     SYMBOL_INFO* symbolInfo = createBaseSymbol(newConstantSymbolName(), createSimpleType(type), constant_s);
@@ -45,11 +50,22 @@ int isConstantSymbolWithValue(SYMBOL_INFO* symbol, int value) {
     return symbol->symbolKind == constant_s && getConstantRawValue(symbol) == value;
 }
 
-SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo) {
-    SYMBOL_INFO* symbolInfo = createBaseSymbol(name, typeInfo, variable_s);
-    // TODO: add location
-    symbolInfo->details.var.location = 0;
-    return symbolInfo;
+
+
+/* ------------------------- Create function symbol ------------------------- */
+
+TYPE_LIST* makeTypeList(SYMBOL_LIST* symbolList) {
+    TYPE_LIST* typeList = initTypeList();
+    for(int i = 0; i < symbolList->size; i++){
+        insertTypeInList(symbolList->symbols[i]->type, typeList);
+    }
+    return typeList;
+}
+
+void initInstructions(SYMBOL_INFO* function) {
+    function->details.function.numInstructions = 0;
+    function->details.function.capacity = 10;
+    function->details.function.instructions = malloc(sizeof(INSTRUCTION) * 10);
 }
 
 void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO* returnType, SYMBOL_LIST* arguments) {
@@ -61,14 +77,20 @@ void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO*
     initInstructions(symbolInfo);
 }
 
-void initInstructions(SYMBOL_INFO* function) {
-    function->details.function.numInstructions = 0;
-    function->details.function.capacity = 10;
-    function->details.function.instructions = malloc(sizeof(INSTRUCTION) * 10);
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                                 Symbol list                                */
+/* -------------------------------------------------------------------------- */
+
+SYMBOL_LIST* initSymbolList() {
+    SYMBOL_LIST* symbols = (SYMBOL_LIST*) malloc(sizeof(SYMBOL_LIST));
+    symbols->capacity = 0;
+    symbols->size = 0;
+    symbols->symbols = 0;
+    return symbols;
 }
-
-
-
 
 static int SYMBOL_INCREMENT_SIZE = 20;
 void growSymbolListIfNeeded(SYMBOL_LIST* symbols) {
@@ -88,19 +110,8 @@ void growSymbolListIfNeeded(SYMBOL_LIST* symbols) {
 }
 
 
-
-
-SYMBOL_LIST* initSymbolList() {
-    SYMBOL_LIST* symbols = (SYMBOL_LIST*) malloc(sizeof(SYMBOL_LIST));
-    symbols->capacity = 0;
-    symbols->size = 0;
-    symbols->symbols = 0;
-    return symbols;
-}
-
 /**
- * Inserts the symbol into the symbol list.
- * Returns a pointer to the new SYMBOL_LIST.
+ * Inserts the symbol into the symbol list. Returns a pointer to the new SYMBOL_LIST.
  */ 
 SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symbolInfo) {
     growSymbolListIfNeeded(symbolList);
@@ -109,7 +120,6 @@ SYMBOL_LIST* insertSymbolInSymbolList(SYMBOL_LIST* symbolList, SYMBOL_INFO* symb
     return symbolList;
 }
 
-
 SYMBOL_LIST* makeSymbolListCopy(SYMBOL_LIST* symbolList) {
     SYMBOL_LIST* result = initSymbolList();
     for (int i = 0; i < symbolList->size; i++) {
@@ -117,6 +127,12 @@ SYMBOL_LIST* makeSymbolListCopy(SYMBOL_LIST* symbolList) {
     }
     return result;
 }
+
+
+/* -------------------------------------------------------------------------- */
+/*                                Symbol table                                */
+/* -------------------------------------------------------------------------- */
+
 
 /**
  * Inserts a function symbl with the given name and type in the symbol table.
@@ -149,48 +165,6 @@ SYMBOL_INFO* insertCompleteSymbolInSymbolTable(SYMBOL_TABLE* symbolTable, SYMBOL
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * Returns 1 if the symbols are equal (same name and same type), otherwise returns 0
- */
-int areSymbolsEqual(SYMBOL_INFO* s1, SYMBOL_INFO* s2) {
-    return (s1->name == s2->name) && (s1->type == s2->type);
-}
-
-/**
- * Returns 1 if the symbols lists are equal, otherwise returns 0.
- */
-int areSymbolListEqual(SYMBOL_LIST* s1, SYMBOL_LIST* s2) {
-    if (s1 == s2) {
-        return 1; // if both pointers point to the same symbol list, the symbol lists are equal
-    }
-
-    if (s1->size != s2->size) {
-        return 0;
-    }
-
-    for(int i = 0; i < s1->size; i++){
-         if (!(areSymbolsEqual(s1->symbols[i], s2->symbols[i]))) {
-            return 0;
-        }
-    }
-
-    return 1;
-}
 
 
 
@@ -254,12 +228,42 @@ void replaceSymbol(SYMBOL_TABLE* scope, SYMBOL_INFO* oldSymbol, SYMBOL_INFO* new
 
 
 
-
-
+/* ---------------------------- Symbol comparison --------------------------- */
 
 /**
- * Print a symbol type information and name
+ * Returns 1 if the symbols are equal (same name and same type), otherwise returns 0
  */
+int areSymbolsEqual(SYMBOL_INFO* s1, SYMBOL_INFO* s2) {
+    return (s1->name == s2->name) && (s1->type == s2->type);
+}
+
+/**
+ * Returns 1 if the symbols lists are equal, otherwise returns 0.
+ */
+int areSymbolListEqual(SYMBOL_LIST* s1, SYMBOL_LIST* s2) {
+    if (s1 == s2) {
+        return 1; // if both pointers point to the same symbol list, the symbol lists are equal
+    }
+
+    if (s1->size != s2->size) {
+        return 0;
+    }
+
+    for(int i = 0; i < s1->size; i++){
+         if (!(areSymbolsEqual(s1->symbols[i], s2->symbols[i]))) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+
+
+
+/* -------------------------------- Printing -------------------------------- */
+
+/*  Print a symbol type information and name */
 void printSymbol(FILE* output, SYMBOL_INFO* symbolInfo) {
     if (symbolInfo == 0){
         fprintf(stdout, "symbol info pointer is 0");
@@ -281,12 +285,10 @@ void printSymbol(FILE* output, SYMBOL_INFO* symbolInfo) {
                     fprintf(output, " (= 'newline')");
                 } else {       // Normal character
                     fprintf(output, " (= '%c')", c);
-                }
-               
+                }            
             }
         }
     }
-    
 }
 
 /**
@@ -328,8 +330,7 @@ void printSymbolTableAndParents(FILE* output, SYMBOL_TABLE* symbolTable){
 
 
 
-
-
+/* --------------------------- Anonymous variables -------------------------- */
 
 static int anonSymbolNumber = 0;
 char* newSymbolName() {
@@ -363,6 +364,12 @@ SYMBOL_INFO* newAnonVarWithType(SYMBOL_TABLE* scope, TYPE_INFO* typeInfo) {
 }
 
 
+
+
+
+
+/* ---------------------- Getters of useful information --------------------- */
+
 int getSymbolSize(SYMBOL_INFO* symbol) {
     return getTypeSize(symbol->type);
 }
@@ -389,6 +396,15 @@ char* getHumanConstantValue(SYMBOL_INFO* constant, char* res) {
     return res;
 }
 
+int areConstantsEqual(SYMBOL_INFO* constant1, SYMBOL_INFO* constant2) {
+    return getConstantRawValue(constant1) == getConstantRawValue(constant2);
+}
+
+
+
+
+
+
 char* getNameOrValue(SYMBOL_INFO* symbol, char* res) {
     if (isConstantSymbol(symbol)) {
         getConstantValue(symbol, res);
@@ -398,9 +414,6 @@ char* getNameOrValue(SYMBOL_INFO* symbol, char* res) {
     }
 }
 
-int areConstantsEqual(SYMBOL_INFO* constant1, SYMBOL_INFO* constant2) {
-    return getConstantRawValue(constant1) == getConstantRawValue(constant2);
-}
 
 
 

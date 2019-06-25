@@ -240,6 +240,7 @@ funDeclaration: type NAME {
 			printType(stderr, scope->function->type);
 			fprintf(stderr, "\n");
 
+			// Marker: optimisation
 			if (shouldOptimise) {
 				fprintf(stderr, "\n########################################################\n");
 				fprintf(stderr, "Before intra-basic-block optimization\n");

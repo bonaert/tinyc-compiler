@@ -1,12 +1,16 @@
 #ifndef LOCATIONSGUARD
 #define LOCATIONSGUARD
 
+/** Data structure representing a set of location in the intermediate code */
 typedef struct locationsSet {
     int* locations;
     int size;
     int capacity;
 } LOCATIONS_SET;
 
+/** Data structure representing the location set associated to the true branch
+ * and the false branch of this choice point.
+ */
 typedef struct choice {
 	LOCATIONS_SET* toFalse;
 	LOCATIONS_SET* toTrue;

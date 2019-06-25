@@ -4,8 +4,9 @@
 #include "function.h"
 
 
-
-
+/** Does a round of peephole optimisation on the function's code. 
+ * Returns true if the round introduced a changed, otherwise returns false.
+ */
 int doPeepHoleOptimizationRound(SYMBOL_INFO* function) {
     int didChanges = 0;
 
@@ -49,7 +50,7 @@ int doPeepHoleOptimizationRound(SYMBOL_INFO* function) {
             }
         }
 
-        // TODO: check if the -2 part is actually the right value
+        
         if (i < numInstructions - 2 && 
             isConditionalJump(instructions[i]) && 
             isDirectJump(instructions[i + 1]) && 
@@ -65,20 +66,9 @@ int doPeepHoleOptimizationRound(SYMBOL_INFO* function) {
                 // z: (seq1)
                 // y: (seq2)
                 
-                /*
-                fprintf(stderr, "\n\nBEFORE: changing instruction %d and %d\n\n", i, i + 1);
-                printAllInstructions(function->details.function.scope);
-                */
-
                 instructions[i].result = instructions[i + 1].result;
                 instructions[i].opcode = getOppositeJumpOpcode(instructions[i].opcode);
                 deleteInstruction(function, i + 1);
-
-                /*
-                fprintf(stderr, "\n\nAFTER: changing instruction %d and %d\n\n", i, i + 1);
-                printAllInstructions(function->details.function.scope);
-                fprintf(stderr, "\n\n");
-                */
 
                 didChanges = 1;
         }
@@ -104,6 +94,11 @@ void optimiseFunction(SYMBOL_INFO* function) {
 }
 
 
+// Marker: optimisation
+/**
+ * Optimises the code of each function. Currently, only peephole optimisation is done here.
+ * Basic block optimisation is not done here, it's done immediately after parsing the function.
+ */
 void optimiseCode(SYMBOL_TABLE* scope) {
 
     fprintf(stderr, "\n\n");
