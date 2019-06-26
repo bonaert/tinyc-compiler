@@ -1,0 +1,10 @@
+int
+f(int x, int y, int x[2]) {
+ return 2;
+}
+
+int
+main() {
+  int a[2];
+  f(2, 3, a);
+}

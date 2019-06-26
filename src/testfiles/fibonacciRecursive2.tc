@@ -1,0 +1,21 @@
+int fibonacci(int n) {
+    if (n < 2) {
+        return 1;
+    } else {
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+}
+
+int main() {
+    int i = 0;
+    while (i < 10) {
+        write i;
+        write ' ';
+        write '-';
+        write ' ';
+        write fibonacci(i);
+        write '*';
+        i = i + 1;
+    }
+    return 1;
+}

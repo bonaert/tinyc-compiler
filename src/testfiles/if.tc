@@ -42,4 +42,59 @@ int main() {
     } else {
         write 'E';
     }
+
+    write '*';
+
+
+    // Testing AND
+    if ((10 > 0) && (10 > 0)) {
+        write 'O';
+    } else {
+        write 'E';
+    }
+
+    if ((10 > 0) && (10 < 0)) {
+        write 'E';
+    } else {
+        write 'O';
+    }
+
+    if ((10 < 0) && (10 > 0)) {
+        write 'E';
+    } else {
+        write 'O';
+    }
+
+    if ((10 < 0) && (10 < 0)) {
+        write 'E';
+    } else {
+        write 'O';
+    }
+
+    write '*';
+
+    // Testing OR
+    if ((10 > 0) || (10 > 0)) {
+        write 'O';
+    } else {
+        write 'E';
+    }
+
+    if ((10 > 0) || (10 < 0)) {
+        write 'O';
+    } else {
+        write 'E';
+    }
+
+    if ((10 < 0) || (10 > 0)) {
+        write 'O';
+    } else {
+        write 'E';
+    }
+
+    if ((10 < 0) || (10 < 0)) {
+        write 'E';
+    } else {
+        write 'O';
+    }
 }

@@ -1,0 +1,11 @@
+int
+f(int x, int y, int z[2]) {
+ int z[2];
+ return 2;
+}
+
+int
+main() {
+  int a[2];
+  f(2, 3, a);
+}

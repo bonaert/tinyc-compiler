@@ -59,6 +59,13 @@
 - [x] Iterative fibonnaci
 - [x] Recursive fibonnaci
 
+### Todo
+
+- [ ] Add ability to fetch subarray of matrix (e.g. char[5][5] c; char[5] d = c = [1]);
+- [ ] Add strings
+- [ ] Add writing char arrays
+
+
 ### Bugs
 
 None known

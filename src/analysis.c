@@ -363,6 +363,8 @@ void printTopSymbols()  {
 /* node finding function: returns node with given opcode and node arguments */
 NODE* match(OPCODE opcode, NODE* node1, NODE* node2) {
     for (int i = 0; i < nodeListSize; i++) {
+        if (NODE_LIST[i].generation != CURRENT_GENERATION) continue;
+
         // Marker: optimisation
         if (opcode == A2PLUS || opcode == A2TIMES) { // Commutative operations
             if ((NODE_LIST[i].opcode == opcode) && (
@@ -847,7 +849,7 @@ int findCorrespondingLocation(int location, BASIC_BLOCK_LIST* basicBlocks, BASIC
             return newBasicBlocks[i].start;
         }
     }
-    fprintf(stderr, "findCorrespondingLocation: should never reach here!");
+    fprintf(stderr, "findCorrespondingLocation: should never reach here! Couldn't find location for %d", location);
     exit(1);
 }
 

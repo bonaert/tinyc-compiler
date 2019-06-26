@@ -2,15 +2,27 @@
 
 compare() {
     #echo "Running unoptimised version of $1"
-    outputOfNonOptimised=$(./runUnoptimised.sh "$1" | sed -n -e '/Running the executable file/,$p')
+    outputOfNonOptimised=$(./runUnoptimised.sh "$1")
     #echo "$outputOfNonOptimised"
 
     #echo "Running optimised version of $1"
-    outputOfOptimised=$(./run.sh "$1" | sed -n -e '/Running the executable file/, $p')
+    outputOfOptimised=$(./run.sh "$1")
     #echo "$outputOfOptimised"
     
-    
+    # Check they both succeded in their execution
+    if echo "$outputOfNonOptimised" | grep -q 'error'; then
+        echo "Non optimized compilation of $1 lead to error!"
+        exit
+    fi
 
+     if echo "$outputOfOptimised" | grep -i -q 'error'; then
+        echo "Optimized compilation of $1 lead to error!"
+        exit
+    fi
+
+
+    outputOfNonOptimised=$(echo "$outputOfNonOptimised" | sed -n -e '/Running the executable file/, $p')
+    outputOfOptimised=$(echo "$outputOfOptimised" | sed -n -e '/Running the executable file/, $p')
 
     optimisedOutputHashed=$(echo -e "$outputOfOptimised" | md5sum)
     nonOptimisedOutputHashed=$(echo -e "$outputOfNonOptimised" | md5sum)
@@ -30,6 +42,7 @@ compare() {
 }
 
 
+#compare "error-undefined-var"
 
 compare "array"
 compare "arrayMultidimensional"

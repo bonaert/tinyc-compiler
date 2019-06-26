@@ -9,6 +9,6 @@ int factorial(int n) {
 }
 
 int main() {
-    int b = factorial(10);
+    int b = factorial(2 * 5);
     write b;
 }

@@ -1,0 +1,11 @@
+int
+f(int a, int b[6]) {
+ return a + b[0];
+}
+
+int
+main() {
+  int x[2][3];
+  f(1, x);
+  f(2, 3);
+}

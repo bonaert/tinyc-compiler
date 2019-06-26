@@ -1,13 +1,13 @@
-
+#!/bin/bash
 filename=${1:?missing filename}
 
 # Compile the TinyC compiler
-echo "Running make\n---------------------"
+echo -e "Running make\n--------------------- "
 make
 
 # Run the TinyC on the example file and save the assembly
-echo "\n\nCompiling example TinyC file (stderr shown)\n---------------------"
-./tinyc < "testfiles/$filename.tc"  1>"testfiles/$filename.s" 2>"testfiles/$filename.log" || { echo "Errors in compilation of $filename"; exit 1; }
+echo -e "\n\nCompiling example TinyC file (stderr shown) with argument ${@:2}\n---------------------"
+./tinyc ${@:2} < "testfiles/$filename.tc"  1>"testfiles/$filename.s" 2>"testfiles/$filename.log" || { echo "Errors in compilation of $filename"; exit 1; }
 cat "./testfiles/$filename.log"
 
 #echo -e "\n\nCompiling example TinyC file (stderr hidden)\n---------------------"
@@ -17,11 +17,11 @@ cat "./testfiles/$filename.log"
 cd testfiles
 
 
-echo "\n\nLinking the assembly and generating an executable\n---------------------"
+echo -e "\n\nLinking the assembly and generating an executable\n---------------------"
 # Link the assembly and create an executable
 bash link.sh "$filename" || { echo "Errors assembling or linking $filename.s"; exit 1; }
 
-echo "\n\nRunning the executable file\n---------------------"
+echo -e "\n\nRunning the executable file\n---------------------"
 # Run the executable
 "./$filename"
 

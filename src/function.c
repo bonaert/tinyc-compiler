@@ -29,6 +29,18 @@ int isParameter(SYMBOL_INFO* symbol, SYMBOL_INFO* function) {
 void ensureFunctionHasReturn(SYMBOL_INFO* function, SYMBOL_TABLE* scope) {
     int numInstructions = function->details.function.numInstructions;
     INSTRUCTION lastInstruction = function->details.function.instructions[numInstructions - 1];
+
+    for (int i = 0; i < numInstructions; i++) {
+        INSTRUCTION instruction = function->details.function.instructions[i];
+        if (isAnyJump(instruction) && getJumpDestination(instruction) >= numInstructions) {
+            emitReturn3AC(scope, 0);
+            fprintf(stderr, "\nINFO: adding extra return statement at the end to be sure sure jumps work correctly!\n");
+            return;
+        }
+    }
+    
+
+
     if (lastInstruction.opcode != RETURNOP) {
         emitReturn3AC(scope, 0);
 

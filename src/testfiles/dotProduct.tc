@@ -1,0 +1,19 @@
+int dotproduct(int[4] a, int[4] b) {
+  int i = 0;
+  int product = 0;
+  while (i<4) {
+    product = product + a[i] * b[i];
+    i = i + 1;
+  }
+  return product;
+}
+
+int main() {
+  int[4] a;
+  a[0] = 1; a[1] = 2; a[2] = 3; a[3] = 4;
+  int[4] b;
+  b[0] = 1; b[1] = 2; b[2] = 3; b[3] = 4;
+  write dotproduct(a,b);
+  write '*';
+  return 5;
+}
