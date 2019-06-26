@@ -7,5 +7,6 @@ int main() {
 	int b = 7;
 	char * name = "greg";
 	int d = sum(a, b);
+	puts(name);
 }
 

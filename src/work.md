@@ -54,11 +54,12 @@
 ### Nice things
 
 - [x] Add writing char arrays
+- [x] Add ability to write strings
 
 ### Todo
 
-- [ ] Add ability to fetch subarray of matrix (e.g. char[5][5] c; char[5] d = c = [1]);
-- [ ] Add strings
+- [ ] Add ability to fetch subarray of matrix (e.g. char[5][5] c; c[1]);
+- [ ] Add ability to do assignment between arrays (e.g. char[5][5] c; char[5] d = c[1]);
 
 ### Example programs
 

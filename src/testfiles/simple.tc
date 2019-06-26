@@ -5,6 +5,7 @@ int foo(int a, int b) {
 
 int main() {
     int i = 5;
+    write i;
 	return 5;
 }
 

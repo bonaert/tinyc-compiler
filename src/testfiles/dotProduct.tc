@@ -13,7 +13,10 @@ int main() {
   a[0] = 1; a[1] = 2; a[2] = 3; a[3] = 4;
   int[4] b;
   b[0] = 1; b[1] = 2; b[2] = 3; b[3] = 4;
+
+  write "The dotproduct of (1,2,3,4) with (1,2,3,4) should be 1+4+9+16=30 and is ";
+
   write dotproduct(a,b);
   write '\n';
-  return 5;
+  return 1;
 }

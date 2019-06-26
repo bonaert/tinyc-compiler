@@ -286,3 +286,4 @@ main_74:
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
+.section .data

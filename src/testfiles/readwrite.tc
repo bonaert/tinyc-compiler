@@ -2,9 +2,14 @@ int main() {
     int a = 0;
     char c = '0';
 
+    write "Please write a char: ";
     read c;
+    write "Read: ";
     write c;
+    write "\n";
 
+    write "Please write an integer: ";
     read a;
+    write "Read: ";
     write a;
 }

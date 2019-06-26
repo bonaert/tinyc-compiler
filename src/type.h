@@ -72,7 +72,9 @@ TYPE_INFO* getBaseType(TYPE_INFO* typeInfo);
 
 int getTypeSize(TYPE_INFO* type);
 
-
 int isCharOrInt(TYPE_INFO* type);
+
+
+TYPE_INFO* makeArrayTypeWithFewerDimensions(int dimensionsToLose, TYPE_INFO* arrayType);
 
 #endif

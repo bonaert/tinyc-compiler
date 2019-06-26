@@ -9,6 +9,17 @@ int factorial(int n) {
 }
 
 int main() {
-    int b = factorial(2 * 5);
-    write b;
+    int i = 0;
+    while (i < 10) {
+        
+        write "factorial(";
+        write i;
+        write ") = ";
+        write factorial(i);
+        write "\n";
+        
+        i = i + 1;
+    }
+
+    return 1;
 }

@@ -246,31 +246,34 @@ bubblesort_21:
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	sub $104, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
-#### main 0:  ASSIGN int const__21 (= 0)  int i 
+	sub $218, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
+#### main 0:  WRITE char[69] const__21 (= ' ')   
+	movq $const__21, %rdi
+	call printCharArray
+#### main 1:  ASSIGN int const__22 (= 0)  int i 
 	movl $0, -4(%rbp)     # i = 0
-main_1:
-#### main 1:  IF_GREATER_OR_EQUAL int i int const__22 (= 5) 9
+main_2:
+#### main 2:  IF_GREATER_OR_EQUAL int i int const__23 (= 5) 10
 	movl -4(%rbp), %r10d
 	movl $5, %r11d
 	cmpl %r11d, %r10d
-	jge main_9
-#### main 2:  READ int j   
+	jge main_10
+#### main 3:  READ int j   
 	call readInt
 	movl %eax, -8(%rbp)
-#### main 3:  GET_ADDRESS int[5] numbers  address anon__21 
+#### main 4:  GET_ADDRESS int[5] numbers  address anon__21 
 	movq %rbp, -36(%rbp)     # Setting up array address
 	addq $-36, -36(%rbp)      # Setting up array address
 	movq -36(%rbp), %r10
 	movq %r10, -44(%rbp)
-#### main 4:  TIMES int i int const__23 (= 4) int anon__20 
+#### main 5:  TIMES int i int const__24 (= 4) int anon__20 
 	# Multiplication - Start: anon__20 = i x $4
 	movl -4(%rbp), %eax
 	movl $4, %r10d
 	imull %r10d
 	movl %eax, -48(%rbp)
 	# Multiplication - End: anon__20 = i x $4
-#### main 5:  ARRAY MODIFICATION address anon__21 int anon__20 int j 
+#### main 6:  ARRAY MODIFICATION address anon__21 int anon__20 int j 
 ## Array modification START - anon__21[anon__20] = j
 	movq -44(%rbp), %r10
 	mov $0, %r11      # We clear all the bits to 0 (the upper 32 bits need to be 0)
@@ -280,51 +283,52 @@ main_1:
 	movl %r12d, 8(%r10, %r11, 1)        # array modification 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 ## Array modification END - anon__21[anon__20] = j
-#### main 6:  PLUS int i int const__24 (= 1) int anon__22 
+#### main 7:  PLUS int i int const__25 (= 1) int anon__22 
 	# Math operation - Start: anon__22 = i addl $1
 	movl -4(%rbp), %r10d
 	movl $1, %r11d
 	addl %r11d, %r10d
 	movl %r10d, -52(%rbp)
 	# Math operation - End: anon__22 = i addl $1
-#### main 7:  ASSIGN int anon__22  int i 
+#### main 8:  ASSIGN int anon__22  int i 
 	movl -52(%rbp), %r10d
 	movl %r10d, -4(%rbp)     # i = anon__22
-#### main 8:  GOTO 1
-	jmp main_1
-main_9:
-#### main 9:  GET_ADDRESS int[5] numbers  address anon__24 
+#### main 9:  GOTO 2
+	jmp main_2
+main_10:
+#### main 10:  GET_ADDRESS int[5] numbers  address anon__24 
 	movq -36(%rbp), %r10
 	movq %r10, -60(%rbp)
-#### main 10:  PARAM address anon__24   
+#### main 11:  PARAM address anon__24   
 	movq -60(%rbp), %r10
 	pushq %r10
-#### main 11:  PARAM int const__25 (= 5)   
+#### main 12:  PARAM int const__26 (= 5)   
 	pushq $5
-#### main 12:  CALL bubblesort: function(int[1],int) -> int   
+#### main 13:  CALL bubblesort: function(int[1],int) -> int   
 	call bubblesort
-#### main 13:  GETRETURN   int anon__23 
+#### main 14:  GETRETURN   int anon__23 
 	movl %eax, -64(%rbp)
-#### main 14:  WRITE char const__26 (= 'newline')   
-	movq $0, %r10   # Empty register 
-	movb $10, %r10b
-	movq %r10, %rdi
-	call printChar
-#### main 15:  GET_ADDRESS int[5] numbers  address anon__26 
+#### main 15:  WRITE char[29] const__27 (= ' ')   
+	movq $const__27, %rdi
+	call printCharArray
+#### main 16:  GET_ADDRESS int[5] numbers  address anon__26 
 	movq -36(%rbp), %r10
 	movq %r10, -72(%rbp)
-#### main 16:  PARAM address anon__26   
+#### main 17:  PARAM address anon__26   
 	movq -72(%rbp), %r10
 	pushq %r10
-#### main 17:  PARAM int const__27 (= 5)   
+#### main 18:  PARAM int const__28 (= 5)   
 	pushq $5
-#### main 18:  PARAM int const__28 (= 1)   
-	pushq $1
-#### main 19:  CALL printArray: function(int[10],int,int) -> int   
+#### main 19:  PARAM int const__29 (= 0)   
+	pushq $0
+#### main 20:  CALL printArray: function(int[10],int,int) -> int   
 	call printArray
-#### main 20:  GETRETURN   int anon__25 
+#### main 21:  GETRETURN   int anon__25 
 	movl %eax, -76(%rbp)
-#### main 21:  RETURN    
+#### main 22:  RETURN    
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
+.section .data
+	const__21: .asciz "Please enter the 5 numbers you want to sort (on different lines)\n"  
+	const__27: .asciz "\nThe sorted numbers are\n"  

@@ -61,4 +61,6 @@ compare "mathsimplify"
 compare "parameters"
 compare "simple"
 compare "simpler"
+compare "string"
+compare "write"
 

@@ -9,13 +9,15 @@ int fibonacci(int n) {
 int main() {
     int i = 0;
     while (i < 10) {
+        
+        write "fibonacci(";
         write i;
-        write ' ';
-        write '-';
-        write ' ';
+        write ") = ";
         write fibonacci(i);
-        write '\n';
+        write "\n";
+        
         i = i + 1;
     }
+
     return 1;
 }

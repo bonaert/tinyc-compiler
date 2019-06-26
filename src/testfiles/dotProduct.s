@@ -88,7 +88,7 @@ dotproduct_11:
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	sub $232, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
+	sub $315, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### main 0:  GET_ADDRESS int[4] a  address anon__9 
 	movq %rbp, -24(%rbp)     # Setting up array address
 	addq $-24, -24(%rbp)      # Setting up array address
@@ -245,33 +245,38 @@ main:
 	movl %r12d, 8(%r10, %r11, 1)        # array modification 
 	mov $0, %r10      # Reset register that was used in 64 bit mode
 ## Array modification END - anon__23[anon__22] = $4
-#### main 24:  GET_ADDRESS int[4] a  address anon__25 
+#### main 24:  WRITE char[75] const__31 (= '°')   
+	movq $const__31, %rdi
+	call printCharArray
+#### main 25:  GET_ADDRESS int[4] a  address anon__25 
 	movq -24(%rbp), %r10
 	movq %r10, -152(%rbp)
-#### main 25:  PARAM address anon__25   
+#### main 26:  PARAM address anon__25   
 	movq -152(%rbp), %r10
 	pushq %r10
-#### main 26:  GET_ADDRESS int[4] b  address anon__26 
+#### main 27:  GET_ADDRESS int[4] b  address anon__26 
 	movq -96(%rbp), %r10
 	movq %r10, -160(%rbp)
-#### main 27:  PARAM address anon__26   
+#### main 28:  PARAM address anon__26   
 	movq -160(%rbp), %r10
 	pushq %r10
-#### main 28:  CALL dotproduct: function(int[4],int[4]) -> int   
+#### main 29:  CALL dotproduct: function(int[4],int[4]) -> int   
 	call dotproduct
-#### main 29:  GETRETURN   int anon__24 
+#### main 30:  GETRETURN   int anon__24 
 	movl %eax, -164(%rbp)
-#### main 30:  WRITE int anon__24   
+#### main 31:  WRITE int anon__24   
 	movq $0, %rdi
 	movl -164(%rbp), %edi
 	call printInteger
-#### main 31:  WRITE char const__31 (= 'newline')   
+#### main 32:  WRITE char const__32 (= 'newline')   
 	movq $0, %r10   # Empty register 
 	movb $10, %r10b
 	movq %r10, %rdi
 	call printChar
-#### main 32:  RETURN int const__32 (= 5)   
-	movq $5, %rax
+#### main 33:  RETURN int const__33 (= 1)   
+	movq $1, %rax
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
+.section .data
+	const__31: .asciz "The dotproduct of (1,2,3,4) with (1,2,3,4) should be 1+4+9+16=30 and is "  

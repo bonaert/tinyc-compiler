@@ -1,0 +1,5 @@
+int main() {
+    int[10][5] big;
+    int[5] small = big[0];
+    return 1;
+}

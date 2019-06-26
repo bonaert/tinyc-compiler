@@ -7,6 +7,17 @@ int factorialRecursive(int n) {
 }
 
 int main() {
-    int b = factorialRecursive(10);
-    write b;
+    int i = 0;
+    while (i < 10) {
+        
+        write "factorial(";
+        write i;
+        write ") = ";
+        write factorialRecursive(i);
+        write "\n";
+        
+        i = i + 1;
+    }
+
+    return 1;
 }

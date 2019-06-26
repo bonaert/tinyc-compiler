@@ -28,6 +28,7 @@ typedef struct {
 	union { 
 		int intValue;
 		char charValue;
+		char * stringValue;
 	} value;
 } CONSTANT_INFO;
 
@@ -77,6 +78,7 @@ int areSymbolListEqual(SYMBOL_LIST* symbolList1, SYMBOL_LIST* symbolList2);
 
 SYMBOL_INFO* createBaseSymbol(char* name, TYPE_INFO* typeInfo, SYMBOL_KIND symbolKind);
 SYMBOL_INFO* createConstantSymbol(TBASIC type, int value);
+SYMBOL_INFO* createConstantStringSymbol(char *value);
 int isConstantSymbol(SYMBOL_INFO* symbol);
 SYMBOL_INFO* createVariableSymbol(char* name, TYPE_INFO* typeInfo);
 void initFunctionSymbol(SYMBOL_INFO* symbolInfo, SYMBOL_TABLE* scope, TYPE_INFO* returnType, SYMBOL_LIST* arguments);
@@ -126,6 +128,7 @@ int isNumeric(SYMBOL_INFO* symbol);
 int isFunction(SYMBOL_INFO* symbol);
 
 INSTRUCTION* getInstrutions(SYMBOL_INFO* function);
+int getNumDimensions(SYMBOL_INFO* array);
 
 
 

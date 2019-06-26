@@ -1,22 +1,21 @@
 int main() {
     int[7][5] a;
+    write "The length of A is 35 and length a = ";
     write length a;
-    
-    // TODO: write 'b'
-    char space = ' ';
-    write space;
     
     
     a[2][3] = 7;
     a[5][7] = 10;
     int b = a[2][3] + a[5][7];
+    write "\nshould be 17: ";
     write b;   
 
+
     a[2][0] = 10;
-    write '\n';
+    write "\nshould be 10: ";
     write a[2][0]; 
     a[2][0] = 50;
-    write '\n';
+    write "\nshould be 50: ";
     write a[2][0]; 
     
     return 1;

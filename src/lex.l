@@ -67,6 +67,13 @@ alphanumUnderscore [A-Za-z0-9_]
 }; 
 
 
+\"[^\"\n]+\"  {
+	/* character inside single quotes (note may need to update this due to chars that need to be escaped) */
+	yylval.text = strndup(yytext, yyleng);  /* Return the character inside the quotes */
+	return STRING;
+}; 
+
+
 
 "int"    return INT;
 "if"     return IF;

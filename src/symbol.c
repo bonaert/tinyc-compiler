@@ -5,6 +5,7 @@
 #include "symbol.h"
 #include "type.h"
 #include "intermediate.h"
+#include "array.h"
 
 
 
@@ -41,6 +42,17 @@ SYMBOL_INFO* createConstantSymbol(TBASIC type, int value) {
     }
     return symbolInfo;
 }
+
+SYMBOL_INFO* createConstantStringSymbol(char *value) {
+    DIMENSIONS* dimensions = initDimensions();
+    addDimension(dimensions, strlen(value) + 1);
+    TYPE_INFO* arrayType = createArrayType(createSimpleType(char_t), dimensions);
+
+    SYMBOL_INFO* symbol = createBaseSymbol(newConstantSymbolName(), arrayType, constant_s);
+    symbol->details.constant.value.stringValue = value;   
+    return symbol;
+}
+
 
 int isConstantSymbol(SYMBOL_INFO* symbol) {
     return symbol->symbolKind == constant_s;
@@ -376,10 +388,12 @@ int getSymbolSize(SYMBOL_INFO* symbol) {
 
 
 int getConstantRawValue(SYMBOL_INFO* constant) {
-    if (constant->type->type == char_t) {
+    if (isChar(constant)) {
         return constant->details.constant.value.charValue;
-    } else if (constant->type->type == int_t) {
+    } else if (isInt(constant)) {
         return constant->details.constant.value.intValue;
+    } else if (isArray(constant)) {
+        return constant->details.constant.value.stringValue;
     } else {
         fprintf(stderr, "Error, array or function is considered a constant (and it shouldn't)!");
         exit(1);
@@ -449,3 +463,6 @@ INSTRUCTION* getInstrutions(SYMBOL_INFO* function) {
     return function->details.function.instructions;
 }
 
+int getNumDimensions(SYMBOL_INFO* array) {
+    return array->type->info.array.dimensions->numDimensions;
+}

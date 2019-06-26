@@ -57,6 +57,7 @@ int main(){
     int i;
     int j;
     int[5] numbers;
+    write "Please enter the 5 numbers you want to sort (on different lines)\n";
 
     int receive;
     i = 0;
@@ -68,6 +69,6 @@ int main(){
 
     qsort(numbers, 0, 4);
 
-    write '\n';
-    printArray(numbers, 5, 1);
+     write "\nThe sorted numbers are\n";
+    printArray(numbers, 5, 0);
 }

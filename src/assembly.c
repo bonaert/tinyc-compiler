@@ -566,8 +566,12 @@ void write(int instrNum, SYMBOL_INFO* symbol) {
         moveToRegister(instrNum, symbol, op1, DEFAULT_REGISTER); 
         fprintf(stdout, "\tmovq %%r10, %%rdi\n");
     } else if (isArray(symbol)) {
-        moveTo64BitRegister(instrNum, symbol, op1, RDI);
-        fprintf(stdout, "\tadd $8, %%rdi\n");
+        if (isConstantSymbol(symbol)) { // A string
+            fprintf(stdout, "\tmovq $%s, %%rdi\n", symbol->name);
+        } else {
+            moveTo64BitRegister(instrNum, symbol, op1, RDI);
+            fprintf(stdout, "\tadd $8, %%rdi\n");
+        }
     } else {
         fprintf(stdout, "\tmovq $0, %%rdi\n");
         moveToRegister(instrNum, symbol, op1, RDI); 
@@ -816,4 +820,21 @@ void generateAssemblyCode(SYMBOL_TABLE* scope) {
         }
         generateAssemblyForFunction(functions->symbols[i]);
     }
+
+
+    // Add string symbols at the end
+    fprintf(stdout, ".section .data\n");
+    for(int i = 0; i < functions->size; i++) {
+        SYMBOL_INFO* function = functions->symbols[i];
+        SYMBOL_LIST* symbols = function->details.function.scope->symbolList;
+        for (int j = 0; j < symbols->size; j++) {
+            SYMBOL_INFO* symbol = symbols->symbols[j];
+            if (isConstantSymbol(symbol) && isArray(symbol)) { // It's a string
+                fprintf(stdout, "\t%s: .asciz %s  \n", symbol->name, symbol->details.constant.value.stringValue);
+            }
+        }
+    }
+//_tmp4: .int .+4
+//__tmp4: .asciz "hello"
+
 }

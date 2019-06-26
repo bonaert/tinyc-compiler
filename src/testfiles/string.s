@@ -9,13 +9,14 @@
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	sub $24, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
-#### main 0:  ASSIGN int const__9 (= 28)  int l 
-	movl $28, -4(%rbp)     # l = 28
-#### main 1:  RETURN int l   
-	movq $0, %rax        # return - set all 64 bits to 0 
-	movl -4(%rbp), %eax  # return - move 32 bit value to return register
+	sub $20, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
+#### main 0:  WRITE char[8] const__1 (= 'ð')   
+	movq $const__1, %rdi
+	call printCharArray
+#### main 1:  RETURN int const__2 (= 1)   
+	movq $1, %rax
 	movq %rbp, %rsp      # Reset stack to previous base pointer
 	popq %rbp            # Recover previous base pointer
 	ret                  # return to the caller
 .section .data
+	const__1: .asciz "hello"  

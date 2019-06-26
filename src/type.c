@@ -315,3 +315,29 @@ int getTypeSize(TYPE_INFO* type) {
 int isCharOrInt(TYPE_INFO* type) {
     return type->type == int_t || type->type == char_t;
 }
+
+
+
+
+
+
+
+/**
+ * Makes a array type but with the first N dimensions removed. Useful when
+ * accessing subarrays, for example:
+ *    int[10][20] = a;
+ *    int[20] b = a[0];
+ * 
+ * a[0] needs to have type int[20]. This function makes that possible.
+ */
+TYPE_INFO* makeArrayTypeWithFewerDimensions(int dimensionsToLose, TYPE_INFO* arrayType) {
+    puts("oqgdhqusgduiqgsduigqusidguqisgduiqs");
+    DIMENSIONS* dimensions = initDimensions();
+    DIMENSIONS* arrayDimensions = arrayType->info.array.dimensions;
+
+    for (int i = dimensionsToLose; i < arrayDimensions->numDimensions; i++) {
+        addDimension(dimensions, arrayDimensions->dimensions[i]);
+    }
+
+    return createArrayType(getBaseType(arrayType), dimensions);
+}

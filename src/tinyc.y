@@ -64,6 +64,7 @@ void handleComparisonInCondition(CHOICE* choice, SYMBOL_INFO* arg1, SYMBOL_INFO*
 %token NAME    /* String starting with a letter, followed by 0 or more letters, digits or underscores */
 %token NUMBER  /* String of digits */
 %token QCHAR   /* Character between singles quotes */ 
+%token STRING   /* Character between singles quotes */ 
 %token INT
 
 /* Keywords */   
@@ -126,6 +127,7 @@ void handleComparisonInCondition(CHOICE* choice, SYMBOL_INFO* arg1, SYMBOL_INFO*
 	char* name;
 	int value;
 	char character;
+	char* text;
 	int location;
 	
 	TYPE_INFO* type;
@@ -146,6 +148,7 @@ void handleComparisonInCondition(CHOICE* choice, SYMBOL_INFO* arg1, SYMBOL_INFO*
 %type <name> NAME;
 %type <value> NUMBER;
 %type <character> QCHAR;
+%type <text> STRING;
 
 %type <type> type baseType;
 
@@ -535,10 +538,16 @@ elist: elist RBRACK LBRACK exp {
 };
 
 lvalue: elist RBRACK {
-	checkArrayAccessHasAllDimensions($1.array, $1.ndim + 1);
+	//checkArrayAccessHasAllDimensions($1.array, $1.ndim + 1);
 	
 	$$.offset = newAnonVar(scope, int_t);  
-	$$.typeKind = getBaseType(($1.array)->type)->type;
+
+	//if ($1.ndim + 1 == getNumDimensions($1.array)) {
+	//	$$.typeKind = makeArrayTypeWithFewerDimensions($1.ndim + 1, $1.array);
+	//} else {
+		$$.typeKind = getBaseType(($1.array)->type)->type;
+	//}
+	fprintf(stderr, "num dimensions: %d", $1.ndim + 1);
 
 	/* base = addr a - array_base(a) */
 	// Note: in my case my indexing starts from zero, so a = array_base(a), and I don't need the
@@ -563,6 +572,8 @@ lvalue: elist RBRACK {
 lhs: lvalue { 
 	if ($1.offset == NIL) { // Just a variable, not an array access
 		$$ = $1.place; 
+	//} else if () {
+	//	emit(A2PLUS, $1)
 	} else {
 		$$ = newAnonVar(scope, $1.typeKind);
 		emit(scope, gen3AC(AAC, $1.place, $1.offset, $$));
@@ -593,6 +604,11 @@ exp: MINUS exp %prec UMINUS { checkIsNumber($2); /* TODO: use correct type */ $$
 exp: LPAR exp RPAR         { $$ = $2;  /* (a) */ };
 
 exp: number { $$ = $1; }
+
+exp: STRING { 
+	$$ = createConstantStringSymbol($1);
+	insertCompleteSymbolInSymbolTable(scope, $$);
+}
 
 exp: functionCall {	$$ = $1; };
 
@@ -667,9 +683,7 @@ type: baseType { $$ = $1; };
 type: baseType dimensionsList  { $$ = createArrayType($1, $2); };
 
 dimensionsList: dimensionsList LBRACK NUMBER RBRACK { 
-	// TODO: figure out how to deal with variable instead of numbers in there
-	// TODO: check type (what should I allow in the brackets?)
-	//checkIsNumber($3); 
+	// Only support fixed size arrays
 	addDimension($1, $3); 
 	$$ = $1; 
 };
