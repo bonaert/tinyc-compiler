@@ -65,6 +65,15 @@ TYPE_INFO* checkIsArray(SYMBOL_INFO* symbol) {
     return symbol->type;
 }
 
+TYPE_INFO* checkIsCharOrCharArray(SYMBOL_INFO* symbol) {
+    if (!isChar(symbol) && !(isArray(symbol) && getBaseType(symbol->type)->type == char_t)) {
+        fprintf(stderr, "Error: The symbol %s is must be a char or a char array!", symbol->name);
+        exit(1);
+    }
+    
+    return symbol->type;
+}
+
 TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* symbol) {
     if (symbol->symbolKind != variable_s) {
         fprintf(stderr, "Error: The symbol %s should be a variable but isn't.", symbol->name);

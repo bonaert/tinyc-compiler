@@ -1,0 +1,15 @@
+int main() {
+    write 'a';
+    write ' ';
+    write '*';
+
+    char[6] letters;
+    letters[0] = 'h';
+    letters[1] = 'e';
+    letters[2] = 'l';
+    letters[3] = 'l';
+    letters[4] = 'o';
+    letters[5] = '\0';
+
+    write letters;
+}

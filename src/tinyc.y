@@ -487,6 +487,7 @@ statementWithoutBlock: functionCall { /* we can call a function without storing 
 
 
 statementWithoutBlock:	WRITE exp { // write statement
+	checkIsCharOrCharArray($2);
 	emit(scope, gen3AC(WRITEOP, $2, 0, 0));
 };
 

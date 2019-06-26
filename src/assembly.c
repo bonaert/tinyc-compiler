@@ -565,13 +565,17 @@ void write(int instrNum, SYMBOL_INFO* symbol) {
         fprintf(stdout, "\tmovq $0, %%r10   # Empty register \n");
         moveToRegister(instrNum, symbol, op1, DEFAULT_REGISTER); 
         fprintf(stdout, "\tmovq %%r10, %%rdi\n");
+    } else if (isArray(symbol)) {
+        moveTo64BitRegister(instrNum, symbol, op1, RDI);
+        fprintf(stdout, "\tadd $8, %%rdi\n");
     } else {
         fprintf(stdout, "\tmovq $0, %%rdi\n");
         moveToRegister(instrNum, symbol, op1, RDI); 
     }
 
-    
-    if (symbol->type->type == char_t) {
+    if (isArray(symbol)) {
+        outputLine("call printCharArray");
+    } else if (isChar(symbol)) {
         outputLine("call printChar");
     } else {
         outputLine("call printInteger");

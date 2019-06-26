@@ -45,11 +45,27 @@ alphanumUnderscore [A-Za-z0-9_]
 "\n"    ++lineno; /* increment lineno variable (which is declared in the parser file) */
 
 
+'\n' {
+	yylval.character = '\n';
+	return QCHAR;
+}
+
+'\\t' {
+	yylval.character = '\t';
+	return QCHAR;
+}
+
+'\\0' {
+	yylval.character = '\0';
+	return QCHAR;
+}
+
 '[^']' {
 	/* character inside single quotes (note may need to update this due to chars that need to be escaped) */
 	yylval.character = yytext[1];  /* Return the character inside the quotes */
 	return QCHAR;
 }; 
+
 
 
 "int"    return INT;
