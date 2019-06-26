@@ -14,6 +14,6 @@ int main() {
   int[4] b;
   b[0] = 1; b[1] = 2; b[2] = 3; b[3] = 4;
   write dotproduct(a,b);
-  write '*';
+  write '\n';
   return 5;
 }

@@ -21,25 +21,25 @@ int main() {
 
     ints[2] = 999;
     
-    write '*';
+    write '\n';
     write ints[2];
     ints = modifyIntArray(ints);
-    write '*';
+    write '\n';
     write ints[2];
     
     chars[2] = 'z';
-    write '*';
+    write '\n';
     write chars[2];
     chars = modifyCharArray(chars);
-    write '*';
+    write '\n';
     write chars[2];
 
 
     xxx[1][1] = 456;
-    write '*';
+    write '\n';
     write xxx[1][1];
     xxx = modifyMultidimensionalIntArray(xxx, 1);
-    write '*';
+    write '\n';
     write xxx[1][1];
     
     

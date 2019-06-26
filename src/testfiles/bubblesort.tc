@@ -6,7 +6,7 @@ int printArray(int[10] n, int count, int withIndex) {
             write ':';
         }  
         write n[a];
-        write '*';
+        write '\n';
         a = a + 1;
     }
 }
@@ -43,6 +43,6 @@ int main(){
 
     bubblesort(numbers, 5);
 
-    write '*';
+    write '\n';
     printArray(numbers, 5, 1);
 }

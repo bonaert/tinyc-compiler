@@ -65,9 +65,12 @@ TYPE_INFO* checkIsArray(SYMBOL_INFO* symbol) {
     return symbol->type;
 }
 
-TYPE_INFO* checkIsCharOrCharArray(SYMBOL_INFO* symbol) {
-    if (!isChar(symbol) && !(isArray(symbol) && getBaseType(symbol->type)->type == char_t)) {
-        fprintf(stderr, "Error: The symbol %s is must be a char or a char array!", symbol->name);
+TYPE_INFO* checkIsWritable(SYMBOL_INFO* symbol) {
+    printType(stderr, symbol->type);
+    if (!isChar(symbol) && 
+        !isInt(symbol) && 
+        !(isArray(symbol) && getBaseType(symbol->type)->type == char_t)) {
+        fprintf(stderr, "Error (line %d): The symbol %s must be a char, int or a char array!", lineno, symbol->name);
         exit(1);
     }
     
@@ -76,7 +79,7 @@ TYPE_INFO* checkIsCharOrCharArray(SYMBOL_INFO* symbol) {
 
 TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* symbol) {
     if (symbol->symbolKind != variable_s) {
-        fprintf(stderr, "Error: The symbol %s should be a variable but isn't.", symbol->name);
+        fprintf(stderr, "Error (line %d): The symbol %s should be a variable but isn't.", lineno, symbol->name);
         exit(1);
     }
     
@@ -133,12 +136,12 @@ TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index) {
 void checkArrayAccessHasAllDimensions(SYMBOL_INFO* array, int numDimensionUsed) {
     int arrayNumDimensions = array->type->info.array.dimensions->numDimensions;
     if (numDimensionUsed < arrayNumDimensions) {
-        fprintf(stderr, "Error - not enough dimensions: provided only %d dimension(s) when accessing array '%s' of %d dimensions\n", 
-                numDimensionUsed, array->name, arrayNumDimensions);
+        fprintf(stderr, "Error (line %d) - not enough dimensions: provided only %d dimension(s) when accessing array '%s' of %d dimensions\n", 
+                lineno, numDimensionUsed, array->name, arrayNumDimensions);
         exit(1);
     } else if (numDimensionUsed > arrayNumDimensions) {
-        fprintf(stderr, "Error - too many dimensions: provided %d dimensions when accessing array '%s' that has only %d dimension(s)\n", 
-                numDimensionUsed, array->name, arrayNumDimensions);
+        fprintf(stderr, "Error (line %d) - too many dimensions: provided %d dimensions when accessing array '%s' that has only %d dimension(s)\n", 
+                lineno, numDimensionUsed, array->name, arrayNumDimensions);
         exit(1);
     }
 }
@@ -157,7 +160,7 @@ void checkComparisonOp(SYMBOL_INFO* op1, SYMBOL_INFO* op2){
     checkIsNumeric(op1);
     checkIsNumeric(op2);
     if (op1->type != op2->type) {
-        fprintf(stderr, "Error: %s and %s don't have the same type\n", op1->name, op2->name);
+        fprintf(stderr, "Error (line %d): %s and %s don't have the same type\n", lineno, op1->name, op2->name);
         exit(1);
     }
 }
@@ -200,7 +203,7 @@ int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actual
         TYPE_INFO* wantedParameter = actualArguments->symbols[i]->type;
 
         if (!areTypesEqual(givenArgument, wantedParameter)) {
-            fprintf(stderr, "Argument %d has an incorrect type. Wanted ", i);
+            fprintf(stderr, "Error (line %d): Argument %d has an incorrect type. Wanted ", lineno, i);
             printType(stderr, givenArgument);
             fprintf(stderr, " but actually got ");
             printType(stderr, wantedParameter);
@@ -213,7 +216,7 @@ int doArgumentsHaveTheCorrectTypes(TYPE_LIST* argumentTypes, SYMBOL_LIST* actual
             DIMENSIONS* givenDimensions = givenArgument->info.array.dimensions;
             for(int j = 0; j < parameterDimensions->numDimensions - 1; j++) {
                 if (parameterDimensions->dimensions[j] != givenDimensions->dimensions[j]) {
-                    fprintf(stderr, "ERROR: when passing an array as an argument, all dimensions except the last must match the dimensions of the declared parameter!\n");
+                    fprintf(stderr, "ERROR (line %d): when passing an array as an argument, all dimensions except the last must match the dimensions of the declared parameter!\n", lineno);
                     fprintf(stderr, "Parameter: ");
                     printType(stderr, wantedParameter);
                     fprintf(stderr, " \nArgument: ");

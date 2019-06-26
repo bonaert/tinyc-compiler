@@ -17,7 +17,7 @@ void checkNameNotTaken(SYMBOL_TABLE* symbolTable, char* name);
 TYPE_INFO* checkIsNumber(SYMBOL_INFO* number);
 void checkIsFunction(SYMBOL_INFO* function);
 TYPE_INFO* checkIsArray(SYMBOL_INFO* array);
-TYPE_INFO* checkIsCharOrCharArray(SYMBOL_INFO* symbol);
+TYPE_INFO* checkIsWritable(SYMBOL_INFO* symbol);
 TYPE_INFO* checkIsIntegerOrCharVariable(SYMBOL_INFO* array);
 
 TYPE_INFO* checkArrayAccess(SYMBOL_INFO* array, SYMBOL_INFO* index);

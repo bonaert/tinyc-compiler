@@ -1,5 +1,4 @@
 int main() {
-
     int[7][5] a;
     write length a;
     
@@ -14,10 +13,10 @@ int main() {
     write b;   
 
     a[2][0] = 10;
-    write '*';
+    write '\n';
     write a[2][0]; 
     a[2][0] = 50;
-    write '*';
+    write '\n';
     write a[2][0]; 
     
     return 1;

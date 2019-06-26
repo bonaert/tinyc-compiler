@@ -1,7 +1,7 @@
 int main() {
     write 'a';
     write ' ';
-    write '*';
+    write '\n';
 
     char[6] letters;
     letters[0] = 'h';
@@ -12,4 +12,12 @@ int main() {
     letters[5] = '\0';
 
     write letters;
+
+    write '\n';
+
+    write 10;
+    write '*';
+    write 10;
+    write '=';
+    write 10 * 10;
 }

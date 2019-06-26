@@ -15,7 +15,7 @@ int main() {
     }
 
     
-    write '*';
+    write '\n';
 
     if (0 > 10) {
         write 'E';
@@ -29,7 +29,7 @@ int main() {
         write 'O';
     }
 
-    write '*';
+    write '\n';
 
     if (0 < 10) {
         write 'O';
@@ -43,7 +43,7 @@ int main() {
         write 'E';
     }
 
-    write '*';
+    write '\n';
 
 
     // Testing AND
@@ -71,7 +71,7 @@ int main() {
         write 'O';
     }
 
-    write '*';
+    write '\n';
 
     // Testing OR
     if ((10 > 0) || (10 > 0)) {

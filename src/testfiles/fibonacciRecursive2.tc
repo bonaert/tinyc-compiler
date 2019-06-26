@@ -14,7 +14,7 @@ int main() {
         write '-';
         write ' ';
         write fibonacci(i);
-        write '*';
+        write '\n';
         i = i + 1;
     }
     return 1;

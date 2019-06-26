@@ -8,8 +8,7 @@
 printArray:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $84, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $84, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### printArray 0:  ASSIGN int const__1 (= 0)  int a 
 	movl $0, -4(%rbp)     # a = 0
 printArray_1:
@@ -84,8 +83,7 @@ printArray_12:
 bubblesort:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $124, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $124, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### bubblesort 0:  MINUS int count int const__7 (= 1) int i 
 	# Math operation - Start: i = count subl $1
 	movq 16(%rbp), %r10
@@ -248,8 +246,7 @@ bubblesort_21:
 main:
 	pushq %rbp           # Save the base pointer
 	movq %rsp, %rbp      # Set new base pointer
-	mov %rbp, %rsp       # Adjust %rsp to the end of the stack with all the local variables
-	sub $104, %rsp       # Adjust %rsp to the end of the stack with all the local variables
+	sub $104, %rsp       # Adjust %rsp to the end of the stack (filled with all the local variables of the function)
 #### main 0:  ASSIGN int const__21 (= 0)  int i 
 	movl $0, -4(%rbp)     # i = 0
 main_1:

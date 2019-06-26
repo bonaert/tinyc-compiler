@@ -45,7 +45,7 @@ alphanumUnderscore [A-Za-z0-9_]
 "\n"    ++lineno; /* increment lineno variable (which is declared in the parser file) */
 
 
-'\n' {
+'\\n' {
 	yylval.character = '\n';
 	return QCHAR;
 }

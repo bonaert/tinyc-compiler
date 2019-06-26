@@ -487,7 +487,7 @@ statementWithoutBlock: functionCall { /* we can call a function without storing 
 
 
 statementWithoutBlock:	WRITE exp { // write statement
-	checkIsCharOrCharArray($2);
+	checkIsWritable($2);
 	emit(scope, gen3AC(WRITEOP, $2, 0, 0));
 };
 
@@ -598,9 +598,6 @@ exp: functionCall {	$$ = $1; };
 
 exp: QCHAR  { // A single character inside single quotes
 	int val = ((int) $1);
-	if (val == 42) { // * is replaced by newline
-		val = 10;
-	}
 	$$ = createConstantSymbol(char_t, val);
 };
 
