@@ -819,6 +819,11 @@ void generateAssemblyCode(SYMBOL_TABLE* scope) {
             markFunctionGlobal(functions->symbols[i]);
         }
         generateAssemblyForFunction(functions->symbols[i]);
+
+        
+        printSymbol(stderr, functions->symbols[i]);
+        fprintf(stderr, "\n");
+        printAllInstructions(functions->symbols[i]->details.function.scope);
     }
 
 
