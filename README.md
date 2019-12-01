@@ -1,6 +1,10 @@
 <img src="https://github.com/bonaert/tinyc-compiler/raw/master/logo.png" height="100" alt="Logo"> **compiler**
 
-Implementation of a compiler for a subset of C called Tiny C. The TinyC compiler was built entirely from scratch in pure C, with use of Lex for lexing and Bison for parsing. The compiler does **lexing**, **parsing**, **syntactic checking**, **type checking**, **semantic checking**, **conversion into an intermediate representation (IR)**, **optimization and simplification** and finally outputs a valid **x86 64 assembly file**.
+Implementation of a compiler for a subset of C called Tiny C. The TinyC compiler was built entirely from scratch in pure C, with use of Lex for lexing and Bison for parsing. The compiler does **lexing**, **parsing**, **syntactic checking**, **type checking**, **semantic checking**, **conversion into an intermediate representation (IR)**, **optimization and simplification** and finally outputs a valid **x86 64 assembly file**. A linker script allow you to easily turn the assembly file into an executable file.
+
+To run the compiler, with full debug output, link the assembly and run the executable, you can do:
+
+`bash ./run.sh factorialRecursive`
 
 *Note: no connection to Fabrice Bellard's amazing [TinyC compiler](https://bellard.org/tcc/).*
 
@@ -170,7 +174,14 @@ The compiler translates the TinyC file into assembly by doing the following step
 
 The program has many test files which evaluate the majority of the language features, error checking, conversions and type checking. They are present in the `src/testfiles` directory. The compiler currently outputs debug information to stdout and error information to stderr to ensure the user can examine the compiler's inner workings.
 
+Bash files are provided to make testing easier. The `run.sh` and `runUnoptimised.sh` compiles the program, showing the unoptimized IR code and the optimized IR code at different stages for `run.sh`, links the assembly to create an executable, and the runs the executable. Example: `bash ./run.sh fibonacciRecursive`.
 
+## Feature testing
 
+## Error checking
 
+- Undefind variables: [error-undefined-var.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/error-undefined-var.tc)
+- Basic lexical errors: [error-lexical.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/error-lexical.tc)
+- Invalid types for function parameters: [error-funcall-type.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/error-funcall-type.tc)
+- Variable redeclaration: [error-double-decl-stmt.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/error-double-decl-stmt.tc)
 
