@@ -155,6 +155,18 @@ The TinyC supports the following **features**:
 - Simple IO: READ and WRITE primitives
 - Program optimization: compile time computation, avoiding duplicate computation, expression simplification, graph analysis
 
+# Limitations / Simplifications
+
+Some features are not implemented to leave the implementation simple and due to a lack of time:
+
+- Sophisticated register allocation algorithms
+- Library support
+- Advanced IO
+- Preprocessing
+- For loops - a good first improvement if you're interested
+- Inter basic block optimisation
+- Dead variable elimination
+
 # Structure of the compiler
 
 The compiler translates the TinyC file into assembly by doing the following steps (a good starting point to explore the code is mentionned for each step):
@@ -166,8 +178,6 @@ The compiler translates the TinyC file into assembly by doing the following step
     - Graph analysis
     - Duplicate expression removal & expression simplification
 4. Conversion of the IR code into x86 64 assembly - [assembly.c](https://github.com/bonaert/tinyc-compiler/blob/master/src/assembly.c)
-
-**TODO**
 
 # Testing
 
