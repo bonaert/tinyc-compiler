@@ -162,7 +162,11 @@ The compiler translates the TinyC file into assembly by doing the following step
     - Duplicate expression removal & expression simplification
 5. Conversion of the IR code into x86 64 assembly
 
+**TODO**
 
+# Testing
+
+The program has many test files which evaluate the majority of the language features, error checking, conversions and type checking. They are present in the `src/testfiles` directory. The compiler currently outputs debug information to stdout and error information to stderr to ensure the user can examine the compiler's inner workings.
 
 
 
