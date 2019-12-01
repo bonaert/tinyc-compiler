@@ -172,11 +172,24 @@ The compiler translates the TinyC file into assembly by doing the following step
 
 # Testing
 
-The program has many test files which evaluate the majority of the language features, error checking, conversions and type checking. They are present in the `src/testfiles` directory. The compiler currently outputs debug information to stdout and error information to stderr to ensure the user can examine the compiler's inner workings.
+The program has test files which evaluate the majority of the language features, error checking, conversions and type checking. They are present in the `src/testfiles` directory. The compiler currently outputs debug information to stdout and error information to stderr to ensure the user can examine the compiler's inner workings.
 
 Bash files are provided to make testing easier. The `run.sh` and `runUnoptimised.sh` compiles the program, showing the unoptimized IR code and the optimized IR code at different stages for `run.sh`, links the assembly to create an executable, and the runs the executable. Example: `bash ./run.sh fibonacciRecursive`.
 
 ## Feature testing
+
+- Basic tests: [simpler.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/simpler.tc), [simpler.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/simpler.tc)
+- String: [string.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/string.tc)
+- Arrays: [array.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/array.tc), [arrayAssignment.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/arrayAssignment.tc), [arrayMultidimensional.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/arrayMultidimensional.tc)
+- Type convertion: [convertions.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/convertions.tc)
+- If statements and boolean logic: [if.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/if.tc)
+- Function calling and parameter passing: [functions.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/functions.tc), [parameters.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/parameters.tc)
+- While statements: [factorial.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/factorial.tc)
+- Recursion: [factorialRecursive.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/factorialRecursive.tc)
+- Test programs: [bubblesort.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/bubblesort.tc), [quicksort.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/quicksort.tc), [dotProduct.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/dotProduct.tc)
+- Compile time optimisation: [mathsimplify.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/mathsimplify.tc)
+- IO: [readWrite.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/readWrite.tc), [write.tc](https://github.com/bonaert/tinyc-compiler/blob/master/src/testfiles/write.tc)
+
 
 ## Error checking
 
