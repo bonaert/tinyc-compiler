@@ -157,16 +157,15 @@ The TinyC supports the following **features**:
 
 # Structure of the compiler
 
-The compiler translates the TinyC file into assembly by doing the following steps:
+The compiler translates the TinyC file into assembly by doing the following steps (a good starting point to explore the code is mentionned for each step):
 
-1. Lexing
-2. Parsing
-3. Conversion into an Intermediate Representation (IR) language
-4. Program optimization:
+1. Lexing: we use GNU Lex to lex tokens (basic elements of the language) - [lex.l](https://github.com/bonaert/tinyc-compiler/blob/master/src/lex.l)
+2. Parsing and creation of the IR code: we parse the tokens to understand the more meaninful constructs (functions, if, while) ([tinyc.y](https://github.com/bonaert/tinyc-compiler/blob/master/src/tinyc.y)), create the IR representation of the code ([intermediate.c](https://github.com/bonaert/tinyc-compiler/blob/master/src/intermediate.c)) and to syntactic/semantic/type checking ([check.c](https://github.com/bonaert/tinyc-compiler/blob/master/src/check.c)). 
+3. Program optimization - [optimise.c](https://github.com/bonaert/tinyc-compiler/blob/master/src/optimise.c), [basicBlock.c](https://github.com/bonaert/tinyc-compiler/blob/master/src/basicBlock.c), [analysis.c](https://github.com/bonaert/tinyc-compiler/blob/master/src/analysis.c):
     - Mathematical simplification
     - Graph analysis
     - Duplicate expression removal & expression simplification
-5. Conversion of the IR code into x86 64 assembly
+4. Conversion of the IR code into x86 64 assembly - [assembly.c](https://github.com/bonaert/tinyc-compiler/blob/master/src/assembly.c)
 
 **TODO**
 
