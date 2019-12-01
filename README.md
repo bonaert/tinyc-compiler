@@ -2,6 +2,8 @@
 
 Implementation of a compiler for a subset of C called Tiny C. The TinyC compiler was built entirely from scratch in pure C, with use of Lex for lexing and Bison for parsing. The compiler does **lexing**, **parsing**, **syntactic checking**, **type checking**, **semantic checking**, **conversion into an intermediate representation (IR)**, **optimization and simplification** and finally outputs a valid **x86 64 assembly file**.
 
+*Note: no connection to Fabrice Bellard's amazing [TinyC compiler](https://bellard.org/tcc/).*
+
 # Demos
 
 ## Recursive fibonacci
