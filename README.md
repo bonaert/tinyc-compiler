@@ -1,11 +1,13 @@
 # TinyC compiler
 
-Implementation of a compiler for a subset of C called Tiny C. The TinyC compiler was built entirely from scratch in pure C, with use of Lex for lexing and Bison for parsing. 
+Implementation of a compiler for a subset of C called Tiny C. The TinyC compiler was built entirely from scratch in pure C, with use of Lex for lexing and Bison for parsing. The compiler does **lexing**, **parsing**, **syntactic checking**, **type checking**, **semantic checking**, **conversion into an intermediate representation (IR)**, **optimization and simplification** and finally outputs a valid **x86 64 assembly file**.
 
-# Demo 
-Example program:
+# Demos
 
-`int fibonacci(int n) {
+## Recursive fibonacci
+
+```c
+int fibonacci(int n) {
     if (n < 2) {
         return 1;
     } else {
@@ -25,10 +27,12 @@ int main() {
     }
 
     return 1;
-}`
+}
+```
 
 Output of `tinyc < fibonacciRecursive.tc && ./fibonacciRecursive`:
-`factorial(0) = 1
+```
+factorial(0) = 1
 factorial(1) = 1
 factorial(2) = 2
 factorial(3) = 6
@@ -38,7 +42,100 @@ factorial(6) = 720
 factorial(7) = 5040
 factorial(8) = 40320
 factorial(9) = 362880
-`
+```
+
+## Quicksort + IO
+
+```c
+int split(int[10] a, int start, int end) {
+    int p = a[start];
+    int i = start;
+    int j = end;
+    int temp;
+
+    while(i < j) {
+        while(a[i] <= p) {
+            i = i + 1;
+        }
+
+        while(a[j] > p) {
+            j = j - 1;
+        }
+
+        if (i < j) {
+            temp = a[i];
+            a[i] = a[j];
+            a[j] = temp;
+        }
+    }
+
+    a[start] = a[j];
+    a[j] = p;
+    return j;
+}
+
+int qsort(int[10] a, int start, int end) {
+    if(start >= end) {
+        return 0;
+    }
+    int s = split(a, start, end);
+    qsort(a, start, s - 1);
+    qsort(a, s + 1, end);
+}
+
+int printArray(int[10] n, int count, int withIndex) {
+    int a = 0;
+    while (a < count) {
+        if (withIndex != 0) {
+            write a;
+            write ':';
+        }  
+        write n[a];
+        write '\n';
+        a = a + 1;
+    }
+}
+
+
+int main(){
+    int i;
+    int j;
+    int[5] numbers;
+    write "Please enter the 5 numbers you want to sort (on different lines)\n";
+
+    int receive;
+    i = 0;
+    while (i < 5) {
+        read j;
+        numbers[i] = j;
+        i = i + 1;
+    };
+
+    qsort(numbers, 0, 4);
+
+    write "\nThe sorted numbers are\n";
+    printArray(numbers, 5, 0);
+}
+```
+
+```bash
+$ tinyc < quicksort.tc && quicksort 
+Please enter the 5 numbers you want to sort (on different lines)
+5
+-7
+8
+99
+-4
+
+The sorted numbers are
+-7
+-4
+5
+8
+99
+```
+
+
 # Features
 
 The TinyC supports the following **features**:
@@ -56,19 +153,18 @@ The TinyC supports the following **features**:
 
 The compiler translates the TinyC file into assembly by doing the following steps:
 
-1) Lexing
-2) Parsing
-3) Conversion into an Intermediate Representation (IR) language
-4) Program optimization:
-  - Mathematical simplification
-  - Graph analysis
-  - Duplicate expression removal & expression simplification
-5) Conversion of the IR code into x86 64 assembly
+1. Lexing
+2. Parsing
+3. Conversion into an Intermediate Representation (IR) language
+4. Program optimization:
+    - Mathematical simplification
+    - Graph analysis
+    - Duplicate expression removal & expression simplification
+5. Conversion of the IR code into x86 64 assembly
 
 
 
 
 
-TinyC compiler (lexer + parser + IR + optimization + x86 assembly generation)
 
 
