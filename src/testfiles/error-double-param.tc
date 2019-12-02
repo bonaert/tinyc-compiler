@@ -1,10 +1,9 @@
-int
-f(int x, int y, int x[2]) {
- return 2;
+int f(int x, int y, int[2] x) {
+  // TODO
+  return 2;
 }
 
-int
-main() {
-  int a[2];
+int main() {
+  int[2] a;
   f(2, 3, a);
 }

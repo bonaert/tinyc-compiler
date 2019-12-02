@@ -1,11 +1,9 @@
-int
-f(int x, int y, int z[2]) {
- int z[2];
+int f(int x, int y, int[2] z) {
+ int[2] z;
  return 2;
 }
 
-int
-main() {
+int main() {
   int a[2];
   f(2, 3, a);
 }

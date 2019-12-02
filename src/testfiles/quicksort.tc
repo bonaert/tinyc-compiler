@@ -69,6 +69,6 @@ int main(){
 
     qsort(numbers, 0, 4);
 
-     write "\nThe sorted numbers are\n";
+    write "\nThe sorted numbers are\n";
     printArray(numbers, 5, 0);
 }

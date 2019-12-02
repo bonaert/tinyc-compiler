@@ -66,7 +66,7 @@ TYPE_INFO* checkIsArray(SYMBOL_INFO* symbol) {
 }
 
 TYPE_INFO* checkIsWritable(SYMBOL_INFO* symbol) {
-    printType(stderr, symbol->type);
+    //printType(stderr, symbol->type);
     if (!isChar(symbol) && 
         !isInt(symbol) && 
         !(isArray(symbol) && getBaseType(symbol->type)->type == char_t)) {

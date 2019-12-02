@@ -47,9 +47,9 @@ SYMBOL_INFO* createConstantStringSymbol(char *value) {
     DIMENSIONS* dimensions = initDimensions();
     addDimension(dimensions, strlen(value) + 1);
     TYPE_INFO* arrayType = createArrayType(createSimpleType(char_t), dimensions);
-
+    
     SYMBOL_INFO* symbol = createBaseSymbol(newConstantSymbolName(), arrayType, constant_s);
-    symbol->details.constant.value.stringValue = value;   
+    symbol->details.constant.value.stringValue = value;  
     return symbol;
 }
 

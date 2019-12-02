@@ -517,18 +517,7 @@ elist: var LBRACK exp {
 elist: elist RBRACK LBRACK exp {
 	int limit = arrayDimSize($1.array, $1.ndim + 1);
 
-	// TODO
-	/*SYMBOL_INFO* constantSymbol = createConstantSymbol(int_t, limit);
-	printSymbol(stderr, $1.place);
-	$$.place = emitMultiplicationIfNeeded(scope, constantSymbol->type, $1.place, constantSymbol);
-	$$.place = emitAdditionIfNeededAtResult(scope, $$.place, $4, $$.place);*/
-	
-
-
-
-	/* offset(next) = offset(prev)*limit(prev) + index(next) */
- 	
-	$$.place = newAnonVar(scope, int_t); // TODO: check if this type is right
+	$$.place = newAnonVar(scope, int_t); 
 	emit(scope, gen3AC(A2TIMES, $1.place, createConstantSymbol(int_t, limit), $$.place));  // offset(prev)*limit(prev)
 	emit(scope, gen3AC(A2PLUS, $$.place, $4, $$.place)); // + index(next) 
 	

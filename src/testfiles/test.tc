@@ -1,5 +1,6 @@
 
 int main() {
+	// Not runnable on purpose, we don't support variable length arrays
 
 	// declarations
 	int b;
@@ -11,7 +12,7 @@ int main() {
 	write a;
 
 	// declarations can come after statements
-	int k = params(5 + 7, b[8 - 2]); 
+	int k = params(5 + 7, b[8 - 2]);
 
 	// return and length
 	return length b;
@@ -28,7 +29,7 @@ int params(int a, char b) {
 	}; // if, if-else, while and block don't need to end in a semicolon (but can if you want to)
 
 	// testing while, if, if-else and conditions
-	while (i == 5) { 
+	while (i == 5) {
 
 		// testing if-else
 		if (j != 6 + 2) {
@@ -49,7 +50,7 @@ int params(int a, char b) {
 	}
 
 	// Can start a block in the middle of another block
-	{ char d; int k; return 5 + 2; read c; } 
+	{ char d; int k; return 5 + 2; read c; }
 
 	// testing complicated arithmetic expression with return
 	return (-5 + !7) * 5 - 5 / 7;
