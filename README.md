@@ -6,7 +6,7 @@ To run the compiler, with full debug output, link the assembly and run the execu
 
 `bash ./run.sh factorialRecursive`
 
-*Note: no connection to Fabrice Bellard's amazing [TinyC compiler](https://bellard.org/tcc/).*
+*Note: no connection to Fabrice Bellard's amazing [Tiny C compiler](https://bellard.org/tcc/).*
 
 # Demos
 
